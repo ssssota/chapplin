@@ -1,6 +1,7 @@
 import { StreamableHTTPTransport } from "@hono/mcp";
 import { serve } from "@hono/node-server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { applyTools } from "chapplin";
 import { Hono } from "hono";
 import get from "./tools/get.js";
 
@@ -11,7 +12,7 @@ const mcp = new McpServer({
 	name: "my-mcp-server",
 	version: "1.0.0",
 });
-get(mcp);
+applyTools(mcp, [get]);
 
 app.all("/mcp", async (c) => {
 	const transport = new StreamableHTTPTransport();
