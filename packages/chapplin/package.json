@@ -1,0 +1,48 @@
+{
+	"name": "chapplin",
+	"type": "module",
+	"version": "0.0.0",
+	"scripts": {
+		"build": "tsc",
+		"check": "tsc --noEmit"
+	},
+	"bin": {
+		"chapplin": "./dist/cli.js"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./tool": {
+			"types": "./dist/tool.d.ts",
+			"preact": "./dist/tool-preact.js",
+			"hono": "./dist/tool-hono.js",
+			"browser": "./dist/tool-react.js",
+			"default": "./dist/tool.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"peerDependencies": {
+		"@modelcontextprotocol/sdk": ">=1",
+		"hono": ">=4",
+		"zod": "^3"
+	},
+	"devDependencies": {
+		"@modelcontextprotocol/sdk": "catalog:",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"hono": "catalog:",
+		"preact": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"typescript": "catalog:",
+		"zod": "catalog:"
+	},
+	"dependencies": {
+		"rolldown": "1.0.0-beta.51"
+	}
+}

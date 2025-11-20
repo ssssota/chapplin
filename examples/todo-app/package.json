@@ -1,0 +1,20 @@
+{
+	"name": "todo-app",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "chapplin src/index.ts"
+	},
+	"devDependencies": {
+		"@hono/node-server": "^1.19.6",
+		"chapplin": "workspace:*"
+	},
+	"dependencies": {
+		"@hono/mcp": "catalog:",
+		"@modelcontextprotocol/sdk": "catalog:",
+		"@types/node": "catalog:",
+		"hono": "catalog:",
+		"typescript": "catalog:",
+		"zod": "catalog:"
+	}
+}
