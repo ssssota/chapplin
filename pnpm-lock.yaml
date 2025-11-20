@@ -33,6 +33,9 @@ catalogs:
     react-dom:
       specifier: ^19.2.0
       version: 19.2.0
+    rolldown:
+      specifier: ^1.0.0-beta.51
+      version: 1.0.0-beta.51
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
@@ -79,7 +82,7 @@ importers:
   packages/chapplin:
     dependencies:
       rolldown:
-        specifier: 1.0.0-beta.51
+        specifier: 'catalog:'
         version: 1.0.0-beta.51
     devDependencies:
       '@modelcontextprotocol/sdk':
