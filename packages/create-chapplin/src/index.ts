@@ -132,13 +132,14 @@ async function main() {
 				],
 			});
 			if (prompts.isCancel(framework)) return cancel();
+			template = framework;
 		}
 	}
 	template ||= "hono";
 
 	const templateDir = path.resolve(
 		fileURLToPath(import.meta.url),
-		"../templates",
+		"../../templates",
 		template,
 	);
 	copyDir(templateDir, targetDir);

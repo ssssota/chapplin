@@ -5,5 +5,6 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"outDir": "dist"
-	}
+	},
+	"exclude": ["templates"]
 }
