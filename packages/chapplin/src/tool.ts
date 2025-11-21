@@ -45,9 +45,12 @@ export function defineTool<
 			>,
 		) => JSXElement;
 	},
-): Mount {
+): Tool<Shape<InputArgs>, Shape<OutputArgs>, Shape<OutputMeta>> {
+	type TypedTool = Tool<Shape<InputArgs>, Shape<OutputArgs>, Shape<OutputMeta>>;
 	if (typeof widget === "undefined") {
-		return (server) => server.registerTool(name, config, cb);
+		return ((server) => {
+			server.registerTool(name, config, cb);
+		}) as TypedTool;
 	}
 	const id = nameIntoId(widget.name || name);
 	const uri = `ui://widget/${id}.html`;
@@ -65,12 +68,12 @@ export function defineTool<
 	 */
 	const html = import(`./widgets/${id}.js`).then((m) => m.default);
 
-	return (server) => {
+	return ((server) => {
 		server.registerResource(widget.name || name, uri, {}, async () => ({
 			contents: [{ uri, mimeType, text: await html, _meta: widget._meta }],
 		}));
 		server.registerTool(name, toolConfig, cb);
-	};
+	}) as TypedTool;
 }
 
 type PromiseOr<T> = T | Promise<T>;
@@ -107,7 +110,21 @@ type ToolCallback<
 	: InputArgs extends z.ZodType<infer T>
 		? (args: T, extra: Extra) => ToolCallbackResult<OutputArgs, OutputMeta>
 		: never;
-type Mount = (server: McpServer) => void;
+
+declare const __tool_phantom__: unique symbol;
+export type Tool<Input, Output, Meta> = {
+	(server: McpServer): void;
+
+	/** For type inference, not for runtime use */
+	[__tool_phantom__]?: { input: Input; output: Output; meta: Meta };
+};
+
+// biome-ignore lint/suspicious/noExplicitAny: This is for type inference
+export type ToolInput<T> = T extends Tool<infer I, any, any> ? I : never;
+// biome-ignore lint/suspicious/noExplicitAny: This is for type inference
+export type ToolOutput<T> = T extends Tool<any, infer O, any> ? O : never;
+// biome-ignore lint/suspicious/noExplicitAny: This is for type inference
+export type ToolMeta<T> = T extends Tool<any, any, infer M> ? M : never;
 
 function nameIntoId(name: string): string {
 	return name

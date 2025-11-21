@@ -10,20 +10,23 @@ type Target = "react" | "preact" | "hono";
 const baseConditionNames = ["import", "browser", "default"];
 const targets = {
 	react: {
+		name: "React",
 		jsxImportSource: "react",
 		conditionNames: ["react", ...baseConditionNames],
 	},
 	preact: {
+		name: "Preact",
 		jsxImportSource: "preact",
 		conditionNames: ["preact", ...baseConditionNames],
 	},
 	hono: {
+		name: "Hono",
 		jsxImportSource: "hono/jsx",
 		conditionNames: ["hono", ...baseConditionNames],
 	},
 } as const satisfies Record<
 	Target,
-	{ jsxImportSource: string; conditionNames: string[] }
+	{ name: string; jsxImportSource: string; conditionNames: string[] }
 >;
 
 async function main() {
@@ -52,7 +55,7 @@ async function main() {
 	const jsxImportSource = await resolveJsxImportSource(args.values.tsconfig);
 	const target = targets[resolveTarget(args.values, jsxImportSource)];
 	const importSource = jsxImportSource ?? target.jsxImportSource;
-	console.log(`Detected target framework: ${target}`);
+	console.log(`Detected target framework: ${target.name}`);
 
 	// bundle the entry file
 	const res = await build({
