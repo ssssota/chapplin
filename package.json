@@ -3,6 +3,7 @@
 	"scripts": {
 		"lint": "biome check",
 		"fmt": "biome check --write",
+		"changeset": "changeset",
 		"changeset:version": "changeset version && pnpm fmt",
 		"changeset:publish": "changeset publish"
 	},
