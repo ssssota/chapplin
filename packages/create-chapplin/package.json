@@ -1,0 +1,27 @@
+{
+	"name": "create-chapplin",
+	"version": "0.0.0",
+	"type": "module",
+	"bin": {
+		"create-chapplin": "dist/index.mjs"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"check": "tsc --noEmit"
+	},
+	"files": [
+		"dist",
+		"templates"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ssssota/chapplin.git"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@clack/prompts": "1.0.0-alpha.6",
+		"@types/node": "catalog:",
+		"tsdown": "^0.16.6",
+		"typescript": "catalog:"
+	}
+}
