@@ -3,11 +3,12 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "chapplin src/index.ts"
+		"build": "vite build"
 	},
 	"devDependencies": {
 		"@hono/node-server": "^1.19.6",
-		"chapplin": "workspace:*"
+		"chapplin": "workspace:*",
+		"vite": "^7.2.4"
 	},
 	"dependencies": {
 		"@hono/mcp": "catalog:",

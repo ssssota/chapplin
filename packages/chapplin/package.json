@@ -7,9 +7,6 @@
 		"check": "tsc --noEmit",
 		"prepare": "pnpm build"
 	},
-	"bin": {
-		"chapplin": "./dist/cli.js"
-	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -21,6 +18,10 @@
 			"hono": "./dist/tool-hono.js",
 			"browser": "./dist/tool-react.js",
 			"default": "./dist/tool.js"
+		},
+		"./vite": {
+			"types": "./dist/vite/index.d.ts",
+			"default": "./dist/vite/index.js"
 		}
 	},
 	"files": [
@@ -33,11 +34,11 @@
 	"license": "MIT",
 	"peerDependencies": {
 		"@modelcontextprotocol/sdk": ">=1",
-		"zod": "^3",
 		"hono": ">=4",
+		"preact": ">=10",
 		"react": ">=18",
 		"react-dom": ">=18",
-		"preact": ">=10"
+		"zod": "^3"
 	},
 	"peerDependenciesMeta": {
 		"hono": {
@@ -63,6 +64,8 @@
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"typescript": "catalog:",
+		"vite": "^7.2.4",
+		"vite-plugin-singlefile": "^2.3.0",
 		"zod": "catalog:"
 	},
 	"dependencies": {
