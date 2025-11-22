@@ -1,12 +1,10 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"module": "nodenext",
+		"module": "esnext",
+		"moduleResolution": "bundler",
 		"jsx": "react-jsx",
 		"jsxImportSource": "preact",
-		"skipLibCheck": true,
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"declaration": true
+		"skipLibCheck": true
 	}
 }
