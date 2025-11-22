@@ -44,7 +44,7 @@ export function chapplinBuild(opts: Options): Plugin {
 				...config,
 				build: {
 					...config.build,
-					rollupOptions: { input: "./src/index.ts" },
+					rollupOptions: { input: opts.entry ?? "./src/index.ts" },
 					ssr: true,
 					dynamicImportVarsOptions: {
 						exclude: "**",
@@ -92,28 +92,21 @@ export function chapplinBuild(opts: Options): Plugin {
 				}),
 			];
 
-			await Promise.all(
-				Array.from(toolFiles).map((file) =>
-					this.fs
-						.readFile(file, { encoding: "utf8" })
-						.then((code) =>
-							bundleClient({
-								target,
-								file,
-								code,
-								jsxImportSource,
-								plugins,
-							}),
-						)
-						.then(([name, js]) =>
-							this.emitFile({
-								type: "prebuilt-chunk",
-								code: js,
-								fileName: `widgets/${name}.js`,
-							}),
-						),
-				),
-			);
+			for (const file of toolFiles) {
+				const code = await this.fs.readFile(file, { encoding: "utf8" });
+				const [name, js] = await bundleClient({
+					target,
+					file,
+					code,
+					jsxImportSource,
+					plugins,
+				});
+				this.emitFile({
+					type: "prebuilt-chunk",
+					code: js,
+					fileName: `widgets/${name}.js`,
+				});
+			}
 		},
 	} satisfies Plugin;
 	return plugin;
