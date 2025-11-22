@@ -1,15 +1,15 @@
 import type { Plugin } from "vite";
 import { transformWithEsbuild } from "vite";
+import type { Target } from "../types.js";
 
-type Options = {
+export function entryPlugin(opts: {
 	entry: string;
 	jsxImportSource: string;
-};
-export function clientPlugin(opts: Options): Plugin {
+}): Plugin {
 	const id = "virtual:chapplin";
 	const resolvedId = `\0${id}`;
 	return {
-		name: "chapplin:client",
+		name: "chapplin:client-entry",
 		resolveId: {
 			filter: { id: new RegExp(`^${id}$`) },
 			handler(source, _importer, _options) {
@@ -31,6 +31,30 @@ export function clientPlugin(opts: Options): Plugin {
 					loader: "tsx",
 					jsxImportSource: opts.jsxImportSource,
 				});
+			},
+		},
+	};
+}
+
+export function toolPlugin(opts: { target: Target }): Plugin {
+	return {
+		name: "chapplin:client-tool",
+		resolveId: {
+			order: "pre",
+			filter: { id: /^chapplin\/tool$/ },
+			handler(source, importer, options) {
+				console.log({
+					source,
+					importer,
+					options,
+				});
+				if (source === "chapplin/tool") {
+					return this.resolve(
+						`chapplin/tool-${opts.target}`,
+						importer,
+						options,
+					);
+				}
 			},
 		},
 	};

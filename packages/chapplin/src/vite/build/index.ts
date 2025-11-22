@@ -6,32 +6,22 @@ import {
 	type ResolvedConfig,
 } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { clientPlugin } from "./client.js";
-import type { Options, Target } from "./types.js";
+import type { Options, Target } from "../types.js";
+import { entryPlugin, toolPlugin } from "./client.js";
 
 const builtinPluginNames = new Set(["commonjs", "alias"]);
 
-const baseConditionNames = ["import", "browser", "default"];
 const targets = {
 	react: {
-		name: "React",
 		jsxImportSource: "react",
-		conditionNames: ["react", ...baseConditionNames],
 	},
 	preact: {
-		name: "Preact",
 		jsxImportSource: "preact",
-		conditionNames: ["preact", ...baseConditionNames],
 	},
 	hono: {
-		name: "Hono",
 		jsxImportSource: "hono/jsx",
-		conditionNames: ["hono", ...baseConditionNames],
 	},
-} as const satisfies Record<
-	Target,
-	{ name: string; jsxImportSource: string; conditionNames: string[] }
->;
+} as const satisfies Record<Target, { jsxImportSource: string }>;
 
 export function chapplinBuild(opts: Options): Plugin {
 	const toolFiles = new Set<string>();
@@ -83,6 +73,7 @@ export function chapplinBuild(opts: Options): Plugin {
 				opts.target || resolveTargetFromJsxImportSource(jsxImportSource);
 
 			const plugins = [
+				toolPlugin({ target }),
 				viteSingleFile(),
 				...resolvedConfig.plugins.filter((p) => {
 					if (p.name === "chapplin:build") return false;
@@ -160,12 +151,11 @@ async function bundleClient(context: Context): Promise<[string, string]> {
 		appType: "spa",
 		plugins: [
 			...context.plugins,
-			clientPlugin({
+			entryPlugin({
 				entry: context.file,
 				jsxImportSource: context.jsxImportSource,
 			}),
 		],
-		resolve: { conditions: targets[context.target].conditionNames },
 		build: { write: false, ssr: false },
 	});
 	if (Array.isArray(result)) {

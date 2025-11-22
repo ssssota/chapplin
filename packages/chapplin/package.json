@@ -14,11 +14,11 @@
 		},
 		"./tool": {
 			"types": "./dist/tool.d.ts",
-			"preact": "./dist/tool-preact.js",
-			"hono": "./dist/tool-hono.js",
-			"browser": "./dist/tool-react.js",
 			"default": "./dist/tool.js"
 		},
+		"./tool-react": "./dist/tool-react.js",
+		"./tool-preact": "./dist/tool-preact.js",
+		"./tool-hono": "./dist/tool-hono.js",
 		"./vite": {
 			"types": "./dist/vite/index.d.ts",
 			"default": "./dist/vite/index.js"
