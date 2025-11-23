@@ -7,7 +7,7 @@ import {
 } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import type { Options, Target } from "../types.js";
-import { entryPlugin, toolPlugin } from "./client.js";
+import { entryPlugin, minifySupportPlugin, toolPlugin } from "./client.js";
 
 const builtinPluginNames = new Set(["commonjs", "alias"]);
 
@@ -73,6 +73,7 @@ export function chapplinBuild(opts: Options): Plugin {
 				opts.target || resolveTargetFromJsxImportSource(jsxImportSource);
 
 			const plugins = [
+				minifySupportPlugin(),
 				toolPlugin({ target }),
 				viteSingleFile(),
 				...resolvedConfig.plugins.filter((p) => {

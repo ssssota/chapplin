@@ -12,8 +12,9 @@ export function defineTool(
 	_name: unknown,
 	_config: unknown,
 	_cb: unknown,
-	widget: Widget,
+	widget?: Widget,
 ): void {
+	if (!widget) return;
 	const container = document.getElementById("app");
 	if (container) render(jsx(App as Component, { app: widget.app }), container);
 }

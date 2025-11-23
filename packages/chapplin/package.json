@@ -38,6 +38,7 @@
 		"preact": ">=10",
 		"react": ">=18",
 		"react-dom": ">=18",
+		"vite": ">=6",
 		"zod": "^3"
 	},
 	"peerDependenciesMeta": {
@@ -65,10 +66,13 @@
 		"react-dom": "catalog:",
 		"typescript": "catalog:",
 		"vite": "^7.2.4",
-		"vite-plugin-singlefile": "^2.3.0",
 		"zod": "catalog:"
 	},
 	"dependencies": {
-		"rolldown": "catalog:"
+		"@babel/parser": "catalog:",
+		"@babel/traverse": "^7.28.5",
+		"magic-string": "catalog:",
+		"rolldown": "catalog:",
+		"vite-plugin-singlefile": "^2.3.0"
 	}
 }
