@@ -1,9 +1,9 @@
-import { parse } from "@babel/parser";
-// @ts-expect-error
-import babel_traverse from "@babel/traverse";
+import type { Node } from "estree";
 import MagicString from "magic-string";
+import { parse } from "oxc-parser";
 import type { Plugin } from "vite";
 import { transformWithEsbuild } from "vite";
+import { walk } from "zimmerframe";
 import type { Target } from "../types.js";
 
 const id = "virtual:chapplin";
@@ -69,40 +69,26 @@ export function minifySupportPlugin(): Plugin {
 			// Run after esbuild transform (TSX -> Pure ESM)
 			order: "post",
 			filter: { id: resolvedIdRegex },
-			handler(code, _id, _options) {
+			async handler(code, _id, _options) {
 				// Replace `defineTool(_, _, _, widget)` -> `defineTool(0, 0, 0, widget)`
-				const parsed = parse(code, { sourceType: "module" });
+				const parsed = await parse(_id, code, {
+					sourceType: "module",
+					range: true,
+				});
 				const m = new MagicString(code);
 
-				let localName: string | null = null;
-				babel_traverse.default(parsed, {
-					// @ts-expect-error
-					ImportDeclaration(path) {
-						const source = path.node.source.value;
-						if (source === "chapplin/tool" || source === "chapplin") {
-							const specifiers = path.node.specifiers;
-							for (const specifier of specifiers) {
-								if (
-									specifier.type === "ImportSpecifier" &&
-									specifier.imported.type === "Identifier" &&
-									specifier.imported.name === "defineTool"
-								) {
-									localName = specifier.local.name;
-								}
-							}
-						}
-					},
-					// @ts-expect-error
+				const state = {};
+				walk(parsed.program as Node, state, {
 					CallExpression(path) {
 						if (
-							localName !== null &&
-							path.node.callee.type === "Identifier" &&
-							path.node.callee.name === localName
+							path.callee.type === "Identifier" &&
+							path.callee.name === "defineTool"
 						) {
-							const args = path.node.arguments;
+							const args = path.arguments;
 							const [first, _, third] = args;
-							if (first === undefined || third === undefined) return;
-							m.overwrite(first.start, third.end, "0, 0, 0");
+							if (first?.range === undefined || third?.range === undefined)
+								return;
+							m.overwrite(first.range[0], third.range[1], "0, 0, 0");
 						}
 					},
 				});
