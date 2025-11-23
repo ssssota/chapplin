@@ -3,13 +3,17 @@
 chapplin is a ChatGPT Apps framework.
 This allow developers to create MCP servers for [OpenAI Apps SDK](https://developers.openai.com/apps-sdk) with type-safe JSX.
 
+* Type-safe tools
+* JSX-based app rendering
+* Framework agnostic
+
 ## Usage
 
 ```sh
 npm create chapplin@latest
 ```
 
-## Example Tool with App
+## Example Todo tool
 
 ```tsx
 import { defineTool } from "chapplin/tool";
