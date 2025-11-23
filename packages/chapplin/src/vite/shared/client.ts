@@ -36,14 +36,12 @@ export function toolResolverPlugin(opts?: {
 			async handler(source, importer, options) {
 				if (source === "chapplin/tool") {
 					if (!target) {
-						console.log("Resolving target");
 						const resolved = await resolveTargetAndJsxImportSource(
 							resolvedConfig,
 							this.fs,
 							opts,
 						);
 						target = resolved.target;
-						console.log("Resolved target", target);
 					}
 					return this.resolve(
 						`chapplin/tool-${target satisfies Target}`,
