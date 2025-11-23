@@ -3,9 +3,9 @@ packages:
   - examples/*
 
 catalog:
-  '@babel/parser': ^7.28.5
   '@hono/mcp': ^0.1.5
   '@modelcontextprotocol/sdk': ^1.22.0
+  'oxc-parser': ^0.98.0
   '@types/node': ^24.10.1
   '@types/react': ^19.2.6
   '@types/react-dom': ^19.2.3
@@ -16,4 +16,6 @@ catalog:
   react-dom: ^19.2.0
   rolldown: ^1.0.0-beta.51
   typescript: ^5.9.3
+  zimmerframe: ^1.1.4
+  vite: ^7.2.4
   zod: ^3.25.76
