@@ -1,0 +1,26 @@
+{
+	"name": "todo-app",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"start": "node ./dist/index.js"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.5",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "^5.1.1",
+		"chapplin": "workspace:*",
+		"vite": "catalog:"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "catalog:",
+		"@types/node": "catalog:",
+		"express": "^5.1.0",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"typescript": "catalog:",
+		"zod": "catalog:"
+	}
+}
