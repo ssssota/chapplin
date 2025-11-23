@@ -64,6 +64,7 @@
 		"preact": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"rolldown": "catalog:",
 		"typescript": "catalog:",
 		"vite": "^7.2.4",
 		"zod": "catalog:"
@@ -72,7 +73,6 @@
 		"@babel/parser": "catalog:",
 		"@babel/traverse": "^7.28.5",
 		"magic-string": "catalog:",
-		"rolldown": "catalog:",
 		"vite-plugin-singlefile": "^2.3.0"
 	}
 }
