@@ -1,19 +1,20 @@
 import type { Plugin } from "vite";
-import { minifySupportPlugin, toolResolverPlugin } from "../shared/client.js";
+import {
+	id,
+	idRegex,
+	minifySupportPlugin,
+	resolvedId,
+	resolvedIdRegex,
+	toolResolverPlugin,
+} from "../shared/client.js";
 import type { Options } from "../types.js";
 
 const toolsDir = "src/tools";
 
 export function chapplinDev(opts: Options): Plugin[] {
-	const id = "virtual:chapplin";
-	const resolveId = `\0${id}`;
 	return [
 		minifySupportPlugin(),
-		toolResolverPlugin({
-			target: opts.target,
-			tsconfigPath: opts.tsconfigPath,
-			// apply: "serve",
-		}),
+		toolResolverPlugin(opts),
 		{
 			name: "chapplin:dev",
 			apply: "serve",
@@ -33,16 +34,16 @@ export function chapplinDev(opts: Options): Plugin[] {
 			},
 			resolveId: {
 				order: "pre",
-				filter: { id: new RegExp(`^${id}$`) },
+				filter: { id: idRegex },
 				async handler(source, _importer, _options) {
-					if (source === id) return resolveId;
+					if (source === id) return resolvedId;
 				},
 			},
 			load: {
 				order: "pre",
-				filter: { id: new RegExp(`^${resolveId}$`) },
+				filter: { id: resolvedIdRegex },
 				async handler(id, _options) {
-					if (id !== resolveId) return;
+					if (id !== resolvedId) return;
 					const toolFiles = await this.fs.readdir(toolsDir);
 					return `
 const container = document.getElementById('app');

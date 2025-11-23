@@ -11,9 +11,9 @@ import {
 import { walk } from "zimmerframe";
 import type { Options, Target } from "../types.js";
 
-export const id = "virtual:chapplin";
+export const id = "/__virtual-chapplin";
 export const idRegex = new RegExp(`^${id}$`);
-export const resolvedId = `\0${id}`;
+export const resolvedId = `\0__virtual-chapplin`;
 export const resolvedIdRegex = new RegExp(`^${resolvedId}$`);
 
 export function toolResolverPlugin(opts?: {
