@@ -2,7 +2,6 @@ import type { Plugin } from "vite";
 import {
 	id,
 	idRegex,
-	minifySupportPlugin,
 	resolvedId,
 	resolvedIdRegex,
 	toolResolverPlugin,
@@ -13,7 +12,6 @@ const toolsDir = "src/tools";
 
 export function chapplinDev(opts: Options): Plugin[] {
 	return [
-		minifySupportPlugin(),
 		toolResolverPlugin(opts),
 		{
 			name: "chapplin:dev",

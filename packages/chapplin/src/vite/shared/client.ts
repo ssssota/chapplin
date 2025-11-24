@@ -1,14 +1,6 @@
-import type { Node } from "estree";
-import MagicString from "magic-string";
-import { parse } from "oxc-parser";
 import type { PluginContext } from "rolldown";
-import {
-	build,
-	type Plugin,
-	type PluginOption,
-	type ResolvedConfig,
-} from "vite";
-import { walk } from "zimmerframe";
+import type { Plugin, PluginOption, ResolvedConfig } from "vite";
+import { build } from "vite";
 import type { Options, Target } from "../types.js";
 
 export const id = "/__virtual-chapplin";
@@ -36,12 +28,7 @@ export function toolResolverPlugin(opts?: {
 			async handler(source, importer, options) {
 				if (source === "chapplin/tool") {
 					if (!target) {
-						const resolved = await resolveTargetAndJsxImportSource(
-							resolvedConfig,
-							this.fs,
-							opts,
-						);
-						target = resolved.target;
+						target = await resolveTarget(resolvedConfig, this.fs, opts);
 					}
 					return this.resolve(
 						`chapplin/tool-${target satisfies Target}`,
@@ -49,43 +36,6 @@ export function toolResolverPlugin(opts?: {
 						options,
 					);
 				}
-			},
-		},
-	};
-}
-
-export function minifySupportPlugin(): Plugin {
-	return {
-		name: "chapplin:client-minify-support",
-		transform: {
-			// Run after esbuild transform (TSX -> Pure ESM)
-			order: "post",
-			filter: { id: resolvedIdRegex },
-			async handler(code, _id, _options) {
-				// Replace `defineTool(_, _, _, widget)` -> `defineTool(0, 0, 0, widget)`
-				const parsed = await parse(_id, code, {
-					sourceType: "module",
-					range: true,
-				});
-				const m = new MagicString(code);
-
-				const state = {};
-				walk(parsed.program as Node, state, {
-					CallExpression(path) {
-						if (
-							path.callee.type === "Identifier" &&
-							path.callee.name === "defineTool"
-						) {
-							const args = path.arguments;
-							const [first, _, third] = args;
-							if (first?.range === undefined || third?.range === undefined)
-								return;
-							m.overwrite(first.range[0], third.range[1], "0, 0, 0");
-						}
-					},
-				});
-
-				return { code: m.toString(), map: m.generateMap() };
 			},
 		},
 	};
@@ -159,28 +109,23 @@ function resolveTargetFromJsxImportSource(jsxImportSource: string): Target {
 	return "react"; // Default to react
 }
 
-const targets = {
-	react: { jsxImportSource: "react" },
-	preact: { jsxImportSource: "preact" },
-	hono: { jsxImportSource: "hono/jsx" },
-} as const satisfies Record<Target, { jsxImportSource: string }>;
-
-export async function resolveTargetAndJsxImportSource(
+export async function resolveTarget(
 	resolvedConfig: ResolvedConfig,
 	fs: PluginContext["fs"],
 	opts?: Pick<Options, "target" | "tsconfigPath">,
-): Promise<{ target: Target; jsxImportSource: string }> {
-	const jsxImportSource = opts?.target
-		? targets[opts.target].jsxImportSource
-		: (getJsxImportSourceFromResolvedConfig(resolvedConfig) ??
-			(await getJsxImportSourceFromTsconfig(
-				fs,
-				opts?.tsconfigPath ?? "tsconfig.json",
-			)) ??
-			"react");
+): Promise<Target> {
+	if (opts?.target) return opts.target;
+
+	const jsxImportSource =
+		getJsxImportSourceFromResolvedConfig(resolvedConfig) ??
+		(await getJsxImportSourceFromTsconfig(
+			fs,
+			opts?.tsconfigPath ?? "tsconfig.json",
+		)) ??
+		"react";
 
 	const target =
 		opts?.target || resolveTargetFromJsxImportSource(jsxImportSource);
 
-	return { target, jsxImportSource };
+	return target;
 }
