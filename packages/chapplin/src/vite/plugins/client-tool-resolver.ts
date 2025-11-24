@@ -15,18 +15,16 @@ export function clientToolResolver(opts?: Options): Plugin {
 			order: "pre",
 			filter: { id: /^chapplin\/tool$/ },
 			async handler(source, importer, options) {
-				if (options.ssr) return;
+				if (options.ssr || source !== "chapplin/tool") return;
 
-				if (source === "chapplin/tool") {
-					if (!target) {
-						target = await resolveTarget(resolvedConfig, this.fs, opts);
-					}
-					return this.resolve(
-						`chapplin/tool-${target satisfies Target}`,
-						importer,
-						options,
-					);
+				if (!target) {
+					target = await resolveTarget(resolvedConfig, this.fs, opts);
 				}
+				return this.resolve(
+					`chapplin/tool-${target satisfies Target}`,
+					importer,
+					options,
+				);
 			},
 		},
 	};
