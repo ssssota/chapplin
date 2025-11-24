@@ -10,7 +10,7 @@ catalog:
   '@types/react-dom': 19.2.3
   hono: ^4.10.6
   magic-string: ^0.30.21
-  oxc-parser: ^0.98.0
+  oxc-parser: ^0.99.0
   preact: ^10.27.2
   react: 19.2.0
   react-dom: 19.2.0
