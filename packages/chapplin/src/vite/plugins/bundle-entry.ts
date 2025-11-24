@@ -8,11 +8,11 @@ import { id, idRegex } from "../shared/client.js";
 type Options = {
 	entry: string;
 };
-export function entryPlugin(opts: Options): Plugin {
+export function bundleEntry(opts: Options): Plugin {
 	let resolvedId: string | undefined;
 
 	return {
-		name: "chapplin:client-entry",
+		name: "chapplin:bundle-entry",
 		resolveId: {
 			filter: { id: idRegex },
 			async handler(source, _importer, _options) {

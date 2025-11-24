@@ -1,16 +1,13 @@
 import type { Plugin, ResolvedConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import {
-	bundleClient,
-	resolveTarget,
-	toolResolverPlugin,
-} from "../shared/client.js";
+import { bundleClient } from "../shared/client.js";
 import type { Options } from "../types.js";
-import { entryPlugin } from "./client.js";
+import { bundleEntry } from "./bundle-entry.js";
+import { clientToolResolver } from "./client-tool-resolver.js";
 
 const builtinPluginNames = new Set(["commonjs", "alias"]);
 
-export function chapplinBuild(opts: Options): Plugin {
+export function build(opts: Options): Plugin {
 	const toolFiles = new Set<string>();
 	let resolvedConfig: ResolvedConfig;
 	const plugin = {
@@ -23,9 +20,12 @@ export function chapplinBuild(opts: Options): Plugin {
 					...config.build,
 					rollupOptions: { input: opts.entry ?? "./src/index.ts" },
 					ssr: true,
-					dynamicImportVarsOptions: {
-						exclude: "**",
-					},
+					dynamicImportVarsOptions: { exclude: "**" },
+				},
+				ssr: {
+					external: true,
+					...config.ssr,
+					noExternal: [/^chapplin(\/.+)?$/],
 				},
 			};
 		},
@@ -39,6 +39,7 @@ export function chapplinBuild(opts: Options): Plugin {
 			order: "pre",
 			filter: { id: /^chapplin(\/tool)?$/ },
 			handler(_source, importer, _options) {
+				// List up all tool files imported in the build
 				if (importer?.match(/\/src\/tools\//)) {
 					toolFiles.add(importer);
 				}
@@ -47,10 +48,8 @@ export function chapplinBuild(opts: Options): Plugin {
 		async buildEnd(_error) {
 			if (toolFiles.size === 0) return;
 
-			const target = await resolveTarget(resolvedConfig, this.fs, opts);
-
 			const plugins = [
-				toolResolverPlugin({ target }),
+				clientToolResolver(opts),
 				viteSingleFile(),
 				...resolvedConfig.plugins.filter((p) => {
 					if (p.name.startsWith("chapplin:")) return false;
@@ -65,7 +64,7 @@ export function chapplinBuild(opts: Options): Plugin {
 				const [name, js] = await bundleClient({
 					file,
 					code,
-					plugins: [...plugins, entryPlugin({ entry: file })],
+					plugins: [...plugins, bundleEntry({ entry: file })],
 				});
 				this.emitFile({
 					type: "prebuilt-chunk",

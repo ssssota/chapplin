@@ -1,5 +1,5 @@
 import type { PluginContext } from "rolldown";
-import type { Plugin, PluginOption, ResolvedConfig } from "vite";
+import type { PluginOption, ResolvedConfig } from "vite";
 import { build } from "vite";
 import type { Options, Target } from "../types.js";
 
@@ -7,39 +7,6 @@ export const id = "/__virtual-chapplin";
 export const idRegex = new RegExp(`^${id}$`);
 export const resolvedId = `\0__virtual-chapplin`;
 export const resolvedIdRegex = new RegExp(`^${resolvedId}$`);
-
-export function toolResolverPlugin(opts?: {
-	target?: Target;
-	tsconfigPath?: string;
-	apply?: Plugin["apply"];
-}): Plugin {
-	let resolvedConfig: ResolvedConfig;
-	let target = opts?.target;
-
-	return {
-		name: "chapplin:client-tool",
-		apply: opts?.apply,
-		configResolved(config) {
-			resolvedConfig = config;
-		},
-		resolveId: {
-			order: "pre",
-			filter: { id: /^chapplin\/tool$/ },
-			async handler(source, importer, options) {
-				if (source === "chapplin/tool") {
-					if (!target) {
-						target = await resolveTarget(resolvedConfig, this.fs, opts);
-					}
-					return this.resolve(
-						`chapplin/tool-${target satisfies Target}`,
-						importer,
-						options,
-					);
-				}
-			},
-		},
-	};
-}
 
 type Context = {
 	file: string;
