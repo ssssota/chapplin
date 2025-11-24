@@ -124,8 +124,5 @@ export async function resolveTarget(
 		)) ??
 		"react";
 
-	const target =
-		opts?.target || resolveTargetFromJsxImportSource(jsxImportSource);
-
-	return target;
+	return resolveTargetFromJsxImportSource(jsxImportSource);
 }
