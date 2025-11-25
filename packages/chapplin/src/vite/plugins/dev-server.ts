@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { id, idRegex, resolvedId, resolvedIdRegex } from "../shared/client.js";
+import { id, idRegex, resolvedId, resolvedIdRegex } from "../id.js";
 
 const toolsDir = "src/tools";
 

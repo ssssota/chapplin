@@ -3,7 +3,7 @@ import MagicString from "magic-string";
 import { parse } from "oxc-parser";
 import type { Plugin } from "vite";
 import { walk } from "zimmerframe";
-import { id, idRegex } from "../shared/client.js";
+import { id, idRegex } from "../id.js";
 
 type Options = {
 	entry: string;
