@@ -1,6 +1,6 @@
-import type { Plugin, ResolvedConfig } from "vite";
+import type { Plugin, PluginOption, ResolvedConfig } from "vite";
+import { build as viteBuild } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { bundleClient } from "../shared/client.js";
 import type { Options } from "../types.js";
 import { bundleEntry } from "./bundle-entry.js";
 import { clientToolResolver } from "./client-tool-resolver.js";
@@ -75,4 +75,34 @@ export function build(opts: Options): Plugin {
 		},
 	} satisfies Plugin;
 	return plugin;
+}
+
+type Context = {
+	file: string;
+	code: string;
+	plugins: PluginOption[];
+};
+async function bundleClient(context: Context): Promise<[string, string]> {
+	const name = context.code.match(
+		/defineTool[ \t\r\n]*\([ \t\r\n]*(['"`])(.+?)\1/,
+	)?.[2];
+	if (!name) {
+		throw new Error(`Failed to extract tool name from ${context.file}`);
+	}
+	const result = await viteBuild({
+		configFile: false,
+		appType: "spa",
+		plugins: context.plugins,
+		build: { write: false, ssr: false },
+	});
+	if (Array.isArray(result)) {
+		throw new Error("Multiple build results are not supported yet.");
+	}
+	if (!("output" in result)) {
+		throw new Error("No output found in build result.");
+	}
+	const html = result.output.find((item) => item.type === "asset");
+	if (!html) throw new Error("No HTML asset found in build output.");
+	const js = `export default ${JSON.stringify(html.source.toString())};`;
+	return [name, js];
 }
