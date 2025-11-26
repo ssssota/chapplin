@@ -17,5 +17,6 @@ catalog:
   rolldown: ^1.0.0-beta.51
   typescript: ^5.9.3
   vite: ^7.2.4
+  vitest: ^2.1.5
   zimmerframe: ^1.1.4
   zod: ^3.25.76

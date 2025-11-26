@@ -5,7 +5,8 @@
 	"scripts": {
 		"build": "tsc",
 		"check": "tsc --noEmit",
-		"prepare": "pnpm build"
+		"prepare": "pnpm build",
+		"test": "vitest"
 	},
 	"exports": {
 		".": {
@@ -68,6 +69,7 @@
 		"rolldown": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
+		"vitest": "catalog:",
 		"zod": "catalog:"
 	},
 	"dependencies": {
