@@ -6,15 +6,29 @@ import treeKill from "tree-kill";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const setupTimeout = 1 * 60 * 1000; // 1 minute
-const projectPath = path.join(process.cwd(), "dist");
+const projectPath = path.join(process.cwd(), "fixture");
 const stdio = "inherit" as const;
 beforeAll(() => {
 	fs.rmSync(projectPath, { recursive: true, force: true });
 	console.log("Creating Chapplin project in", projectPath);
-	execSync("npx create-chapplin dist --hono", { stdio });
+	execSync("npx create-chapplin fixture --hono", { stdio });
+
+	console.log("Use chapplin version from local packages");
+	const pkgJsonPath = path.join(projectPath, "package.json");
+	const source = fs.readFileSync(pkgJsonPath, "utf8");
+	const pkg = JSON.parse(source);
+	pkg.devDependencies.chapplin = `workspace:*`;
+	fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2), "utf8");
+
 	console.log("Installing dependencies in", projectPath);
-	execSync("npm install", { cwd: projectPath, stdio });
+	execSync("pnpm install", { cwd: projectPath, stdio });
 }, setupTimeout);
+
+afterAll(() => {
+	console.log("Cleaning up", projectPath);
+	fs.rmSync(projectPath, { recursive: true, force: true });
+	execSync("pnpm install", { stdio });
+});
 
 describe("npm run dev", () => {
 	let devProcess: ReturnType<typeof spawn>;
@@ -43,7 +57,13 @@ describe("npm run dev", () => {
 	])("should respond to %s", async (url) => {
 		const response = await fetch(`http://localhost:5173${url}`);
 		const text = await response.text();
-		const hashReplaced = text.replace(/\?v=[0-9a-f]{8}/g, "?v=HASH");
+		const hashReplaced = text
+			.replace(
+				/from "\/@fs\/.+?\/chapplin\/packages/g,
+				'from "/@fs/PATH/chapplin/packages',
+			)
+			.replace(/fileName: "[^"]+"/g, 'fileName: "FILE"')
+			.replace(/\?v=[0-9a-f]{8}/g, "?v=HASH");
 		expect(hashReplaced).toMatchSnapshot();
 	});
 });
