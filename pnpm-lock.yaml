@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@hono/mcp':
-      specifier: ^0.1.5
-      version: 0.1.5
+      specifier: ^0.2.0
+      version: 0.2.0
     '@modelcontextprotocol/sdk':
       specifier: ^1.22.0
       version: 1.22.0
@@ -21,6 +21,9 @@ catalogs:
     '@types/react-dom':
       specifier: 19.2.3
       version: 19.2.3
+    hono:
+      specifier: ^4.10.6
+      version: 4.10.7
     magic-string:
       specifier: ^0.30.21
       version: 0.30.21
@@ -113,7 +116,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.1.5(@modelcontextprotocol/sdk@1.22.0)(hono@4.10.7)
+        version: 0.2.0(@modelcontextprotocol/sdk@1.22.0)(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.22.0
@@ -584,11 +587,12 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@hono/mcp@0.1.5':
-    resolution: {integrity: sha512-q6Yurx9VUwVEpqnwVXtzIYaq4kgQgWWq9lYLM7NFS2W0sg1RzL+RdKh6jO4/dGyvBLKrahPd2v+NC6rr0XWBvQ==}
+  '@hono/mcp@0.2.0':
+    resolution: {integrity: sha512-kKZklY+yApZce6zzHzQPrEOhon4O7ANstUCDWstvGF3+B/Qn0j9mWUyps2XZhA/PzKoFGUBuAu1SwTFc7JRX9A==}
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.12.0
-      hono: '>=4.0.0'
+      '@modelcontextprotocol/sdk': ^1.17.3
+      hono: '*'
+      hono-rate-limiter: ^0.4.2
 
   '@hono/node-server@1.19.6':
     resolution: {integrity: sha512-Shz/KjlIeAhfiuE93NDKVdZ7HdBVLQAfdbaXEaoAVO3ic9ibRSLGIQGkcBbFyuLr+7/1D5ZCINM8B+6IvXeMtw==}
@@ -1357,6 +1361,11 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  hono-rate-limiter@0.4.2:
+    resolution: {integrity: sha512-AAtFqgADyrmbDijcRTT/HJfwqfvhalya2Zo+MgfdrMPas3zSMD8SU03cv+ZsYwRU1swv7zgVt0shwN059yzhjw==}
+    peerDependencies:
+      hono: ^4.1.1
 
   hono@4.10.7:
     resolution: {integrity: sha512-icXIITfw/07Q88nLSkB9aiUrd8rYzSweK681Kjo/TSggaGbOX4RRyxxm71v+3PC8C/j+4rlxGeoTRxQDkaJkUw==}
@@ -2380,10 +2389,12 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@hono/mcp@0.1.5(@modelcontextprotocol/sdk@1.22.0)(hono@4.10.7)':
+  '@hono/mcp@0.2.0(@modelcontextprotocol/sdk@1.22.0)(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.22.0
       hono: 4.10.7
+      hono-rate-limiter: 0.4.2(hono@4.10.7)
+      pkce-challenge: 5.0.0
 
   '@hono/node-server@1.19.6(hono@4.10.7)':
     dependencies:
@@ -3087,6 +3098,10 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  hono-rate-limiter@0.4.2(hono@4.10.7):
+    dependencies:
+      hono: 4.10.7
 
   hono@4.10.7: {}
 
