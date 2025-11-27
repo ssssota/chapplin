@@ -65,7 +65,6 @@
 		"preact": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
-		"rolldown": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"zod": "catalog:"

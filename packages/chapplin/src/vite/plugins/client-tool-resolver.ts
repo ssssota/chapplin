@@ -1,6 +1,14 @@
-import type { PluginContext } from "rolldown";
 import type { Plugin, ResolvedConfig } from "vite";
 import type { Options, Target } from "../types.js";
+
+type PluginContext = NonNullable<
+	Plugin["load"]
+> extends // biome-ignore lint/suspicious/noExplicitAny: for type inference
+	| ((this: infer U, ...args: any[]) => any)
+	// biome-ignore lint/suspicious/noExplicitAny: for type inference
+	| { handler: (this: any, ...args: any[]) => any }
+	? U
+	: never;
 
 export function clientToolResolver(opts?: Options): Plugin {
 	let resolvedConfig: ResolvedConfig;
