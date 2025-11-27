@@ -33,13 +33,13 @@
 	},
 	"license": "MIT",
 	"peerDependencies": {
-		"@modelcontextprotocol/sdk": ">=1",
+		"@modelcontextprotocol/sdk": ">=1.23",
 		"hono": ">=4",
 		"preact": ">=10",
 		"react": ">=18",
 		"react-dom": ">=18",
 		"vite": ">=6",
-		"zod": "^3"
+		"zod": ">=4"
 	},
 	"peerDependenciesMeta": {
 		"hono": {

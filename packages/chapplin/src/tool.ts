@@ -1,4 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type {
+	AnySchema,
+	SchemaOutput,
+	ShapeOutput,
+	ZodRawShapeCompat,
+} from "@modelcontextprotocol/sdk/server/zod-compat.js";
 import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import type {
 	CallToolResult,
@@ -6,7 +12,6 @@ import type {
 	ServerRequest,
 	ToolAnnotations,
 } from "@modelcontextprotocol/sdk/types.js";
-import type z from "zod";
 import type {
 	ClientProvidedMeta,
 	ComponentResourceMeta,
@@ -78,12 +83,12 @@ export function defineTool<
 
 type PromiseOr<T> = T | Promise<T>;
 /** Zod schema */
-type Schema = z.ZodRawShape | z.ZodType<Record<string, unknown>>;
+type Schema = ZodRawShapeCompat | AnySchema;
 /** Infer type from Zod schema */
-type Shape<T extends Schema | undefined> = T extends z.ZodRawShape
-	? z.objectOutputType<T, z.ZodTypeAny>
-	: T extends z.ZodType<infer U>
-		? U
+type Shape<T extends Schema | undefined> = T extends ZodRawShapeCompat
+	? ShapeOutput<T>
+	: T extends AnySchema
+		? SchemaOutput<T>
 		: Record<string, unknown>;
 
 type ToolCallbackResult<
@@ -102,13 +107,16 @@ type ToolCallback<
 	InputArgs extends Schema,
 	OutputArgs extends Schema,
 	OutputMeta extends Schema | undefined,
-> = InputArgs extends z.ZodRawShape
+> = InputArgs extends ZodRawShapeCompat
 	? (
-			args: z.objectOutputType<InputArgs, z.ZodTypeAny>,
+			args: ShapeOutput<InputArgs>,
 			extra: Extra,
 		) => ToolCallbackResult<OutputArgs, OutputMeta>
-	: InputArgs extends z.ZodType<infer T>
-		? (args: T, extra: Extra) => ToolCallbackResult<OutputArgs, OutputMeta>
+	: InputArgs extends AnySchema
+		? (
+				args: SchemaOutput<InputArgs>,
+				extra: Extra,
+			) => ToolCallbackResult<OutputArgs, OutputMeta>
 		: never;
 
 declare const __tool_phantom__: unique symbol;
