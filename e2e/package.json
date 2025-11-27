@@ -1,0 +1,12 @@
+{
+	"type": "module",
+	"scripts": {
+		"test": "vitest --run"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"create-chapplin": "workspace:*",
+		"tree-kill": "^1.2.2",
+		"vitest": "^4.0.14"
+	}
+}

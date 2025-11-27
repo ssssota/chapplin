@@ -7,7 +7,7 @@ This allow developers to create MCP servers for [OpenAI Apps SDK](https://develo
 * JSX-based app rendering
 * Framework agnostic
   * Hono, Express, Fastify, etc. for server
-	* React, Preact, Hono for UI
+  * React, Preact, Hono for UI
 
 ## Usage
 
