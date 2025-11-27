@@ -8,7 +8,7 @@
 		"start": "node ./dist/index.js"
 	},
 	"devDependencies": {
-		"@hono/node-server": "^1.19.6",
+		"@hono/node-server": "^1",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"@vitejs/plugin-react": "^5",
@@ -17,12 +17,12 @@
 	},
 	"dependencies": {
 		"@hono/mcp": "^0.2.0",
-		"@modelcontextprotocol/sdk": "^1.22",
+		"@modelcontextprotocol/sdk": "^1.23",
 		"@types/node": "^24",
 		"hono": "^4",
 		"react": "^19",
 		"react-dom": "^19",
 		"typescript": "^5",
-		"zod": "^3"
+		"zod": "^4"
 	}
 }
