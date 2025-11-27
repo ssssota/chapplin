@@ -1,5 +1,11 @@
 # create-chapplin
 
+## 0.1.1
+
+### Patch Changes
+
+- [#28](https://github.com/ssssota/chapplin/pull/28) [`25261b0`](https://github.com/ssssota/chapplin/commit/25261b0ed90d9ceeb22e9ea6da6afe202f0d2de9) Thanks [@ssssota](https://github.com/ssssota)! - Update template dependencies
+
 ## 0.1.0
 
 ### Minor Changes
