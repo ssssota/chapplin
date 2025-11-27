@@ -1,5 +1,13 @@
 # chapplin
 
+## 0.1.1
+
+### Patch Changes
+
+- [#33](https://github.com/ssssota/chapplin/pull/33) [`0d25ce4`](https://github.com/ssssota/chapplin/commit/0d25ce41d850fdb13daeee603bf4f6b877b0535d) Thanks [@ssssota](https://github.com/ssssota)! - Remove rolldown
+
+- [#35](https://github.com/ssssota/chapplin/pull/35) [`d3ad97d`](https://github.com/ssssota/chapplin/commit/d3ad97d54583f11035391f2b936c0ed0a9191b15) Thanks [@ssssota](https://github.com/ssssota)! - Optimise jsx output
+
 ## 0.1.0
 
 ### Minor Changes
