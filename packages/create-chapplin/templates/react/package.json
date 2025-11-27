@@ -16,7 +16,7 @@
 		"vite": "^7"
 	},
 	"dependencies": {
-		"@hono/mcp": "^0.1.5",
+		"@hono/mcp": "^0.2.0",
 		"@modelcontextprotocol/sdk": "^1.22",
 		"@types/node": "^24",
 		"hono": "^4",
