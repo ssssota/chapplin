@@ -1,9 +1,7 @@
 import type { Plugin, ResolvedConfig } from "vite";
 import type { Options, Target } from "../types.js";
 
-type PluginContext = NonNullable<
-	Plugin["load"]
-> extends // biome-ignore lint/suspicious/noExplicitAny: for type inference
+type PluginContext = NonNullable<Plugin["load"]> extends // biome-ignore lint/suspicious/noExplicitAny: for type inference
 	| ((this: infer U, ...args: any[]) => any)
 	// biome-ignore lint/suspicious/noExplicitAny: for type inference
 	| { handler: (this: any, ...args: any[]) => any }
