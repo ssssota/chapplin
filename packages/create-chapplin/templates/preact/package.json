@@ -15,11 +15,11 @@
 	},
 	"dependencies": {
 		"@hono/mcp": "^0.2.0",
-		"@modelcontextprotocol/sdk": "^1.22",
+		"@modelcontextprotocol/sdk": "^1.23",
 		"@types/node": "^24",
 		"hono": "^4",
 		"preact": "^10",
 		"typescript": "^5",
-		"zod": "^3"
+		"zod": "^4"
 	}
 }
