@@ -92,6 +92,8 @@ async function bundleClient(context: Context): Promise<[string, string]> {
 	const result = await viteBuild({
 		configFile: false,
 		appType: "spa",
+		esbuild: { jsxDev: false },
+		mode: "production",
 		plugins: context.plugins,
 		build: { write: false, ssr: false },
 	});
