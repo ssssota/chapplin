@@ -21,13 +21,13 @@ beforeAll(() => {
 	fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2), "utf8");
 
 	console.log("Installing dependencies in", projectPath);
-	execSync("pnpm install", { cwd: projectPath, stdio });
+	execSync("pnpm install --no-frozen-lockfile", { cwd: projectPath, stdio });
 }, setupTimeout);
 
 afterAll(() => {
 	console.log("Cleaning up", projectPath);
 	fs.rmSync(projectPath, { recursive: true, force: true });
-	execSync("pnpm install", { stdio });
+	execSync("pnpm install --no-frozen-lockfile", { stdio });
 });
 
 describe("npm run dev", () => {
