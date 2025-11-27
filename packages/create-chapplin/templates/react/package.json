@@ -23,6 +23,6 @@
 		"react": "^19",
 		"react-dom": "^19",
 		"typescript": "^5",
-		"zod": "^3"
+		"zod": "^4.0.0"
 	}
 }
