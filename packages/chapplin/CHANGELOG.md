@@ -1,5 +1,11 @@
 # chapplin
 
+## 0.1.2
+
+### Patch Changes
+
+- [#37](https://github.com/ssssota/chapplin/pull/37) [`5387370`](https://github.com/ssssota/chapplin/commit/5387370f064a7299c519554d11aa9ede52ff4b37) Thanks [@ssssota](https://github.com/ssssota)! - Improve output meta type
+
 ## 0.1.1
 
 ### Patch Changes
