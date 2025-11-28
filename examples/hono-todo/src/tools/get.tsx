@@ -34,12 +34,16 @@ export default defineTool(
 			structuredContent: {
 				todos: todos,
 			},
+			_meta: {
+				timestamp: new Date().toISOString(),
+			},
 		};
 	},
 	{
-		app: ({ toolOutput }) => (
+		app: ({ toolOutput, toolResponseMetadata }) => (
 			<div>
 				<h1>GET Tool Example</h1>
+				<small>{toolResponseMetadata?.timestamp}</small>
 				<p>Status: {toolOutput?.todos.length} todos remaining.</p>
 				<ul>
 					{toolOutput?.todos.map((todo) => (
