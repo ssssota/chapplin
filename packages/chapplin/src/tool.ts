@@ -24,7 +24,7 @@ const mimeType = "text/html+skybridge";
 export function defineTool<
 	InputArgs extends Schema,
 	OutputArgs extends Schema,
-	OutputMeta extends Schema | undefined,
+	OutputMeta extends UnknownObject | undefined,
 	JSXElement,
 >(
 	name: string,
@@ -46,12 +46,12 @@ export function defineTool<
 			props: OpenAiGlobals<
 				Shape<InputArgs>,
 				Shape<OutputArgs>,
-				Shape<OutputMeta>
+				OutputMeta extends undefined ? UnknownObject : OutputMeta
 			>,
 		) => JSXElement;
 	},
-): Tool<Shape<InputArgs>, Shape<OutputArgs>, Shape<OutputMeta>> {
-	type TypedTool = Tool<Shape<InputArgs>, Shape<OutputArgs>, Shape<OutputMeta>>;
+): Tool<Shape<InputArgs>, Shape<OutputArgs>, OutputMeta> {
+	type TypedTool = Tool<Shape<InputArgs>, Shape<OutputArgs>, OutputMeta>;
 	if (typeof widget === "undefined") {
 		return ((server) => {
 			server.registerTool(name, config, cb);
@@ -84,6 +84,7 @@ export function defineTool<
 type PromiseOr<T> = T | Promise<T>;
 /** Zod schema */
 type Schema = ZodRawShapeCompat | AnySchema;
+type UnknownObject = Record<string, unknown>;
 /** Infer type from Zod schema */
 type Shape<T extends Schema | undefined> = T extends ZodRawShapeCompat
 	? ShapeOutput<T>
@@ -93,11 +94,11 @@ type Shape<T extends Schema | undefined> = T extends ZodRawShapeCompat
 
 type ToolCallbackResult<
 	OutputArgs extends Schema,
-	OutputMeta extends Schema | undefined,
+	OutputMeta extends UnknownObject | undefined,
 > = PromiseOr<
 	CallToolResult & {
 		structuredContent: Shape<OutputArgs>;
-		_meta?: Shape<OutputMeta> & Record<string, unknown>;
+		_meta?: OutputMeta & Record<string, unknown>;
 	}
 >;
 type Extra = RequestHandlerExtra<ServerRequest, ServerNotification> & {
@@ -106,7 +107,7 @@ type Extra = RequestHandlerExtra<ServerRequest, ServerNotification> & {
 type ToolCallback<
 	InputArgs extends Schema,
 	OutputArgs extends Schema,
-	OutputMeta extends Schema | undefined,
+	OutputMeta extends UnknownObject | undefined,
 > = InputArgs extends ZodRawShapeCompat
 	? (
 			args: ShapeOutput<InputArgs>,
