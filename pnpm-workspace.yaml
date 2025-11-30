@@ -3,6 +3,7 @@ packages:
   - examples/*
   - e2e
   - e2e/fixture
+  - website
 
 catalog:
   '@hono/mcp': ^0.2.0
