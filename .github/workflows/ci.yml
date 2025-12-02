@@ -19,6 +19,7 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm -r check
+      - run: pnpm -r build
 
   test:
     strategy:
