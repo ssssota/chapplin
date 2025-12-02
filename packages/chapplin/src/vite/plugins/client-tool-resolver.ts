@@ -28,7 +28,7 @@ export function clientToolResolver(opts?: Options): Plugin {
 					target = await resolveTarget(resolvedConfig, this.fs, opts);
 				}
 				return this.resolve(
-					`chapplin/tool-${target satisfies Target}`,
+					`chapplin/_internal/tool-${target satisfies Target}`,
 					importer,
 					options,
 				);
