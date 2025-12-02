@@ -1,0 +1,39 @@
+---
+title: Chapplin
+description: Build ChatGPT Apps with type-safe JSX and MCP servers
+template: splash
+hero:
+  tagline: A ChatGPT Apps framework for creating MCP servers with type-safe JSX
+  image:
+    file: /public/favicon.svg
+  actions:
+    - text: Get Started
+      link: /guides/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/ssssota/chapplin
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is Chapplin?
+
+Chapplin is a ChatGPT Apps framework that allows developers to create MCP servers for [OpenAI Apps SDK](https://developers.openai.com/apps-sdk) with type-safe JSX.
+
+<CardGrid>
+	<Card title="Type-Safe Tools" icon="approve-check">
+		Define tools with Zod schemas for full type safety across your application.
+	</Card>
+	<Card title="JSX-Based UI" icon="seti:html">
+		Build beautiful UI components using familiar JSX syntax for tool outputs.
+	</Card>
+	<Card title="Framework Agnostic" icon="puzzle">
+		Works with Hono, Express, Fastify, and more. Choose your preferred server framework.
+	</Card>
+	<Card title="Multiple UI Libraries" icon="rocket">
+		Support for React, Preact, and Hono JSX for rendering your components.
+	</Card>
+</CardGrid>
