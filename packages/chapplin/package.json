@@ -19,6 +19,7 @@
 		"./_internal/tool-react": "./dist/tool-react.js",
 		"./_internal/tool-preact": "./dist/tool-preact.js",
 		"./_internal/tool-hono": "./dist/tool-hono.js",
+		"./_internal/tool-solid": "./dist/tool-solid.js",
 		"./vite": {
 			"types": "./dist/vite/index.d.ts",
 			"default": "./dist/vite/index.js"
@@ -65,6 +66,7 @@
 		"preact": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"solid-js": "^1.9.10",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"zod": "catalog:"

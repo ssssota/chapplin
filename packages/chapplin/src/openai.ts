@@ -113,20 +113,20 @@ export type OpenAiGlobals<
 	ToolResponseMetadata extends UnknownObject = UnknownObject,
 	WidgetState extends UnknownObject = UnknownObject,
 > = {
-	theme: Theme;
-	userAgent: UserAgent;
-	locale: string;
+	readonly theme: Theme;
+	readonly userAgent: UserAgent;
+	readonly locale: string;
 
 	// layout
-	maxHeight: number;
-	displayMode: DisplayMode;
-	safeArea: SafeArea;
+	readonly maxHeight: number;
+	readonly displayMode: DisplayMode;
+	readonly safeArea: SafeArea;
 
 	// state
-	toolInput: ToolInput;
-	toolOutput: ToolOutput | null;
-	toolResponseMetadata: ToolResponseMetadata | null;
-	widgetState: WidgetState | null;
+	readonly toolInput: ToolInput;
+	readonly toolOutput: ToolOutput | null;
+	readonly toolResponseMetadata: ToolResponseMetadata | null;
+	readonly widgetState: WidgetState | null;
 };
 export type Theme = "light" | "dark";
 export type UserAgent = {
