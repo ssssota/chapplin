@@ -1,39 +1,31 @@
-# Starlight Starter Kit: Basics
+# Chapplin Documentation Website
+
+This is the official documentation website for Chapplin, built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build).
 
 [![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
-```
-npm create astro@latest -- --template starlight
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
 ## 🚀 Project Structure
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
 ```
-.
-├── public/
+website/
+├── public/              # Static assets (favicon, logo)
 ├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+│   ├── assets/         # Image assets
+│   └── content/
+│       └── docs/       # Documentation pages
+│           ├── index.mdx
+│           ├── guides/
+│           │   ├── getting-started.md
+│           │   └── frameworks.md
+│           └── reference/
+│               └── api.md
+├── astro.config.mjs    # Astro & Starlight configuration
+└── package.json
 ```
-
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
-
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
-
-Static assets, like favicons, can be placed in the `public/` directory.
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+All commands are run from the website directory:
 
 | Command                   | Action                                           |
 | :------------------------ | :----------------------------------------------- |
@@ -41,9 +33,21 @@ All commands are run from the root of the project, from a terminal:
 | `npm run dev`             | Starts local dev server at `localhost:4321`      |
 | `npm run build`           | Build your production site to `./dist/`          |
 | `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-## 👀 Want to learn more?
+## 📝 Documentation Structure
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+### Getting Started
+- **Introduction** (`index.mdx`) - Overview of Chapplin
+- **Quick Start** (`guides/getting-started.md`) - First application tutorial
+
+### Guides
+- **Framework Integration** (`guides/frameworks.md`) - Use with Hono, Express, React, etc.
+
+### Reference
+- **API Reference** (`reference/api.md`) - Complete API documentation
+
+## 📚 Learn More
+
+- [Starlight Documentation](https://starlight.astro.build/)
+- [Astro Documentation](https://docs.astro.build)
+- [Chapplin Repository](https://github.com/ssssota/chapplin)

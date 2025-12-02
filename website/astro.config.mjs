@@ -1,5 +1,4 @@
 // @ts-check
-
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 
@@ -8,7 +7,12 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: "Chapplin",
-			logo: { src: "./public/logo.svg", replacesTitle: true },
+			description: "Build ChatGPT Apps with type-safe JSX and MCP servers",
+			logo: {
+				light: "./public/logo.svg",
+				dark: "./public/logo-dark.svg",
+				replacesTitle: true,
+			},
 			social: [
 				{
 					icon: "github",
@@ -16,17 +20,23 @@ export default defineConfig({
 					href: "https://github.com/ssssota/chapplin",
 				},
 			],
+			editLink: {
+				baseUrl: "https://github.com/ssssota/chapplin/edit/main/website/",
+			},
 			sidebar: [
+				{
+					label: "Getting Started",
+					items: [{ label: "Quick Start", slug: "guides/getting-started" }],
+				},
 				{
 					label: "Guides",
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: "Example Guide", slug: "guides/example" },
+						{ label: "Framework Integration", slug: "guides/frameworks" },
 					],
 				},
 				{
 					label: "Reference",
-					autogenerate: { directory: "reference" },
+					items: [{ label: "API Reference", slug: "reference/api" }],
 				},
 			],
 		}),
