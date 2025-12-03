@@ -27,7 +27,10 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: "Getting Started",
-					items: [{ label: "Quick Start", slug: "guides/getting-started" }],
+					items: [
+						{ label: "Why Chapplin?", slug: "guides/why-chapplin" },
+						{ label: "Quick Start", slug: "guides/getting-started" },
+					],
 				},
 				{
 					label: "Guides",
