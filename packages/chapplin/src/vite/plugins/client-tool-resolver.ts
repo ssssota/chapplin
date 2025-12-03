@@ -69,6 +69,7 @@ async function getJsxImportSourceFromTsconfig(
 function resolveTargetFromJsxImportSource(jsxImportSource: string): Target {
 	if (jsxImportSource === "react") return "react";
 	if (jsxImportSource === "preact") return "preact";
+	if (jsxImportSource === "solid-js") return "solid";
 	if (jsxImportSource.startsWith("hono/jsx")) return "hono";
 	return "react"; // Default to react
 }
