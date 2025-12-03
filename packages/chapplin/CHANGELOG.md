@@ -1,5 +1,13 @@
 # chapplin
 
+## 0.2.0
+
+### Minor Changes
+
+- [#50](https://github.com/ssssota/chapplin/pull/50) [`38c76c3`](https://github.com/ssssota/chapplin/commit/38c76c3dc6c1600ad28faf761a58ce2e8c8e69d1) Thanks [@ssssota](https://github.com/ssssota)! - Support SolidJS
+
+- [#46](https://github.com/ssssota/chapplin/pull/46) [`7effb16`](https://github.com/ssssota/chapplin/commit/7effb16c1aa71a30d36f02ead3a18e417748e7df) Thanks [@ssssota](https://github.com/ssssota)! - Make tool-\*\* internal
+
 ## 0.1.2
 
 ### Patch Changes
