@@ -7,7 +7,7 @@ The [OpenAI Apps SDK](https://developers.openai.com/apps-sdk) provides only prim
 
 ## The Challenge with Raw OpenAI Apps SDK
 
-When you need to provide a UI for your ChatGPT App, the OpenAI Apps SDK requires you to register a **single HTML file** containing all JavaScript and CSS bundled together with the MCP server. This presents several challenges:
+When you need to provide a UI for your ChatGPT App, the OpenAI Apps SDK expects you to register a **single HTML asset** via the Apps SDK manifest. This asset must be self-contained (JS/CSS inlined or bundled) and is loaded by ChatGPT alongside your MCP server. This presents several challenges:
 
 ### Complex Build Process
 
@@ -37,7 +37,7 @@ Chapplin abstracts away all this complexity and provides an **all-in-one, type-s
 
 Chapplin includes built-in Vite plugins that handle the entire build process automatically:
 - Automatically bundles JavaScript and CSS into a single HTML string
-- Provides hot module reloading during development
+- Provides hot module reloading during local development (via Vite)
 - Optimizes production builds without any configuration
 - Generates the correct format expected by the OpenAI Apps SDK
 
@@ -67,7 +67,11 @@ export default defineTool(
 	async () => {
 		return {
 			content: [{ type: "text", text: "Fetched todos" }],
-			structuredContent: { todos: [...] },
+			structuredContent: {
+				todos: [
+					{ id: 1, title: "Sample todo", completed: false },
+				],
+			},
 		};
 	},
 	{
@@ -91,6 +95,7 @@ The `toolOutput` parameter in your `app` component is automatically typed based 
 ### Unified Development Experience
 
 Chapplin provides a cohesive development experience where everything works together:
+
 - Define tools with Zod schemas
 - Build UI with your preferred JSX library (React, Preact, Solid, or Hono JSX)
 - Integrate with your preferred server framework (Hono, Express, Fastify, etc.)
