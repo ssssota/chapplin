@@ -1,5 +1,11 @@
 # create-chapplin
 
+## 0.2.0
+
+### Minor Changes
+
+- [#50](https://github.com/ssssota/chapplin/pull/50) [`38c76c3`](https://github.com/ssssota/chapplin/commit/38c76c3dc6c1600ad28faf761a58ce2e8c8e69d1) Thanks [@ssssota](https://github.com/ssssota)! - Support SolidJS
+
 ## 0.1.1
 
 ### Patch Changes
