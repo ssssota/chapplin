@@ -12,12 +12,25 @@ import * as prompts from "@clack/prompts";
 
 main().catch(console.error);
 
+type Target = "react" | "preact" | "hono" | "solid";
+
 async function main() {
+	const targets = [
+		{ label: "React", value: "react" },
+		{ label: "Preact", value: "preact" },
+		{ label: "Hono", value: "hono" },
+		{ label: "Solid", value: "solid" },
+	] satisfies { label: string; value: Target }[];
+	const targetOptions = {
+		react: { type: "boolean", default: false },
+		preact: { type: "boolean", default: false },
+		hono: { type: "boolean", default: false },
+		solid: { type: "boolean", default: false },
+	} as const satisfies Record<Target, { type: "boolean"; default: false }>;
+
 	const args = parseArgs({
 		options: {
-			react: { type: "boolean", default: false },
-			preact: { type: "boolean", default: false },
-			hono: { type: "boolean", default: false },
+			...targetOptions,
 			overwrite: { type: "boolean", default: false },
 		},
 		allowPositionals: true,
@@ -125,11 +138,7 @@ async function main() {
 		if (interactive) {
 			const framework = await prompts.select({
 				message: "Select a framework:",
-				options: [
-					{ label: "React", value: "react" },
-					{ label: "Preact", value: "preact" },
-					{ label: "Hono", value: "hono" },
-				],
+				options: targets,
 			});
 			if (prompts.isCancel(framework)) return cancel();
 			template = framework;
@@ -197,10 +206,12 @@ function resolveTemplate(options: {
 	react: boolean;
 	preact: boolean;
 	hono: boolean;
-}): "react" | "preact" | "hono" | undefined {
+	solid: boolean;
+}): Target | undefined {
 	if (options.react) return "react";
 	if (options.preact) return "preact";
 	if (options.hono) return "hono";
+	if (options.solid) return "solid";
 	return undefined;
 }
 
