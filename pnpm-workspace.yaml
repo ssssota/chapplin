@@ -15,8 +15,8 @@ catalog:
   magic-string: ^0.30.21
   oxc-parser: ^0.101.0
   preact: ^10.27.2
-  react: 19.2.0
-  react-dom: 19.2.0
+  react: 19.2.1
+  react-dom: 19.2.1
   typescript: ^5.9.3
   vite: ^7.2.4
   zimmerframe: ^1.1.4
