@@ -22,7 +22,7 @@
 	"devDependencies": {
 		"@clack/prompts": "1.0.0-alpha.7",
 		"@types/node": "catalog:",
-		"tsdown": "^0.16.6",
+		"tsdown": "^0.17.0",
 		"typescript": "catalog:"
 	}
 }
