@@ -18,6 +18,7 @@ import type {
 	OpenAiGlobals,
 	ToolDescriptorMeta,
 } from "./openai.js";
+import { nameIntoId } from "./utils.js";
 
 const mimeType = "text/html+skybridge";
 
@@ -134,10 +135,3 @@ export type ToolInput<T> = T extends Tool<infer I, any, any> ? I : never;
 export type ToolOutput<T> = T extends Tool<any, infer O, any> ? O : never;
 // biome-ignore lint/suspicious/noExplicitAny: This is for type inference
 export type ToolMeta<T> = T extends Tool<any, any, infer M> ? M : never;
-
-function nameIntoId(name: string): string {
-	return name
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "_")
-		.replace(/^_+|_+$/g, "");
-}

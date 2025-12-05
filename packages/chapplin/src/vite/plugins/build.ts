@@ -1,6 +1,7 @@
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
 import { build as viteBuild } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { nameIntoId } from "../../utils.js";
 import type { Options } from "../types.js";
 import { bundleEntry } from "./bundle-entry.js";
 import { clientToolResolver } from "./client-tool-resolver.js";
@@ -69,7 +70,7 @@ export function build(opts: Options): Plugin {
 				this.emitFile({
 					type: "prebuilt-chunk",
 					code: js,
-					fileName: `widgets/${name}.js`,
+					fileName: `widgets/${nameIntoId(name)}.js`,
 				});
 			}
 		},
