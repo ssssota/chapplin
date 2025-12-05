@@ -1,5 +1,11 @@
 # chapplin
 
+## 0.2.1
+
+### Patch Changes
+
+- [#58](https://github.com/ssssota/chapplin/pull/58) [`eacaa20`](https://github.com/ssssota/chapplin/commit/eacaa204c141ed30a3d525b7d6461bd1b6d73fc8) Thanks [@ssssota](https://github.com/ssssota)! - Fix widget js filename
+
 ## 0.2.0
 
 ### Minor Changes
