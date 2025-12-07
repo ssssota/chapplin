@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@hono/mcp':
-      specifier: ^0.2.0
-      version: 0.2.0
     '@modelcontextprotocol/sdk':
       specifier: ^1.22.0
       version: 1.23.0
@@ -42,6 +39,9 @@ catalogs:
     typescript:
       specifier: ^5.9.3
       version: 5.9.3
+    vite:
+      specifier: ^7.2.4
+      version: 7.2.6
     zimmerframe:
       specifier: ^1.1.4
       version: 1.1.4
@@ -125,7 +125,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.0(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)
+        version: 0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)(zod@4.1.13)
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.23.0(zod@4.1.13)
@@ -663,12 +663,13 @@ packages:
   '@expressive-code/plugin-text-markers@0.41.3':
     resolution: {integrity: sha512-SN8tkIzDpA0HLAscEYD2IVrfLiid6qEdE9QLlGVSxO1KEw7qYvjpbNBQjUjMr5/jvTJ7ys6zysU2vLPHE0sb2g==}
 
-  '@hono/mcp@0.2.0':
-    resolution: {integrity: sha512-kKZklY+yApZce6zzHzQPrEOhon4O7ANstUCDWstvGF3+B/Qn0j9mWUyps2XZhA/PzKoFGUBuAu1SwTFc7JRX9A==}
+  '@hono/mcp@0.2.2':
+    resolution: {integrity: sha512-h1yHXsv08OWT8bXyIOoZVXw0qU1UmSDwm014fPnFXiyeS9iMMHftn907wNXTh07IorlGqPbZArev4nBz9Q3oKQ==}
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.17.3
+      '@modelcontextprotocol/sdk': ^1.23.0
       hono: '*'
       hono-rate-limiter: ^0.4.2
+      zod: ^3.25.0 || ^4.0.0
 
   '@hono/node-server@1.19.6':
     resolution: {integrity: sha512-Shz/KjlIeAhfiuE93NDKVdZ7HdBVLQAfdbaXEaoAVO3ic9ibRSLGIQGkcBbFyuLr+7/1D5ZCINM8B+6IvXeMtw==}
@@ -2685,10 +2686,6 @@ packages:
     resolution: {integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==}
     engines: {node: '>=6'}
 
-  pkce-challenge@5.0.0:
-    resolution: {integrity: sha512-ueGLflrrnvwB3xuo/uGob5pd5FN7l0MsLf0Z87o/UQmRtwjvfylfc9MurIxRAWywCYTgrvpXBcqjV4OfCYGCIQ==}
-    engines: {node: '>=16.20.0'}
-
   pkce-challenge@5.0.1:
     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
     engines: {node: '>=16.20.0'}
@@ -3348,46 +3345,6 @@ packages:
       sass-embedded: '*'
       stylus: '*'
       sugarss: '*'
-      terser: ^5.16.0
-      tsx: ^4.8.1
-      yaml: ^2.4.2
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      jiti:
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      sass-embedded:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-      tsx:
-        optional: true
-      yaml:
-        optional: true
-
-  vite@7.2.4:
-    resolution: {integrity: sha512-NL8jTlbo0Tn4dUEXEsUg8KeyG/Lkmc4Fnzb8JXN/Ykm9G4HNImjtABMJgkQoVjOBN/j2WAwDTRytdqJbZsah7w==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': ^20.19.0 || >=22.12.0
-      jiti: '>=1.21.0'
-      less: ^4.0.0
-      lightningcss: ^1.21.0
-      sass: ^1.70.0
-      sass-embedded: ^1.70.0
-      stylus: '>=0.54.8'
-      sugarss: ^5.0.0
       terser: ^5.16.0
       tsx: ^4.8.1
       yaml: ^2.4.2
@@ -4127,12 +4084,13 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.41.3
 
-  '@hono/mcp@0.2.0(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)':
+  '@hono/mcp@0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)(zod@4.1.13)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.23.0(zod@4.1.13)
       hono: 4.10.7
       hono-rate-limiter: 0.4.2(hono@4.10.7)
-      pkce-challenge: 5.0.0
+      pkce-challenge: 5.0.1
+      zod: 4.1.13
 
   '@hono/node-server@1.19.6(hono@4.10.7)':
     dependencies:
@@ -6525,8 +6483,6 @@ snapshots:
 
   pify@4.0.1: {}
 
-  pkce-challenge@5.0.0: {}
-
   pkce-challenge@5.0.1: {}
 
   postcss-nested@6.2.0(postcss@8.5.6):
@@ -7274,18 +7230,6 @@ snapshots:
       vite: 7.2.6(@types/node@24.10.1)
 
   vite@6.4.1(@types/node@24.10.1):
-    dependencies:
-      esbuild: 0.25.12
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
-      postcss: 8.5.6
-      rollup: 4.53.3
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 24.10.1
-      fsevents: 2.3.3
-
-  vite@7.2.4(@types/node@24.10.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
