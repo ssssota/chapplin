@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@hono/mcp':
+      specifier: ^0.2.0
+      version: 0.2.2
     '@modelcontextprotocol/sdk':
       specifier: ^1.22.0
       version: 1.23.0
@@ -18,9 +21,6 @@ catalogs:
     '@types/react-dom':
       specifier: 19.2.3
       version: 19.2.3
-    hono:
-      specifier: ^4.10.6
-      version: 4.10.7
     magic-string:
       specifier: ^0.30.21
       version: 0.30.21
@@ -125,7 +125,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)(zod@4.1.13)
+        version: 0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.11.0))(hono@4.11.0)(zod@4.1.13)
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.23.0(zod@4.1.13)
@@ -134,7 +134,7 @@ importers:
         version: 24.10.1
       hono:
         specifier: 'catalog:'
-        version: 4.10.7
+        version: 4.11.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -144,7 +144,7 @@ importers:
     devDependencies:
       '@hono/node-server':
         specifier: ^1.19.6
-        version: 1.19.6(hono@4.10.7)
+        version: 1.19.6(hono@4.11.0)
       chapplin:
         specifier: workspace:*
         version: link:../../packages/chapplin
@@ -184,7 +184,7 @@ importers:
         version: 19.2.3(@types/react@19.2.7)
       hono:
         specifier: 'catalog:'
-        version: 4.10.7
+        version: 4.11.0
       preact:
         specifier: 'catalog:'
         version: 10.28.0
@@ -2104,8 +2104,8 @@ packages:
     peerDependencies:
       hono: ^4.1.1
 
-  hono@4.10.7:
-    resolution: {integrity: sha512-icXIITfw/07Q88nLSkB9aiUrd8rYzSweK681Kjo/TSggaGbOX4RRyxxm71v+3PC8C/j+4rlxGeoTRxQDkaJkUw==}
+  hono@4.11.0:
+    resolution: {integrity: sha512-Jg8uZzN2ul8/qlyid5FO8O624F3AK0wKtkgoeEON1qBum1rM1itYBxoMKu/1SPJC7F1+xlIZsJMmc4HHhJ1AWg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -4067,17 +4067,17 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.41.3
 
-  '@hono/mcp@0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)(zod@4.1.13)':
+  '@hono/mcp@0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.11.0))(hono@4.11.0)(zod@4.1.13)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.23.0(zod@4.1.13)
-      hono: 4.10.7
-      hono-rate-limiter: 0.4.2(hono@4.10.7)
+      hono: 4.11.0
+      hono-rate-limiter: 0.4.2(hono@4.11.0)
       pkce-challenge: 5.0.1
       zod: 4.1.13
 
-  '@hono/node-server@1.19.6(hono@4.10.7)':
+  '@hono/node-server@1.19.6(hono@4.11.0)':
     dependencies:
-      hono: 4.10.7
+      hono: 4.11.0
 
   '@img/colour@1.0.0': {}
 
@@ -5648,11 +5648,11 @@ snapshots:
       property-information: 7.1.0
       space-separated-tokens: 2.0.2
 
-  hono-rate-limiter@0.4.2(hono@4.10.7):
+  hono-rate-limiter@0.4.2(hono@4.11.0):
     dependencies:
-      hono: 4.10.7
+      hono: 4.11.0
 
-  hono@4.10.7: {}
+  hono@4.11.0: {}
 
   hookable@5.5.3: {}
 
