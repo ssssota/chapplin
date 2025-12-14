@@ -2,8 +2,12 @@ import type { Child, JSXNode } from "hono/jsx";
 import { jsx, render, useEffect, useState } from "hono/jsx/dom";
 import { createGlobalGetterHooks } from "./client.js";
 import type { OpenAiGlobals } from "./openai.js";
+import { type Preview, initializePreview } from "./preview.js";
 
-type Widget = { app: (props: OpenAiGlobals) => Child };
+type Widget = {
+	app: (props: OpenAiGlobals) => Child;
+	preview?: Preview;
+};
 type Component = (props: unknown) => JSXNode;
 
 const hooks = createGlobalGetterHooks({ useState, useEffect });
@@ -15,6 +19,9 @@ export function defineTool(
 	widget?: Widget,
 ): void {
 	if (!widget) return;
+
+	initializePreview(widget.preview);
+
 	const container = document.getElementById("app");
 	if (container) render(jsx(App as Component, { app: widget.app }), container);
 }

@@ -2,8 +2,12 @@ import { type Component, createEffect, createSignal } from "solid-js";
 import { createComponent, render } from "solid-js/web";
 import { createGlobalGetterHook, createGlobalsSubscribe } from "./client.js";
 import type { OpenAiGlobals } from "./openai.js";
+import { type Preview, initializePreview } from "./preview.js";
 
-type Widget = { app: Component<OpenAiGlobals> };
+type Widget = {
+	app: Component<OpenAiGlobals>;
+	preview?: Preview;
+};
 
 export function defineTool(
 	_name: unknown,
@@ -12,6 +16,9 @@ export function defineTool(
 	widget?: Widget,
 ): void {
 	if (!widget) return;
+
+	initializePreview(widget.preview);
+
 	const container = document.getElementById("app");
 	if (container)
 		render(

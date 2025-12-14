@@ -50,6 +50,17 @@ export function defineTool<
 				OutputMeta extends undefined ? UnknownObject : OutputMeta
 			>,
 		) => JSXElement;
+		/**
+		 * Preview data for local development.
+		 * Used to display mock data before MCP response is available.
+		 */
+		preview?: {
+			toolInput?: Shape<InputArgs>;
+			toolOutput?: Shape<OutputArgs>;
+			toolResponseMetadata?: OutputMeta extends undefined
+				? UnknownObject
+				: OutputMeta;
+		};
 	},
 ): Tool<Shape<InputArgs>, Shape<OutputArgs>, OutputMeta> {
 	type TypedTool = Tool<Shape<InputArgs>, Shape<OutputArgs>, OutputMeta>;
