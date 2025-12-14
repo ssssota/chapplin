@@ -50,5 +50,8 @@ export default defineTool(
 				</ul>
 			</div>
 		),
+		preview: {
+			toolOutput: { todos },
+		},
 	},
 );

@@ -4,8 +4,12 @@ import { useEffect, useState } from "preact/hooks";
 import { jsx } from "preact/jsx-runtime";
 import { createGlobalGetterHooks } from "./client.js";
 import type { OpenAiGlobals } from "./openai.js";
+import { type Preview, initializePreview } from "./preview.js";
 
-type Widget = { app: ComponentType<OpenAiGlobals> };
+type Widget = {
+	app: ComponentType<OpenAiGlobals>;
+	preview?: Preview;
+};
 
 const hooks = createGlobalGetterHooks({ useState, useEffect });
 
@@ -16,6 +20,9 @@ export function defineTool(
 	widget?: Widget,
 ): void {
 	if (!widget) return;
+
+	initializePreview(widget.preview);
+
 	const container = document.getElementById("app");
 	if (container) render(jsx(App, { app: widget.app }), container);
 }
