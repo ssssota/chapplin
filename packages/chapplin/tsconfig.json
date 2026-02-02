@@ -1,10 +1,7 @@
 {
-	"compilerOptions": {
-		"strict": true,
-		"module": "nodenext",
-		"skipLibCheck": true,
-		"rootDir": "./src",
-		"outDir": "./dist",
-		"declaration": true
-	}
+	"files": [],
+	"references": [
+		{ "path": "./tsconfig.lib.json" },
+		{ "path": "./tsconfig.app.json" }
+	]
 }

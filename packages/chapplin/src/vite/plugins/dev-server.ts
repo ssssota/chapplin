@@ -7,19 +7,35 @@ export function devServer(): Plugin {
 	return {
 		name: "chapplin:dev-server",
 		apply: "serve",
-		configureServer(server) {
-			server.middlewares.use(async (req, res, next) => {
-				if (req.url?.startsWith("/tools/")) {
-					res.setHeader("content-type", "text/html");
-					res.end(
-						`<!doctype html><html><body>
+		configureServer: {
+			order: "pre",
+			async handler(server) {
+				server.middlewares.use(async (req, res, next) => {
+					if (!req.url) return next();
+					if (req.url.startsWith("/preview/tools/")) {
+						res.setHeader("content-type", "text/html");
+						res.end(
+							`<!doctype html><html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
+<body>
+<iframe src="${req.url.replace(/^\/preview/, "")}"></iframe>`,
+						);
+						return;
+					}
+					if (req.url.startsWith("/tools/")) {
+						res.setHeader("content-type", "text/html");
+						res.end(
+							`<!doctype html><html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
+<body>
 <div id="app"></div>
 <script type="module" src="/src${req.url}"></script>`,
-					);
-					return;
-				}
-				next();
-			});
+						);
+						return;
+					}
+					next();
+				});
+			},
 		},
 		resolveId: {
 			order: "pre",

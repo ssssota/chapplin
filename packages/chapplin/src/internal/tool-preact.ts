@@ -2,8 +2,8 @@ import type { ComponentType, VNode } from "preact";
 import { render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { jsx } from "preact/jsx-runtime";
-import { createGlobalGetterHooks } from "./client.js";
-import type { OpenAiGlobals } from "./openai.js";
+import { createGlobalGetterHooks } from "../client.js";
+import type { OpenAiGlobals } from "../openai.js";
 
 type Widget = { app: ComponentType<OpenAiGlobals> };
 

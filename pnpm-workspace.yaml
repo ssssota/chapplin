@@ -19,5 +19,6 @@ catalog:
   react-dom: 19.2.0
   typescript: ^5.9.3
   vite: ^7.2.4
+  vite-plugin-singlefile: ^2.3.0
   zimmerframe: ^1.1.4
   zod: ^4.1.13

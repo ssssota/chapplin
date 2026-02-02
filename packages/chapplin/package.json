@@ -3,9 +3,10 @@
 	"type": "module",
 	"version": "0.2.1",
 	"scripts": {
-		"build": "tsc",
-		"check": "tsc --noEmit",
-		"prepare": "pnpm build"
+		"build": "tsdown && vite build ui",
+		"check": "tsc -b --noEmit",
+		"prepare": "pnpm build",
+		"dev": "vite ui"
 	},
 	"exports": {
 		".": {
@@ -16,6 +17,7 @@
 			"types": "./dist/tool.d.ts",
 			"default": "./dist/tool.js"
 		},
+		"./_internal/iframe-runtime": "./dist/iframe-runtime.js",
 		"./_internal/tool-react": "./dist/tool-react.js",
 		"./_internal/tool-preact": "./dist/tool-preact.js",
 		"./_internal/tool-hono": "./dist/tool-hono.js",
@@ -57,24 +59,32 @@
 		}
 	},
 	"devDependencies": {
+		"@chapplin/internal-types": "file:./types",
 		"@modelcontextprotocol/sdk": "catalog:",
+		"@preact/preset-vite": "^2.10.2",
+		"@preact/signals": "^2.5.1",
 		"@types/estree": "^1.0.8",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"@unocss/reset": "^66.5.12",
 		"hono": "catalog:",
 		"preact": "catalog:",
+		"preact-iso": "^2.11.1",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"solid-js": "^1.9.10",
+		"tsdown": "^0.17.0",
 		"typescript": "catalog:",
+		"unocss": "^66.5.12",
+		"valibot": "^1.2.0",
 		"vite": "catalog:",
 		"zod": "catalog:"
 	},
 	"dependencies": {
 		"magic-string": "catalog:",
 		"oxc-parser": "catalog:",
-		"vite-plugin-singlefile": "^2.3.0",
+		"vite-plugin-singlefile": "catalog:",
 		"zimmerframe": "catalog:"
 	}
 }

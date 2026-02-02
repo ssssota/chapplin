@@ -1,7 +1,7 @@
 import type { Child, JSXNode } from "hono/jsx";
 import { jsx, render, useEffect, useState } from "hono/jsx/dom";
-import { createGlobalGetterHooks } from "./client.js";
-import type { OpenAiGlobals } from "./openai.js";
+import { createGlobalGetterHooks } from "../client.js";
+import type { OpenAiGlobals } from "../openai.js";
 
 type Widget = { app: (props: OpenAiGlobals) => Child };
 type Component = (props: unknown) => JSXNode;

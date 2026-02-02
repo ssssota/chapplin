@@ -2,8 +2,8 @@ import type { ComponentType, ReactElement } from "react";
 import { useEffect, useState } from "react";
 import { jsx } from "react/jsx-runtime";
 import { createRoot } from "react-dom/client";
-import { createGlobalGetterHooks } from "./client.js";
-import type { OpenAiGlobals } from "./openai.js";
+import { createGlobalGetterHooks } from "../client.js";
+import type { OpenAiGlobals } from "../openai.js";
 
 type Widget = { app: ComponentType<OpenAiGlobals> };
 
