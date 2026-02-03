@@ -12,6 +12,7 @@ import type {
 	ServerRequest,
 	ToolAnnotations,
 } from "@modelcontextprotocol/sdk/types.js";
+import { CHATGPT_APPS_DIR } from "./constants.js";
 import type {
 	ClientProvidedMeta,
 	ComponentResourceMeta,
@@ -72,7 +73,7 @@ export function defineTool<
 	 * HTML source
 	 * `export default "<!doctype html><html>...</html>"`
 	 */
-	const html = import(`./widgets/${id}.js`).then((m) => m.default);
+	const html = import(`./${CHATGPT_APPS_DIR}/${id}.js`).then((m) => m.default);
 
 	return ((server) => {
 		server.registerResource(widget.name || name, uri, {}, async () => ({

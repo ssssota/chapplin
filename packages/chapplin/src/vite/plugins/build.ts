@@ -1,6 +1,7 @@
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
 import { build as viteBuild } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { CHATGPT_APPS_DIR } from "../../constants.js";
 import { nameIntoId } from "../../utils.js";
 import type { Options } from "../types.js";
 import { bundleEntry } from "./bundle-entry.js";
@@ -70,7 +71,7 @@ export function build(opts: Options): Plugin {
 				this.emitFile({
 					type: "prebuilt-chunk",
 					code: js,
-					fileName: `widgets/${nameIntoId(name)}.js`,
+					fileName: `${CHATGPT_APPS_DIR}/${nameIntoId(name)}.js`,
 				});
 			}
 		},

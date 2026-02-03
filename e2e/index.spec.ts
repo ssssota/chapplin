@@ -80,7 +80,11 @@ describe.for(frameworks)("%s", (framework) => {
 			});
 
 			it("should create the expected files", () => {
-				const expectedFiles = ["dist/index.js", "dist/widgets/get.js"];
+				const expectedFiles = [
+					"dist/index.js",
+					"dist/__chapplin__/chatgpt/get.js",
+					"dist/__chapplin__/mcp/get.js",
+				];
 				expectedFiles.forEach((file) => {
 					const filePath = path.join(projectPath, file);
 					expect(fs.existsSync(filePath)).toBe(true);
@@ -88,7 +92,11 @@ describe.for(frameworks)("%s", (framework) => {
 			});
 
 			it("should correctly build widget", async () => {
-				const widgetPath = path.join(projectPath, "dist/widgets/get.js");
+				const widgetPath = path.join(
+					projectPath,
+					"dist/__chapplin__/chatgpt/get.js",
+					"dist/__chapplin__/mcp/get.js",
+				);
 				const widgetModule = await import(
 					path.relative(fileURLToPath(import.meta.url), widgetPath)
 				);
