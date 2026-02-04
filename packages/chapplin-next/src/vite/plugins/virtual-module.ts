@@ -1,11 +1,10 @@
-import type { Plugin, ResolvedConfig } from "vite";
+import { RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps";
+import type { Plugin } from "vite";
 import {
-	MCP_APP_MIME_TYPE,
-	MCP_APPS_DIR,
 	RESOLVED_VIRTUAL_MODULE_ID,
 	VIRTUAL_MODULE_ID,
 } from "../../constants.js";
-import type { Options } from "../types.js";
+import type { CollectedFiles, Options } from "../types.js";
 import { nameToIdentifier, resolveOptions } from "../utils.js";
 import { getBuiltAppHtml } from "./client-build.js";
 import { getCollectedFiles } from "./file-collector.js";
@@ -18,13 +17,9 @@ const APP_HTML_PREFIX = "virtual:chapplin-app-html:";
  */
 export function virtualModule(opts: Options): Plugin {
 	const resolvedOpts = resolveOptions(opts);
-	let config: ResolvedConfig;
 
 	return {
 		name: "chapplin:virtual-module",
-		configResolved(resolvedConfig) {
-			config = resolvedConfig;
-		},
 		resolveId(id) {
 			if (id === VIRTUAL_MODULE_ID) {
 				return RESOLVED_VIRTUAL_MODULE_ID;
@@ -36,8 +31,8 @@ export function virtualModule(opts: Options): Plugin {
 		},
 		async load(id) {
 			if (id === RESOLVED_VIRTUAL_MODULE_ID) {
-				const files = getCollectedFiles(config);
-				return generateVirtualModuleCode(files, resolvedOpts, config);
+				const files = await getCollectedFiles();
+				return generateVirtualModuleCode(files, resolvedOpts);
 			}
 			// Load app HTML virtual modules
 			if (id.startsWith(`\0${APP_HTML_PREFIX}`)) {
@@ -57,9 +52,8 @@ export function virtualModule(opts: Options): Plugin {
  * Generate the code for the virtual module
  */
 function generateVirtualModuleCode(
-	files: ReturnType<typeof getCollectedFiles>,
+	files: CollectedFiles,
 	_opts: ReturnType<typeof resolveOptions>,
-	config: ResolvedConfig,
 ): string {
 	const imports: string[] = [];
 	const toolRegistrations: string[] = [];
@@ -168,13 +162,13 @@ function generateAppToolRegistration(
     uri,
     {
       description: ${importName}.config.description,
-      mimeType: "${MCP_APP_MIME_TYPE}",
+      mimeType: "${RESOURCE_MIME_TYPE}",
       _meta: { ui: ${importName}.appMeta ?? {} },
     },
     async () => ({
       contents: [{
         uri,
-        mimeType: "${MCP_APP_MIME_TYPE}",
+        mimeType: "${RESOURCE_MIME_TYPE}",
         text: ${htmlImportName},
       }],
     })

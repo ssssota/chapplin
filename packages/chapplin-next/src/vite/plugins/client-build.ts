@@ -39,7 +39,7 @@ export async function getBuiltAppHtml(
 
 	// Build on demand
 	if (buildContext) {
-		const files = getCollectedFiles(buildContext.config);
+		const files = await getCollectedFiles();
 		const tool = files.tools.find((t) => t.name === toolName && t.hasApp);
 		if (tool) {
 			const buildPromise = buildClientApp({

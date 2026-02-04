@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
+import { join, relative } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
 import { VIRTUAL_MODULE_ID } from "../../constants.js";
 import {
@@ -28,7 +28,7 @@ export function typeGeneration(opts: Options): Plugin {
 			config = resolvedConfig;
 		},
 		async buildStart() {
-			const files = getCollectedFiles(config);
+			const files = await getCollectedFiles();
 			const root = config.root;
 
 			// Parse all files to extract type information
@@ -153,16 +153,15 @@ function generateTypeDefinitions(
 	for (const tool of tools) {
 		const toolName = tool.name || tool.relativePath.replace(/\.(ts|tsx)$/, "");
 		// Import types from the actual tool file
-		const importPath =
-			"./" + relative(root, tool.path).replace(/\.(ts|tsx)$/, "");
+		const importPath = `../${relative(root, tool.path).replace(/\.(ts|tsx)$/, "")}`;
 
 		lines.push(`    "${toolName}": {`);
 		lines.push(`      /** Import path: ${importPath} */`);
 		lines.push(
-			`      input: import("${importPath}").config extends { inputSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
+			`      input: typeof import("${importPath}").config extends { inputSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
 		);
 		lines.push(
-			`      output: import("${importPath}").config extends { outputSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
+			`      output: typeof import("${importPath}").config extends { outputSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
 		);
 		lines.push("    };");
 	}
@@ -216,11 +215,11 @@ function generateTypeDefinitions(
 
 	for (const prompt of prompts) {
 		const promptName = prompt.name || prompt.relativePath.replace(/\.ts$/, "");
-		const importPath = "./" + relative(root, prompt.path).replace(/\.ts$/, "");
+		const importPath = `../${relative(root, prompt.path).replace(/\.ts$/, "")}`;
 
 		lines.push(`    "${promptName}": {`);
 		lines.push(
-			`      args: import("${importPath}").config extends { argsSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
+			`      args: typeof import("${importPath}").config extends { argsSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
 		);
 		lines.push("    };");
 	}

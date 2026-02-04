@@ -18,7 +18,7 @@ export interface Options {
 	/**
 	 * UI framework target
 	 */
-	target?: Target;
+	target: Target;
 
 	/**
 	 * Directory containing tool files

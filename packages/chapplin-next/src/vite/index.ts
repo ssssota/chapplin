@@ -29,12 +29,12 @@ export type { Options, ResolvedOptions, Target } from "./types.js";
  * });
  * ```
  */
-export function chapplin(opts: Options = {}): Plugin[] {
+export function chapplin(opts: Options): Plugin[] {
 	return [
 		fileCollector(opts),
 		virtualModule(opts),
 		clientBuild(opts),
 		typeGeneration(opts),
-		devServer(opts),
+		...devServer(opts),
 	];
 }

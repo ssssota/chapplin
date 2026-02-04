@@ -35,7 +35,9 @@ chapplin は、Model Context Protocol (MCP) サーバーと MCP Apps（インタ
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "vite-plugin-singlefile": "*",
     "magic-string": "*",
-    "oxc-parser": "*"
+    "oxc-parser": "*",
+    "preact-iso": "*",
+    "vite-plugin-dev-api": "*"
   }
 }
 ```
@@ -490,6 +492,31 @@ const transport = new StdioServerTransport();
 await server.connect(transport);
 ```
 
+### 6.3 `virtual:chapplin-client`（開発サーバー専用）
+
+開発サーバーでツールUIをiframeで表示するために使用される仮想モジュールです。
+
+```typescript
+// 仮想モジュール ID の形式
+virtual:chapplin-client/{toolPath}
+
+// 例: virtual:chapplin-client/tools/chart.tsx
+// ↓
+// 生成されるコード
+import { init } from 'chapplin-next/client/react';
+import { App } from '/path/to/tools/chart.tsx';
+init(App);
+```
+
+この仮想モジュールは、`dev-server.ts` プラグインの `load` hook で処理され、以下の動作をします：
+
+1. 仮想モジュールIDからツールファイルのパスを抽出
+2. ツールファイルから `App` コンポーネントをインポート
+3. 設定された `target`（react/preact/solid/hono）に応じた `init` 関数をインポート
+4. `init(App)` を呼び出してDOMにレンダリング
+
+`/iframe/tools/{toolFile}` パスでアクセスされた際に、この仮想モジュールが使用されます。
+
 ---
 
 ## 7. 型生成システム
@@ -627,7 +654,235 @@ node dist/index.js
 - MCP App の iframe 表示
 - ホスト ↔ App 間の通信シミュレーション
 
-### 9.4 開発コマンド
+### 9.4 プレビュー UI の実装方針
+
+プレビュー UI は Preact ベースの SPA として実装します。HTML のベタ書きでは限界があるため、以下の理由で Preact を採用します：
+
+- **軽量**: React より小さなバンドルサイズで、開発サーバーのオーバーヘッドを最小化
+- **React 互換**: React のエコシステム（Hooks、コンポーネントパターン）をそのまま利用可能
+- **開発体験**: JSX、HMR、型安全性などのモダンな開発体験を提供
+- **保守性**: コンポーネントベースの設計で、機能追加や変更が容易
+
+#### 9.4.1 ディレクトリ構成
+
+```
+packages/chapplin-next/
+├── src/
+│   └── vite/
+│       └── plugins/
+│           └── dev-server.ts
+└── dev-ui/                    # 開発サーバー UI 用のディレクトリ
+    ├── src/
+    │   ├── api/
+    │   │   └── index.ts       # Hono アプリの定義
+    │   ├── components/
+    │   │   ├── ToolList.tsx
+    │   │   ├── ResourceList.tsx
+    │   │   ├── PromptList.tsx
+    │   │   ├── ToolPreview.tsx
+    │   │   └── ServerLog.tsx
+    │   ├── App.tsx
+    │   └── main.tsx
+    ├── index.html
+    ├── vite.config.ts
+    └── package.json
+```
+
+#### 9.4.2 技術スタック
+
+- **フレームワーク**: Preact（軽量で React 互換）
+- **ルーティング**: `preact-iso` - Preact のためのルーティングライブラリ
+- **API サーバー**: Hono - 軽量で高速な Web フレームワーク
+- **Vite プラグイン**: `vite-plugin-dev-api` - 開発サーバーに Hono を簡単に統合
+
+#### 9.4.3 実装の詳細
+
+- **エントリーポイント**: `dev-ui/src/main.tsx` で Preact アプリを起動
+- **ルーティング**: `preact-iso` を使用したクライアントサイドルーティング
+- **API 通信**: `/__chapplin__/api/*` エンドポイントと通信（Hono で実装）
+- **ビルド**: Vite で開発サーバー UI をビルドし、プラグイン内で配信
+- **HMR**: Vite の HMR を活用して開発中の UI 変更を即座に反映
+
+#### 9.4.4 プラグインとの統合
+
+`dev-server.ts` プラグインは以下のように動作します：
+
+1. 開発モード時、`dev-ui/` を Vite のサブビルドとして起動
+2. `/__chapplin__/` パスで Preact SPA を配信
+3. `vite-plugin-dev-api` を使用して Hono アプリを開発サーバーに統合
+4. `/__chapplin__/api/*` で Hono の API エンドポイントを提供
+5. ビルド済みの HTML/JS/CSS をメモリ上に保持して配信
+6. `/iframe/tools/{toolFile}` パスでツールUIをiframeとして配信
+
+#### 9.4.5 クライアントモジュール
+
+開発サーバーでは、各フレームワーク用のクライアントモジュール `chapplin-next/client/{target}` を提供します。
+
+```typescript
+// chapplin-next/client/react
+import type { ComponentType } from "react";
+import { jsx } from "react/jsx-runtime";
+import { createRoot } from "react-dom/client";
+
+export function init(App: ComponentType<AppProps>): void {
+  const root = document.getElementById("root");
+  if (!root) return;
+  const reactRoot = createRoot(root);
+  reactRoot.render(jsx(App, { input: {}, output: null, meta: null }));
+}
+
+// chapplin-next/client/preact
+import type { ComponentType } from "preact";
+import { render } from "preact";
+import { jsx } from "preact/jsx-runtime";
+
+export function init(App: ComponentType<AppProps>): void {
+  const root = document.getElementById("root");
+  if (!root) return;
+  render(jsx(App, { input: {}, output: null, meta: null }), root);
+}
+
+// chapplin-next/client/solid
+import type { Component } from "solid-js";
+import { createComponent, render } from "solid-js/web";
+
+export function init(App: Component<AppProps>): void {
+  const root = document.getElementById("root");
+  if (!root) return;
+  render(
+    () => createComponent(App, { input: {}, output: null, meta: null }),
+    root
+  );
+}
+
+// chapplin-next/client/hono
+import type { Child, JSXNode } from "hono/jsx";
+import { jsx, render } from "hono/jsx/dom";
+
+export function init(App: (props: AppProps) => Child): void {
+  const root = document.getElementById("root");
+  if (!root) return;
+  render(jsx(App as Component, { input: {}, output: null, meta: null }), root);
+}
+
+interface AppProps {
+  input: Record<string, unknown>;
+  output: unknown;
+  meta: unknown;
+}
+```
+
+`init` 関数は、開発プレビュー用に App コンポーネントを DOM にレンダリングします。各フレームワークの特性に応じて、適切なレンダリング方法を使用します：
+
+- **React**: `createRoot` と `react/jsx-runtime` の `jsx` 関数を使用（JSX記法を使わない）
+- **Preact**: `render` と `preact/jsx-runtime` の `jsx` 関数を使用（JSX記法を使わない）
+- **Solid**: `createComponent` を使用（JSX記法を使わない）
+- **Hono**: `hono/jsx/dom` の `jsx` と `render` 関数を使用
+
+これにより、ランタイムでのJSX変換を避け、パフォーマンスを最適化します。
+
+#### 9.4.6 仮想モジュール `virtual:chapplin-client` と iframe 配信
+
+開発サーバーでは、ツールUIをiframeで表示するために `virtual:chapplin-client/{toolPath}` という仮想モジュールを提供します。
+
+**パス**: `/iframe/tools/{toolFile}`
+
+このパスにアクセスすると、以下の処理が行われます：
+
+1. `toolFile` からツールファイルのパスを構築（例: `chart.tsx` → `/tools/chart.tsx`）
+2. `virtual:chapplin-client/tools/chart.tsx` という仮想モジュールIDを生成
+3. `dev-server.ts` プラグインの `load` hook で仮想モジュールを解決
+4. 解決されたコードをHTMLに埋め込み、iframeとして配信
+
+```typescript
+// 仮想モジュールの解決例
+// virtual:chapplin-client/tools/chart.tsx
+// ↓
+// 生成されるコード
+import { init } from 'chapplin-next/client/react';
+import { App } from '/path/to/tools/chart.tsx';
+init(App);
+```
+
+生成されたコードは、以下のHTMLテンプレートに埋め込まれます：
+
+```html
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    /* 生成されたコードがここに挿入される */
+  </script>
+</body>
+</html>
+```
+
+このHTMLは、プレビューUIのiframe内で表示され、ツールの `App` コンポーネントがレンダリングされます。
+
+#### 9.4.7 API エンドポイント設計
+
+Hono で実装する API エンドポイント：
+
+```typescript
+// dev-ui/src/api/index.ts
+import { Hono } from "hono";
+
+const app = new Hono();
+
+// ファイル一覧取得
+app.get("/api/files", async (c) => {
+  const files = getCollectedFiles();
+  return c.json(files);
+});
+
+// ツール実行
+app.post("/api/tools/:name/execute", async (c) => {
+  const { name } = c.req.param();
+  const args = await c.req.json();
+  const result = await executeTool(name, args);
+  return c.json(result);
+});
+
+// MCP サーバー状態
+app.get("/api/server/status", async (c) => {
+  return c.json({ status: "running" });
+});
+
+export default app;
+```
+
+#### 9.4.8 Vite 設定例
+
+`dev-ui/vite.config.ts` の設定例：
+
+```typescript
+// dev-ui/vite.config.ts
+import { defineConfig } from "vite";
+import preact from "@preact/preset-vite";
+import { devApi } from "vite-plugin-dev-api";
+import api from "./src/api/index.ts";
+
+export default defineConfig({
+  plugins: [
+    preact(),
+    devApi({
+      handler: api,
+      path: "/__chapplin__/api",
+    }),
+  ],
+  build: {
+    outDir: "../dist/dev-ui",
+    emptyOutDir: false,
+  },
+});
+```
+
+### 9.5 開発コマンド
 
 ```bash
 # 開発サーバー起動
@@ -689,6 +944,11 @@ vite dev
 | タスク | 説明 | 状態 |
 |--------|------|------|
 | 5.1 | プレビュー UI（ホスト側） | [x] |
+| 5.1.1 | Preact SPA として再実装 | [ ] |
+| 5.1.2 | preact-iso によるルーティング実装 | [ ] |
+| 5.1.3 | コンポーネント設計（ToolList, Preview など） | [ ] |
+| 5.1.4 | Hono による API サーバー実装 | [ ] |
+| 5.1.5 | vite-plugin-dev-api による統合 | [ ] |
 | 5.2 | MCP サーバー起動 | [ ] |
 | 5.3 | HMR 対応 | [ ] |
 

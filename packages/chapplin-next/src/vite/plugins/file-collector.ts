@@ -4,8 +4,14 @@ import type { Plugin, ResolvedConfig } from "vite";
 import type { CollectedFile, CollectedFiles, Options } from "../types.js";
 import { pathToName, resolveOptions } from "../utils.js";
 
-/** Store for collected files (shared between plugins) */
-const collectedFilesStore = new Map<string, CollectedFiles>();
+/** Store for collection options and root (shared between plugins) */
+let collectionContext: {
+	root: string;
+	opts: ReturnType<typeof resolveOptions>;
+} | null = null;
+
+/** Cached collected files (updated in buildStart) */
+let cachedFiles: CollectedFiles | null = null;
 
 /**
  * Plugin that collects tool/resource/prompt files
@@ -13,38 +19,38 @@ const collectedFilesStore = new Map<string, CollectedFiles>();
 export function fileCollector(opts: Options): Plugin {
 	const resolvedOpts = resolveOptions(opts);
 	let config: ResolvedConfig;
-	let storeKey: string;
 
 	return {
 		name: "chapplin:file-collector",
 		configResolved(resolvedConfig) {
 			config = resolvedConfig;
-			storeKey = config.root;
+			collectionContext = {
+				root: config.root,
+				opts: resolvedOpts,
+			};
 		},
 		async buildStart() {
-			const root = config.root;
-			const collectedFiles = await collectFiles(root, resolvedOpts);
-			collectedFilesStore.set(storeKey, collectedFiles);
+			if (!collectionContext) return;
+
+			const files = await collectFiles(
+				collectionContext.root,
+				collectionContext.opts,
+			);
+
+			// Cache the collected files
+			cachedFiles = files;
 
 			// Log collected files in dev mode
 			if (config.command === "serve") {
 				const total =
-					collectedFiles.tools.length +
-					collectedFiles.resources.length +
-					collectedFiles.prompts.length;
+					files.tools.length + files.resources.length + files.prompts.length;
 				if (total > 0) {
 					config.logger.info(
-						`[chapplin] Collected ${collectedFiles.tools.length} tools, ` +
-							`${collectedFiles.resources.length} resources, ` +
-							`${collectedFiles.prompts.length} prompts`,
+						`[chapplin] Collected ${files.tools.length} tools, ` +
+							`${files.resources.length} resources, ` +
+							`${files.prompts.length} prompts`,
 					);
 				}
-			}
-		},
-		buildEnd() {
-			// Clean up store after build
-			if (config.command === "build") {
-				collectedFilesStore.delete(storeKey);
 			}
 		},
 	};
@@ -95,22 +101,42 @@ async function collectFilesFromDir(
 				hasApp,
 			});
 		}
-	} catch {
-		// Directory doesn't exist, return empty array
+	} catch (err) {
+		// Directory doesn't exist or other error
+		// Log error in development for debugging
+		if (process.env.NODE_ENV !== "production") {
+			console.warn(
+				`[chapplin] Failed to collect files from ${dir}:`,
+				err instanceof Error ? err.message : err,
+			);
+		}
+		return [];
 	}
 
 	return files;
 }
 
 /**
- * Get collected files from store
+ * Get collected files (fetches fresh data each time)
+ * Falls back to cached files if collectionContext is not ready
  */
-export function getCollectedFiles(config: ResolvedConfig): CollectedFiles {
-	return (
-		collectedFilesStore.get(config.root) ?? {
-			tools: [],
-			resources: [],
-			prompts: [],
+export async function getCollectedFiles(): Promise<CollectedFiles> {
+	if (!collectionContext) {
+		// Return cached files if available, otherwise empty
+		if (cachedFiles) {
+			return cachedFiles;
 		}
-	);
+		// Log warning in development for debugging
+		if (process.env.NODE_ENV !== "production") {
+			console.warn(
+				"[chapplin] collectionContext not initialized yet. Files will be empty.",
+			);
+		}
+		return { tools: [], resources: [], prompts: [] };
+	}
+	// Fetch fresh data
+	const files = await collectFiles(collectionContext.root, collectionContext.opts);
+	// Update cache
+	cachedFiles = files;
+	return files;
 }

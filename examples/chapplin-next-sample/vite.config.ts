@@ -4,19 +4,10 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
 	plugins: [
+		react(),
 		chapplin({
 			entry: "./src/index.ts",
 			target: "react",
 		}),
-		react(),
 	],
-	build: {
-		ssr: true,
-		rollupOptions: {
-			input: "./src/index.ts",
-			output: {
-				entryFileNames: "index.js",
-			},
-		},
-	},
 });

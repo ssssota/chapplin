@@ -2,3 +2,4 @@ node_modules
 dist
 /website/.astro
 /e2e/fixtures
+.chapplin

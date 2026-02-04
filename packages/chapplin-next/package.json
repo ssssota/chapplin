@@ -4,9 +4,11 @@
 	"version": "0.0.1",
 	"description": "All-in-one framework for building MCP Server with MCP Apps",
 	"scripts": {
-		"build": "tsdown",
+		"build": "tsdown && pnpm build:dev-ui",
+		"build:dev-ui": "vite build dev-ui",
 		"check": "tsc -b --noEmit",
-		"dev": "tsdown --watch"
+		"dev": "tsdown --watch",
+		"prepare": "pnpm build"
 	},
 	"exports": {
 		".": {
@@ -16,10 +18,28 @@
 		"./vite": {
 			"types": "./dist/vite/index.d.ts",
 			"default": "./dist/vite/index.js"
-		}
+		},
+		"./client/react": {
+			"types": "./dist/client/react.d.ts",
+			"default": "./dist/client/react.js"
+		},
+		"./client/preact": {
+			"types": "./dist/client/preact.d.ts",
+			"default": "./dist/client/preact.js"
+		},
+		"./client/solid": {
+			"types": "./dist/client/solid.d.ts",
+			"default": "./dist/client/solid.js"
+		},
+		"./client/hono": {
+			"types": "./dist/client/hono.d.ts",
+			"default": "./dist/client/hono.js"
+		},
+		"./iframe.html": "./iframe.html"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"iframe.html"
 	],
 	"repository": {
 		"type": "git",
@@ -30,6 +50,11 @@
 	"peerDependencies": {
 		"@modelcontextprotocol/ext-apps": ">=1.0.0",
 		"@modelcontextprotocol/sdk": ">=1.22",
+		"hono": ">=4.0.0",
+		"preact": ">=10.0.0",
+		"react": ">=18.0.0",
+		"react-dom": ">=18.0.0",
+		"solid-js": ">=1.0.0",
 		"vite": ">=6",
 		"zod": ">=3"
 	},
@@ -40,13 +65,13 @@
 		"hono": {
 			"optional": true
 		},
+		"preact": {
+			"optional": true
+		},
 		"react": {
 			"optional": true
 		},
 		"react-dom": {
-			"optional": true
-		},
-		"preact": {
 			"optional": true
 		},
 		"solid-js": {
@@ -56,24 +81,32 @@
 	"devDependencies": {
 		"@modelcontextprotocol/ext-apps": "^1.0.1",
 		"@modelcontextprotocol/sdk": "catalog:",
+		"@preact/preset-vite": "^2.9.0",
 		"@types/estree": "^1.0.8",
 		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
 		"hono": "catalog:",
 		"magic-string": "catalog:",
 		"oxc-parser": "catalog:",
 		"preact": "catalog:",
+		"preact-iso": "^2.0.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"tsdown": "^0.17.0",
 		"typescript": "catalog:",
+		"unocss": "catalog:",
+		"@unocss/reset": "catalog:",
 		"vite": "catalog:",
+		"vite-plugin-dev-api": "^0.1.0",
 		"vite-plugin-singlefile": "catalog:",
-		"zod": "catalog:",
-		"zimmerframe": "catalog:"
+		"zimmerframe": "catalog:",
+		"zod": "catalog:"
 	},
 	"dependencies": {
 		"magic-string": "catalog:",
 		"oxc-parser": "catalog:",
+		"vite-plugin-dev-api": "^0.2.1",
 		"vite-plugin-singlefile": "catalog:",
 		"zimmerframe": "catalog:"
 	}
