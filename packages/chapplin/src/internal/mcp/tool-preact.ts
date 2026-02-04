@@ -1,9 +1,9 @@
-import type { ComponentType, ReactElement } from "react";
-import { useEffect, useState } from "react";
-import { jsx } from "react/jsx-runtime";
-import { createRoot } from "react-dom/client";
-import { createGlobalGetterHooks } from "../client.js";
-import type { OpenAiGlobals } from "../openai.js";
+import type { ComponentType, VNode } from "preact";
+import { render } from "preact";
+import { useEffect, useState } from "preact/hooks";
+import { jsx } from "preact/jsx-runtime";
+import type { OpenAiGlobals } from "../../openai.js";
+import { createGlobalGetterHooks } from "../openai/client.js";
 
 type Widget = { app: ComponentType<OpenAiGlobals> };
 
@@ -17,10 +17,10 @@ export function defineTool(
 ): void {
 	if (!widget) return;
 	const container = document.getElementById("app");
-	if (container) createRoot(container).render(jsx(App, { app: widget.app }));
+	if (container) render(jsx(App, { app: widget.app }), container);
 }
 
-function App(props: Widget): ReactElement {
+function App(props: Widget): VNode {
 	return jsx(props.app, {
 		displayMode: hooks.useDisplayMode(),
 		theme: hooks.useTheme(),

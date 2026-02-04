@@ -1,7 +1,10 @@
 import { type Component, createEffect, createSignal } from "solid-js";
 import { createComponent, render } from "solid-js/web";
-import { createGlobalGetterHook, createGlobalsSubscribe } from "../client.js";
-import type { OpenAiGlobals } from "../openai.js";
+import type { OpenAiGlobals } from "../../openai.js";
+import {
+	createGlobalGetterHook,
+	createGlobalsSubscribe,
+} from "../openai/client.js";
 
 type Widget = { app: Component<OpenAiGlobals> };
 

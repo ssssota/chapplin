@@ -1,4 +1,4 @@
-import { type OpenAiGlobals, SET_GLOBALS_EVENT_TYPE } from "./openai.js";
+import { type OpenAiGlobals, SET_GLOBALS_EVENT_TYPE } from "../../openai.js";
 
 export function createGlobalGetterHooks(hooks: {
 	useState: <T>(initial: T) => [T, (newValue: T) => void];

@@ -1,11 +1,10 @@
-import type { ComponentType, VNode } from "preact";
-import { render } from "preact";
-import { useEffect, useState } from "preact/hooks";
-import { jsx } from "preact/jsx-runtime";
-import { createGlobalGetterHooks } from "../client.js";
-import type { OpenAiGlobals } from "../openai.js";
+import type { Child, JSXNode } from "hono/jsx";
+import { jsx, render, useEffect, useState } from "hono/jsx/dom";
+import type { OpenAiGlobals } from "../../openai.js";
+import { createGlobalGetterHooks } from "./client.js";
 
-type Widget = { app: ComponentType<OpenAiGlobals> };
+type Widget = { app: (props: OpenAiGlobals) => Child };
+type Component = (props: unknown) => JSXNode;
 
 const hooks = createGlobalGetterHooks({ useState, useEffect });
 
@@ -17,11 +16,11 @@ export function defineTool(
 ): void {
 	if (!widget) return;
 	const container = document.getElementById("app");
-	if (container) render(jsx(App, { app: widget.app }), container);
+	if (container) render(jsx(App as Component, { app: widget.app }), container);
 }
 
-function App(props: Widget): VNode {
-	return jsx(props.app, {
+function App(props: Widget): JSXNode {
+	return jsx(props.app as Component, {
 		displayMode: hooks.useDisplayMode(),
 		theme: hooks.useTheme(),
 		userAgent: hooks.useUserAgent(),

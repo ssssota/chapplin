@@ -1,0 +1,33 @@
+import { createMcpServer } from "chapplin:mcp-server";
+import { StreamableHTTPTransport } from "@hono/mcp";
+import { serve } from "@hono/node-server";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Hono } from "hono";
+
+const mode = process.argv[2] || "http";
+
+if (mode === "stdio") {
+	// STDIO transport mode (for CLI usage)
+	const server = createMcpServer();
+	const transport = new StdioServerTransport();
+	await server.connect(transport);
+	console.error("MCP server started in STDIO mode");
+} else {
+	// HTTP transport mode (for web usage)
+	const app = new Hono();
+
+	// Health check endpoint
+	app.get("/health", (c) => c.json({ status: "ok" }));
+
+	// MCP endpoint using StreamableHTTPTransport
+	app.all("/mcp", async (c) => {
+		const server = createMcpServer();
+		const transport = new StreamableHTTPTransport();
+		await server.connect(transport);
+		return transport.handleRequest(c);
+	});
+
+	const port = Number(process.env.PORT) || 3000;
+	console.log(`MCP server started at http://localhost:${port}/mcp`);
+	serve({ fetch: app.fetch, port });
+}

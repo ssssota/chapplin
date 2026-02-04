@@ -1,4 +1,4 @@
-import type { OpenAiGlobals } from "../openai.js";
+import type { OpenAiGlobals } from "../../openai.js";
 
 export function initialize(w: Window & { openai: Partial<OpenAiGlobals> }) {
 	w.openai ||= {
