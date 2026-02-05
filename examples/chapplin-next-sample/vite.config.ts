@@ -10,4 +10,14 @@ export default defineConfig({
 			target: "react",
 		}),
 	],
+	build: {
+		rollupOptions: {
+			external: [
+				"@hono/mcp",
+				"@hono/node-server",
+				"@modelcontextprotocol/sdk/server/stdio.js",
+				"hono",
+			],
+		},
+	},
 });

@@ -1,19 +1,22 @@
-import { readFile } from "node:fs/promises";
-import { glob } from "node:fs/promises";
+import { glob, readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
-import type { CollectedFile, CollectedFiles, Options } from "../types.js";
-import { pathToName, resolveOptions } from "../utils.js";
 import {
 	parsePromptFile,
 	parseResourceFile,
 	parseToolFile,
 } from "../parser.js";
+import type {
+	CollectedFile,
+	CollectedFiles,
+	ResolvedOptions,
+} from "../types.js";
+import { pathToName } from "../utils.js";
 
 /** Store for collection options and root (shared between plugins) */
 let collectionContext: {
 	root: string;
-	opts: ReturnType<typeof resolveOptions>;
+	opts: ResolvedOptions;
 } | null = null;
 
 /** Cached collected files (updated in buildStart) */
@@ -22,8 +25,7 @@ let cachedFiles: CollectedFiles | null = null;
 /**
  * Plugin that collects tool/resource/prompt files
  */
-export function fileCollector(opts: Options): Plugin {
-	const resolvedOpts = resolveOptions(opts);
+export function fileCollector(opts: ResolvedOptions): Plugin {
 	let config: ResolvedConfig;
 
 	return {
@@ -32,7 +34,7 @@ export function fileCollector(opts: Options): Plugin {
 			config = resolvedConfig;
 			collectionContext = {
 				root: config.root,
-				opts: resolvedOpts,
+				opts,
 			};
 		},
 		async buildStart() {
@@ -67,7 +69,7 @@ export function fileCollector(opts: Options): Plugin {
  */
 async function collectFiles(
 	root: string,
-	opts: ReturnType<typeof resolveOptions>,
+	opts: ResolvedOptions,
 ): Promise<CollectedFiles> {
 	const [tools, resources, prompts] = await Promise.all([
 		collectToolFiles(root, opts.toolsDir),
@@ -217,7 +219,10 @@ export async function getCollectedFiles(): Promise<CollectedFiles> {
 		return { tools: [], resources: [], prompts: [] };
 	}
 	// Fetch fresh data
-	const files = await collectFiles(collectionContext.root, collectionContext.opts);
+	const files = await collectFiles(
+		collectionContext.root,
+		collectionContext.opts,
+	);
 	// Update cache
 	cachedFiles = files;
 	return files;

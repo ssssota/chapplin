@@ -43,7 +43,7 @@ export interface Options {
 export interface ResolvedOptions {
 	entry: string[];
 	tsconfigPath: string;
-	target: Target | undefined;
+	target: Target;
 	toolsDir: string;
 	resourcesDir: string;
 	promptsDir: string;

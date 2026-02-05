@@ -1,8 +1,7 @@
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
 import { build as viteBuild } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import type { Options } from "../types.js";
-import { resolveOptions } from "../utils.js";
+import type { ResolvedOptions } from "../types.js";
 import { getCollectedFiles } from "./file-collector.js";
 
 /** Plugin names to exclude from client build */
@@ -17,7 +16,7 @@ const pendingBuilds = new Map<string, Promise<string>>();
 /** Build context for lazy building */
 let buildContext: {
 	config: ResolvedConfig;
-	opts: ReturnType<typeof resolveOptions>;
+	opts: ResolvedOptions;
 	plugins: PluginOption[];
 } | null = null;
 
@@ -64,8 +63,7 @@ export async function getBuiltAppHtml(
 /**
  * Plugin that builds UI tools into single HTML files
  */
-export function clientBuild(opts: Options): Plugin {
-	const resolvedOpts = resolveOptions(opts);
+export function clientBuild(opts: ResolvedOptions): Plugin {
 	let config: ResolvedConfig;
 
 	return {
@@ -81,8 +79,8 @@ export function clientBuild(opts: Options): Plugin {
 			// Set up build context for lazy building
 			buildContext = {
 				config,
-				opts: resolvedOpts,
-				plugins: getClientBuildPlugins(config, resolvedOpts),
+				opts,
+				plugins: getClientBuildPlugins(config, opts),
 			};
 		},
 		buildEnd() {
@@ -97,7 +95,7 @@ export function clientBuild(opts: Options): Plugin {
  */
 function getClientBuildPlugins(
 	config: ResolvedConfig,
-	_opts: ReturnType<typeof resolveOptions>,
+	_opts: ResolvedOptions,
 ): PluginOption[] {
 	// Framework plugin prefixes to keep
 	const KEEP_PREFIXES = [

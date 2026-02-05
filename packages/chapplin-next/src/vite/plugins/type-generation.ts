@@ -7,7 +7,7 @@ import {
 	parseResourceFile,
 	parseToolFile,
 } from "../parser.js";
-import type { Options } from "../types.js";
+import type { ResolvedOptions } from "../types.js";
 import { getCollectedFiles } from "./file-collector.js";
 
 /** Output directory for generated types */
@@ -16,7 +16,7 @@ const TYPE_GEN_DIR = ".chapplin/types";
 /**
  * Plugin that generates TypeScript type definitions
  */
-export function typeGeneration(_opts: Options): Plugin {
+export function typeGeneration(_opts: ResolvedOptions): Plugin {
 	let config: ResolvedConfig;
 
 	return {

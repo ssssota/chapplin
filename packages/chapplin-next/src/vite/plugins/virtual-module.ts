@@ -4,8 +4,8 @@ import {
 	RESOLVED_VIRTUAL_MODULE_ID,
 	VIRTUAL_MODULE_ID,
 } from "../../constants.js";
-import type { CollectedFiles, Options } from "../types.js";
-import { nameToIdentifier, resolveOptions } from "../utils.js";
+import type { CollectedFiles, ResolvedOptions } from "../types.js";
+import { nameToIdentifier } from "../utils.js";
 import { getBuiltAppHtml } from "./client-build.js";
 import { getCollectedFiles } from "./file-collector.js";
 
@@ -15,9 +15,7 @@ const APP_HTML_PREFIX = "virtual:chapplin-app-html:";
 /**
  * Plugin that provides the virtual module `chapplin:mcp-server`
  */
-export function virtualModule(opts: Options): Plugin {
-	const resolvedOpts = resolveOptions(opts);
-
+export function virtualModule(opts: ResolvedOptions): Plugin {
 	return {
 		name: "chapplin:virtual-module",
 		resolveId(id) {
@@ -32,7 +30,7 @@ export function virtualModule(opts: Options): Plugin {
 		async load(id) {
 			if (id === RESOLVED_VIRTUAL_MODULE_ID) {
 				const files = await getCollectedFiles();
-				return generateVirtualModuleCode(files, resolvedOpts);
+				return generateVirtualModuleCode(files, opts);
 			}
 			// Load app HTML virtual modules
 			if (id.startsWith(`\0${APP_HTML_PREFIX}`)) {
@@ -53,7 +51,7 @@ export function virtualModule(opts: Options): Plugin {
  */
 function generateVirtualModuleCode(
 	files: CollectedFiles,
-	_opts: ReturnType<typeof resolveOptions>,
+	_opts: ResolvedOptions,
 ): string {
 	const imports: string[] = [];
 	const toolRegistrations: string[] = [];
@@ -87,7 +85,9 @@ function generateVirtualModuleCode(
 	for (const resource of files.resources) {
 		const identifier = nameToIdentifier(resource.name.replace(/\//g, "_"));
 		const importName = `resource_${identifier}`;
-		imports.push(`import { resource as ${importName} } from "${resource.path}";`);
+		imports.push(
+			`import { resource as ${importName} } from "${resource.path}";`,
+		);
 		resourceRegistrations.push(generateResourceRegistration(importName));
 	}
 

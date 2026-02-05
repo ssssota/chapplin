@@ -6,8 +6,7 @@ import { styleText } from "node:util";
 import { Hono } from "hono";
 import type { Plugin, ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
-import type { Options } from "../types.js";
-import { resolveOptions } from "../utils.js";
+import type { ResolvedOptions } from "../types.js";
 import { app as apiApp } from "./api-app.js";
 
 /** Dev server preview UI path */
@@ -105,8 +104,7 @@ function setupPreviewUrlLogging(server: ViteDevServer) {
 /**
  * Plugin that provides dev server functionality
  */
-export function devServer(opts: Options): Plugin[] {
-	const resolvedOpts = resolveOptions(opts);
+export function devServer(opts: ResolvedOptions): Plugin[] {
 	let root: string;
 
 	return [
@@ -142,7 +140,7 @@ export function devServer(opts: Options): Plugin[] {
 					const resolvedPath = join(root, path);
 					this.addWatchFile(resolvedPath);
 					return [
-						`import { init } from 'chapplin-next/client/${resolvedOpts.target}';`,
+						`import { init } from 'chapplin-next/client/${opts.target}';`,
 						`import { app } from '${resolvedPath}';`,
 						`init(app.ui);`,
 					].join("\n");
@@ -208,7 +206,7 @@ export function devServer(opts: Options): Plugin[] {
 						if (req.url.startsWith("/iframe/tools/")) {
 							const toolFile = req.url.replace("/iframe/tools/", "");
 							res.setHeader("content-type", "text/html");
-							const toolPath = `/${resolvedOpts.toolsDir}/${toolFile}`;
+							const toolPath = `/${opts.toolsDir}/${toolFile}`;
 							const script = await server.transformRequest(
 								`${VIRTUAL_MODULE_PREFIX}${toolPath}`,
 							);
