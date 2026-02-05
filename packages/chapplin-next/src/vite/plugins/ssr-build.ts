@@ -12,12 +12,9 @@ export function ssrBuild(opts: ResolvedOptions): Plugin {
 		name: "chapplin:ssr-build",
 		config(_, { command }) {
 			if (command === "build") {
-				// build.ssr expects a single string entry
-				// For multiple entries, use rollupOptions.input with build.ssr: true
-				const ssrEntry = opts.entry.length === 1 ? opts.entry[0] : opts.entry;
 				return {
 					build: {
-						ssr: ssrEntry,
+						ssr: opts.entry,
 					},
 				};
 			}

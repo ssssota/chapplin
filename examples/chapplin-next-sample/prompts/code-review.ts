@@ -1,5 +1,5 @@
 import { definePrompt } from "chapplin-next";
-import { z } from "zod";
+import z from "zod";
 
 export const prompt = definePrompt({
 	name: "code-review",
@@ -10,9 +10,7 @@ export const prompt = definePrompt({
 			focus: z
 				.string()
 				.optional()
-				.describe(
-					"レビューの焦点（例: security, performance, readability）",
-				),
+				.describe("レビューの焦点（例: security, performance, readability）"),
 		},
 	},
 	handler(args) {

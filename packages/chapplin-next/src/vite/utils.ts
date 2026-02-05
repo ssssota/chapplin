@@ -9,14 +9,8 @@ import type { Options, ResolvedOptions } from "./types.js";
  * Resolve options with defaults
  */
 export function resolveOptions(opts: Options): ResolvedOptions {
-	const entry = opts.entry
-		? Array.isArray(opts.entry)
-			? opts.entry
-			: [opts.entry]
-		: ["./src/index.ts"];
-
 	return {
-		entry,
+		entry: opts.entry ?? "./src/index.ts",
 		tsconfigPath: opts.tsconfigPath ?? "tsconfig.json",
 		target: opts.target,
 		toolsDir: opts.toolsDir ?? DEFAULT_TOOLS_DIR,

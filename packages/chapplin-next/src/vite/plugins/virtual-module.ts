@@ -60,43 +60,32 @@ function generateVirtualModuleCode(
 
 	// Generate imports and registrations for tools (defineTool / defineApp)
 	for (const tool of files.tools) {
-		const identifier = nameToIdentifier(tool.name.replace(/\//g, "_"));
-		const toolVar = `tool_${identifier}`;
+		const ns = `tool_${nameToIdentifier(tool.name.replace(/\//g, "_"))}`;
+		imports.push(`import * as ${ns} from "${tool.path}";`);
 
 		if (tool.hasApp) {
-			const appVar = `app_${identifier}`;
-			imports.push(
-				`import { tool as ${toolVar}, app as ${appVar} } from "${tool.path}";`,
-			);
-			const htmlImportName = `${toolVar}_html`;
+			const htmlImportName = `${ns}_html`;
 			imports.push(
 				`import ${htmlImportName} from "${APP_HTML_PREFIX}${tool.name}";`,
 			);
-			toolRegistrations.push(
-				generateAppToolRegistration(toolVar, appVar, htmlImportName),
-			);
+			toolRegistrations.push(generateAppToolRegistration(ns, htmlImportName));
 		} else {
-			imports.push(`import { tool as ${toolVar} } from "${tool.path}";`);
-			toolRegistrations.push(generateBasicToolRegistration(toolVar));
+			toolRegistrations.push(generateBasicToolRegistration(ns));
 		}
 	}
 
 	// Generate imports and registrations for resources (defineResource)
 	for (const resource of files.resources) {
-		const identifier = nameToIdentifier(resource.name.replace(/\//g, "_"));
-		const importName = `resource_${identifier}`;
-		imports.push(
-			`import { resource as ${importName} } from "${resource.path}";`,
-		);
-		resourceRegistrations.push(generateResourceRegistration(importName));
+		const ns = `resource_${nameToIdentifier(resource.name.replace(/\//g, "_"))}`;
+		imports.push(`import * as ${ns} from "${resource.path}";`);
+		resourceRegistrations.push(generateResourceRegistration(ns));
 	}
 
 	// Generate imports and registrations for prompts (definePrompt)
 	for (const prompt of files.prompts) {
-		const identifier = nameToIdentifier(prompt.name.replace(/\//g, "_"));
-		const importName = `prompt_${identifier}`;
-		imports.push(`import { prompt as ${importName} } from "${prompt.path}";`);
-		promptRegistrations.push(generatePromptRegistration(importName));
+		const ns = `prompt_${nameToIdentifier(prompt.name.replace(/\//g, "_"))}`;
+		imports.push(`import * as ${ns} from "${prompt.path}";`);
+		promptRegistrations.push(generatePromptRegistration(ns));
 	}
 
 	return `
@@ -134,39 +123,38 @@ export default createMcpServer;
 /**
  * Generate registration code for a basic tool (no UI)
  */
-function generateBasicToolRegistration(importName: string): string {
-	return `server.registerTool(${importName}.name, ${importName}.config, ${importName}.handler);`;
+function generateBasicToolRegistration(ns: string): string {
+	return `server.registerTool(${ns}.tool.name, ${ns}.tool.config, ${ns}.tool.handler);`;
 }
 
 /**
  * Generate registration code for a tool with UI (defineApp; app.meta used for _meta)
  */
 function generateAppToolRegistration(
-	toolVar: string,
-	appVar: string,
+	ns: string,
 	htmlImportName: string,
 ): string {
 	return `
 {
-  const uri = \`ui://\${${toolVar}.name}/app.html\`;
+  const uri = \`ui://\${${ns}.tool.name}/app.html\`;
   server.registerTool(
-    ${toolVar}.name,
+    ${ns}.tool.name,
     {
-      ...${toolVar}.config,
+      ...${ns}.tool.config,
       _meta: {
-        ...${toolVar}.config._meta,
+        ...${ns}.tool.config._meta,
         ui: { resourceUri: uri },
       },
     },
-    ${toolVar}.handler
+    ${ns}.tool.handler
   );
   server.registerResource(
-    ${toolVar}.name,
+    ${ns}.tool.name,
     uri,
     {
-      description: ${toolVar}.config.description,
+      description: ${ns}.tool.config.description,
       mimeType: "${RESOURCE_MIME_TYPE}",
-      _meta: { ui: ${appVar}.meta ?? {} },
+      _meta: { ui: ${ns}.app.meta ?? {} },
     },
     async () => ({
       contents: [{
@@ -182,13 +170,13 @@ function generateAppToolRegistration(
 /**
  * Generate registration code for a resource
  */
-function generateResourceRegistration(importName: string): string {
-	return `server.registerResource(${importName}.name, ${importName}.config.uri, ${importName}.config, ${importName}.handler);`;
+function generateResourceRegistration(ns: string): string {
+	return `server.registerResource(${ns}.resource.name, ${ns}.resource.config.uri, ${ns}.resource.config, ${ns}.resource.handler);`;
 }
 
 /**
  * Generate registration code for a prompt
  */
-function generatePromptRegistration(importName: string): string {
-	return `server.registerPrompt(${importName}.name, ${importName}.config, ${importName}.handler);`;
+function generatePromptRegistration(ns: string): string {
+	return `server.registerPrompt(${ns}.prompt.name, ${ns}.prompt.config, ${ns}.prompt.handler);`;
 }

@@ -44,10 +44,7 @@ export interface ParsedPromptFile {
 	argsSchemaSource: string | null;
 }
 
-function getObjectProperty(
-	obj: ObjectExpression,
-	keyName: string,
-): unknown {
+function getObjectProperty(obj: ObjectExpression, keyName: string): unknown {
 	for (const prop of obj.properties) {
 		if (prop.type !== "Property") continue;
 		const key = (prop as Property).key;
@@ -85,7 +82,7 @@ function extractFromDefineToolObject(
 	if (
 		configVal &&
 		typeof configVal === "object" &&
-		configVal.type === "ObjectExpression"
+		(configVal as { type?: string }).type === "ObjectExpression"
 	) {
 		const config = configVal as ObjectExpression;
 		const inputProp = getObjectProperty(config, "inputSchema");
@@ -140,10 +137,11 @@ export async function parseToolFile(
 					if (varName === "tool" && d.init?.type === "CallExpression") {
 						const call = d.init as CallExpression;
 						const callee =
-							call.callee.type === "Identifier"
-								? call.callee.name
-								: null;
-						if (callee === "defineTool" && call.arguments[0]?.type === "ObjectExpression") {
+							call.callee.type === "Identifier" ? call.callee.name : null;
+						if (
+							callee === "defineTool" &&
+							call.arguments[0]?.type === "ObjectExpression"
+						) {
 							state.hasTool = true;
 							const extracted = extractFromDefineToolObject(
 								call.arguments[0] as ObjectExpression,
@@ -158,9 +156,7 @@ export async function parseToolFile(
 					} else if (varName === "app" && d.init?.type === "CallExpression") {
 						const call = d.init as CallExpression;
 						const callee =
-							call.callee.type === "Identifier"
-								? call.callee.name
-								: null;
+							call.callee.type === "Identifier" ? call.callee.name : null;
 						if (callee === "defineApp") {
 							state.hasApp = true;
 						}
@@ -173,9 +169,10 @@ export async function parseToolFile(
 	return result;
 }
 
-function extractFromDefineResourceObject(
-	obj: ObjectExpression,
-): { name: string | null; uri: string | null } {
+function extractFromDefineResourceObject(obj: ObjectExpression): {
+	name: string | null;
+	uri: string | null;
+} {
 	let name: string | null = null;
 	let uri: string | null = null;
 
@@ -188,12 +185,9 @@ function extractFromDefineResourceObject(
 	if (
 		configVal &&
 		typeof configVal === "object" &&
-		configVal.type === "ObjectExpression"
+		(configVal as { type?: string }).type === "ObjectExpression"
 	) {
-		const uriVal = getObjectProperty(
-			configVal as ObjectExpression,
-			"uri",
-		);
+		const uriVal = getObjectProperty(configVal as ObjectExpression, "uri");
 		if (uriVal && typeof uriVal === "object" && "value" in uriVal) {
 			uri = String((uriVal as { value: unknown }).value);
 		}
@@ -233,10 +227,11 @@ export async function parseResourceFile(
 					if (varName === "resource" && d.init?.type === "CallExpression") {
 						const call = d.init as CallExpression;
 						const callee =
-							call.callee.type === "Identifier"
-								? call.callee.name
-								: null;
-						if (callee === "defineResource" && call.arguments[0]?.type === "ObjectExpression") {
+							call.callee.type === "Identifier" ? call.callee.name : null;
+						if (
+							callee === "defineResource" &&
+							call.arguments[0]?.type === "ObjectExpression"
+						) {
 							state.hasResource = true;
 							const extracted = extractFromDefineResourceObject(
 								call.arguments[0] as ObjectExpression,
@@ -269,7 +264,7 @@ function extractFromDefinePromptObject(
 	if (
 		configVal &&
 		typeof configVal === "object" &&
-		configVal.type === "ObjectExpression"
+		(configVal as { type?: string }).type === "ObjectExpression"
 	) {
 		const argsProp = getObjectProperty(
 			configVal as ObjectExpression,
@@ -317,10 +312,11 @@ export async function parsePromptFile(
 					if (varName === "prompt" && d.init?.type === "CallExpression") {
 						const call = d.init as CallExpression;
 						const callee =
-							call.callee.type === "Identifier"
-								? call.callee.name
-								: null;
-						if (callee === "definePrompt" && call.arguments[0]?.type === "ObjectExpression") {
+							call.callee.type === "Identifier" ? call.callee.name : null;
+						if (
+							callee === "definePrompt" &&
+							call.arguments[0]?.type === "ObjectExpression"
+						) {
 							state.hasPrompt = true;
 							const extracted = extractFromDefinePromptObject(
 								call.arguments[0] as ObjectExpression,

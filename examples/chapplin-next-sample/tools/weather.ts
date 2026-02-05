@@ -1,5 +1,5 @@
 import { defineTool } from "chapplin-next";
-import { z } from "zod";
+import z from "zod";
 
 export const tool = defineTool({
 	name: "get_weather",

@@ -7,7 +7,7 @@ export interface Options {
 	 * Entry point file
 	 * @default './src/index.ts'
 	 */
-	entry?: string | string[];
+	entry?: string;
 
 	/**
 	 * Path to tsconfig.json
@@ -41,7 +41,7 @@ export interface Options {
 
 /** Resolved options with defaults applied */
 export interface ResolvedOptions {
-	entry: string[];
+	entry: string;
 	tsconfigPath: string;
 	target: Target;
 	toolsDir: string;

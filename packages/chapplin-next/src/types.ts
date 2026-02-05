@@ -50,12 +50,14 @@ export type ToolHandlerExtra = RequestHandlerExtra<
 export type ToolHandler<
 	TInput extends ZodRawShape = ZodRawShape,
 	TOutput extends ZodRawShape = ZodRawShape,
+	TMeta extends Record<string, unknown> = Record<string, unknown>,
 > = (
 	args: InferShapeOutput<TInput>,
 	extra: ToolHandlerExtra,
 ) => Promise<
 	CallToolResult & {
 		structuredContent?: InferShapeOutput<TOutput>;
+		_meta?: TMeta;
 	}
 >;
 

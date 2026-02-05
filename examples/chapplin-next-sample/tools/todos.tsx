@@ -1,5 +1,5 @@
 import { defineApp, defineTool } from "chapplin-next";
-import { z } from "zod";
+import z from "zod";
 
 const todos = [
 	{ id: 1, title: "牛乳を買う", completed: false },

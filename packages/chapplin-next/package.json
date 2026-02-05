@@ -8,7 +8,8 @@
 		"build:dev-ui": "vite build dev-ui",
 		"check": "tsc -b --noEmit",
 		"dev": "tsdown --watch",
-		"prepare": "pnpm build"
+		"prepare": "pnpm build",
+		"test": "vitest"
 	},
 	"exports": {
 		".": {
@@ -86,6 +87,7 @@
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"@unocss/reset": "catalog:",
 		"hono": "catalog:",
 		"magic-string": "catalog:",
 		"oxc-parser": "catalog:",
@@ -96,10 +98,10 @@
 		"tsdown": "^0.17.0",
 		"typescript": "catalog:",
 		"unocss": "catalog:",
-		"@unocss/reset": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dev-api": "^0.1.0",
 		"vite-plugin-singlefile": "catalog:",
+		"vitest": "^4.0.15",
 		"zimmerframe": "catalog:",
 		"zod": "catalog:"
 	},

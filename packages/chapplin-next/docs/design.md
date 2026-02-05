@@ -109,7 +109,7 @@ project/
 ```typescript
 // tools/weather.ts
 import { defineTool } from "chapplin-next";
-import { z } from "zod";
+import z from "zod";
 
 export const tool = defineTool({
   name: "get_weather",
@@ -146,7 +146,7 @@ export const tool = defineTool({
 ```tsx
 // tools/chart.tsx
 import { defineTool, defineApp } from "chapplin-next";
-import { z } from "zod";
+import z from "zod";
 
 export const tool = defineTool({
   name: "show_chart",
@@ -249,7 +249,7 @@ export const resource = defineResource({
 ```typescript
 // prompts/code-review.ts
 import { definePrompt } from "chapplin-next";
-import { z } from "zod";
+import z from "zod";
 
 export const prompt = definePrompt({
   name: "code-review",
