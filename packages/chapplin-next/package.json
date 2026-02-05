@@ -83,14 +83,12 @@
 		"@modelcontextprotocol/ext-apps": "^1.0.1",
 		"@modelcontextprotocol/sdk": "catalog:",
 		"@preact/preset-vite": "^2.9.0",
-		"@types/estree": "^1.0.8",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"@unocss/reset": "catalog:",
 		"hono": "catalog:",
 		"magic-string": "catalog:",
-		"oxc-parser": "catalog:",
 		"preact": "catalog:",
 		"preact-iso": "^2.0.0",
 		"react": "catalog:",
@@ -102,14 +100,11 @@
 		"vite-plugin-dev-api": "^0.1.0",
 		"vite-plugin-singlefile": "catalog:",
 		"vitest": "^4.0.15",
-		"zimmerframe": "catalog:",
 		"zod": "catalog:"
 	},
 	"dependencies": {
 		"magic-string": "catalog:",
-		"oxc-parser": "catalog:",
 		"vite-plugin-dev-api": "^0.2.1",
-		"vite-plugin-singlefile": "catalog:",
-		"zimmerframe": "catalog:"
+		"vite-plugin-singlefile": "catalog:"
 	}
 }

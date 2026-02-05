@@ -36,7 +36,6 @@ chapplin は、Model Context Protocol (MCP) サーバーと MCP Apps（インタ
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "vite-plugin-singlefile": "*",
     "magic-string": "*",
-    "oxc-parser": "*",
     "preact-iso": "*",
     "vite-plugin-dev-api": "*"
   }
@@ -160,9 +159,12 @@ export const tool = defineTool({
   },
   async handler(args, extra) {
     const chartId = generateId();
+    // _meta contains UI-only data that won't be sent to the LLM
+    const chartData = await fetchChartData(args.data);
     return {
       content: [{ type: "text", text: `Chart ${chartId} created` }],
       structuredContent: { chartId },
+      _meta: { chartData },  // Passed to UI but not to LLM
     };
   },
 });
@@ -179,39 +181,81 @@ export const app = defineApp<typeof tool>({
   ui: (props) => (
     <div>
       <h1>Chart: {props.output?.chartId}</h1>
-      <Chart type={props.input.chartType} data={props.input.data} />
+      {/* props.meta is typed based on handler's _meta return */}
+      {props.meta && <Chart data={props.meta.chartData} />}
     </div>
   ),
 });
 ```
 
-- **meta**: MCP App のメタデータ（CSP・権限・prefersBorder など）。`@modelcontextprotocol/ext-apps` の AppMeta に準拠。
+- **meta (in defineApp)**: MCP App のメタデータ（CSP・権限・prefersBorder など）。`@modelcontextprotocol/ext-apps` の AppMeta に準拠。
 - **ui**: すべて JSX で記述する。React/Preact/Solid は各ランタイムの JSX、**Hono は `hono/jsx` モジュールを前提とする**（後述）。`props` は `{ input, output, meta }` で、型は `typeof tool` から推論。
+- **_meta (in handler return)**: UI 専用データ。LLM に送信されず、UI のみに渡される。コンテキストの汚染を避けつつ、大きなデータや可視化用データを UI に渡す際に使用。
 
 #### 4.1.3 型定義
 
 ```typescript
 // defineTool の型（イメージ）
-function defineTool<TConfig extends ToolConfig>(options: {
-  name: string;
-  config: TConfig;
-  handler: ToolHandler<InferInput<TConfig>, InferOutput<TConfig>>;
-}): DefinedTool<TConfig>;
+// TMeta is inferred from handler's _meta return type
+function defineTool<TName, TInput, TOutput, TMeta>(options: {
+  name: TName;
+  config: { inputSchema: TInput; outputSchema: TOutput; ... };
+  handler: (args: TInput) => Promise<{
+    content: Content[];
+    structuredContent: TOutput;
+    _meta?: TMeta;  // UI-only data
+  }>;
+}): DefinedTool<TName, TInput, TOutput, TMeta>;
 
 // defineApp の型（イメージ）
-// ui はすべて JSX。Hono の場合は hono/jsx の JSXNode / Child を返す
+// TMeta is extracted from TTool and passed to AppProps
 function defineApp<TTool extends DefinedTool>(options: {
   meta?: AppMeta;
-  ui: (props: AppProps<TTool>) => ReactNode;  // React/Preact/Solid: 各 JSX。Hono: hono/jsx の Child
+  ui: (props: AppProps<TTool>) => ReactNode;
 }): DefinedApp<TTool>;
 
-// CallToolResult / AppMeta / AppProps 等は従来どおり
-interface ToolConfig<TInput, TOutput> { ... }
-interface AppMeta { ... }
-interface AppProps<TInput, TOutput, TMeta> { input: TInput; output: TOutput | null; meta: TMeta | null; }
+// AppProps includes meta from handler's _meta
+interface AppProps<TInput, TOutput, TMeta> {
+  input: TInput;
+  output: TOutput | null;
+  meta: TMeta | null;  // From handler's _meta, null if not yet executed
+}
 ```
 
-#### 4.1.4 懸念・注意点
+#### 4.1.4 `_meta` による UI 専用データの受け渡し
+
+ツールのハンドラーから `_meta` を返すと、そのデータは UI にのみ渡され、LLM には送信されません。これにより、以下のようなユースケースに対応できます：
+
+- **大きなデータ**: チャートの元データなど、LLM のコンテキストを圧迫するデータ
+- **可視化用データ**: 画像の Base64、グラフの座標データなど
+- **UI 状態**: デフォルトのタブ選択、初期ズームレベルなど
+
+```typescript
+// handler 内で _meta を返す
+async handler(args) {
+  const result = await processData(args);
+  return {
+    content: [{ type: "text", text: "処理完了" }],
+    structuredContent: { summary: result.summary },
+    _meta: {
+      rawData: result.data,      // 大きなデータ
+      chartPoints: result.chart, // 可視化用
+    },
+  };
+}
+
+// UI で props.meta として受け取る
+ui: (props) => (
+  <div>
+    <Summary text={props.output?.summary} />
+    {props.meta && <Chart points={props.meta.chartPoints} />}
+  </div>
+)
+```
+
+型安全性は完全に保たれ、`props.meta` の型は `handler` の `_meta` 戻り値から自動推論されます。
+
+#### 4.1.5 懸念・注意点
 
 - **既存実装との差**: 現在の実装は `export const name` / `export const config` / `export function handler` 等の**個別 export** をパースしています。define* 形式に合わせるには、ファイル収集・型生成・仮想モジュール生成のいずれも「`defineTool` / `defineResource` / `definePrompt` の呼び出し」および「`defineApp<typeof tool>` の有無」を解析する形に変更する必要があります。
 - **export 名**: `tool` / `resource` / `prompt` / `app` を標準の export 名として扱う想定です。複数 export は想定せず、1 ファイル 1 つの define* にします。

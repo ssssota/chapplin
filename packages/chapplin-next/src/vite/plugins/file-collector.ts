@@ -1,17 +1,18 @@
 import { glob, readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
-import {
-	parsePromptFile,
-	parseResourceFile,
-	parseToolFile,
-} from "../parser.js";
 import type {
 	CollectedFile,
 	CollectedFiles,
 	ResolvedOptions,
 } from "../types.js";
 import { pathToName } from "../utils.js";
+
+/** Regex patterns for detecting define* calls */
+const DEFINE_TOOL_PATTERN = /\bdefineTool\b/;
+const DEFINE_APP_PATTERN = /\bdefineApp\b/;
+const DEFINE_RESOURCE_PATTERN = /\bdefineResource\b/;
+const DEFINE_PROMPT_PATTERN = /\bdefinePrompt\b/;
 
 /** Store for collection options and root (shared between plugins) */
 let collectionContext: {
@@ -81,7 +82,7 @@ async function collectFiles(
 }
 
 /**
- * Collect files from tools directory (defineTool / defineApp format)
+ * Collect files from tools directory
  */
 async function collectToolFiles(
 	root: string,
@@ -95,16 +96,18 @@ async function collectToolFiles(
 			const absolutePath = resolve(fullDir, entry);
 			const relativePath = relative(root, absolutePath);
 			const code = await readFile(absolutePath, "utf-8");
-			const parsed = await parseToolFile(absolutePath, code);
 
-			if (!parsed.hasTool) continue;
+			// Check if file contains defineTool
+			if (!DEFINE_TOOL_PATTERN.test(code)) continue;
 
-			const name = parsed.name ?? pathToName(entry, "");
+			const name = pathToName(entry, "");
+			const hasApp = DEFINE_APP_PATTERN.test(code);
+
 			files.push({
 				path: absolutePath,
 				relativePath,
 				name,
-				hasApp: parsed.hasApp,
+				hasApp,
 			});
 		}
 	} catch (err) {
@@ -121,7 +124,7 @@ async function collectToolFiles(
 }
 
 /**
- * Collect files from resources directory (defineResource format)
+ * Collect files from resources directory
  */
 async function collectResourceFiles(
 	root: string,
@@ -135,11 +138,12 @@ async function collectResourceFiles(
 			const absolutePath = resolve(fullDir, entry);
 			const relativePath = relative(root, absolutePath);
 			const code = await readFile(absolutePath, "utf-8");
-			const parsed = await parseResourceFile(absolutePath, code);
 
-			if (!parsed.hasResource) continue;
+			// Check if file contains defineResource
+			if (!DEFINE_RESOURCE_PATTERN.test(code)) continue;
 
-			const name = parsed.name ?? pathToName(entry, "");
+			const name = pathToName(entry, "");
+
 			files.push({
 				path: absolutePath,
 				relativePath,
@@ -161,7 +165,7 @@ async function collectResourceFiles(
 }
 
 /**
- * Collect files from prompts directory (definePrompt format)
+ * Collect files from prompts directory
  */
 async function collectPromptFiles(
 	root: string,
@@ -175,11 +179,12 @@ async function collectPromptFiles(
 			const absolutePath = resolve(fullDir, entry);
 			const relativePath = relative(root, absolutePath);
 			const code = await readFile(absolutePath, "utf-8");
-			const parsed = await parsePromptFile(absolutePath, code);
 
-			if (!parsed.hasPrompt) continue;
+			// Check if file contains definePrompt
+			if (!DEFINE_PROMPT_PATTERN.test(code)) continue;
 
-			const name = parsed.name ?? pathToName(entry, "");
+			const name = pathToName(entry, "");
+
 			files.push({
 				path: absolutePath,
 				relativePath,

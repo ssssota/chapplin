@@ -1,12 +1,7 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
 import { VIRTUAL_MODULE_ID } from "../../constants.js";
-import {
-	parsePromptFile,
-	parseResourceFile,
-	parseToolFile,
-} from "../parser.js";
 import type { ResolvedOptions } from "../types.js";
 import { getCollectedFiles } from "./file-collector.js";
 
@@ -28,46 +23,24 @@ export function typeGeneration(_opts: ResolvedOptions): Plugin {
 			const files = await getCollectedFiles();
 			const root = config.root;
 
-			// Parse all files to extract type information
-			const toolInfos = await Promise.all(
-				files.tools.map(async (tool) => {
-					const code = await readFile(tool.path, "utf-8");
-					const parsed = await parseToolFile(tool.path, code);
-					return {
-						...tool,
-						...parsed,
-					};
-				}),
-			);
-
-			const resourceInfos = await Promise.all(
-				files.resources.map(async (resource) => {
-					const code = await readFile(resource.path, "utf-8");
-					const parsed = await parseResourceFile(resource.path, code);
-					return {
-						...resource,
-						...parsed,
-					};
-				}),
-			);
-
-			const promptInfos = await Promise.all(
-				files.prompts.map(async (prompt) => {
-					const code = await readFile(prompt.path, "utf-8");
-					const parsed = await parsePromptFile(prompt.path, code);
-					return {
-						...prompt,
-						...parsed,
-					};
-				}),
-			);
-
-			// Generate type definitions
+			// Generate type definitions using import-based type inference
 			const typeDefinitions = generateTypeDefinitions(
 				root,
-				toolInfos,
-				resourceInfos,
-				promptInfos,
+				files.tools.map((t) => ({
+					path: t.path,
+					relativePath: t.relativePath,
+					name: t.name,
+				})),
+				files.resources.map((r) => ({
+					path: r.path,
+					relativePath: r.relativePath,
+					name: r.name,
+				})),
+				files.prompts.map((p) => ({
+					path: p.path,
+					relativePath: p.relativePath,
+					name: p.name,
+				})),
 			);
 
 			// Write to .chapplin/types/ directory
@@ -105,27 +78,10 @@ export function typeGeneration(_opts: ResolvedOptions): Plugin {
 	};
 }
 
-interface ToolInfo {
+interface FileInfo {
 	path: string;
 	relativePath: string;
-	name: string | null;
-	hasApp: boolean;
-	inputSchemaSource: string | null;
-	outputSchemaSource: string | null;
-}
-
-interface ResourceInfo {
-	path: string;
-	relativePath: string;
-	name: string | null;
-	uri: string | null;
-}
-
-interface PromptInfo {
-	path: string;
-	relativePath: string;
-	name: string | null;
-	argsSchemaSource: string | null;
+	name: string;
 }
 
 /**
@@ -133,9 +89,9 @@ interface PromptInfo {
  */
 function generateTypeDefinitions(
 	root: string,
-	tools: ToolInfo[],
-	resources: ResourceInfo[],
-	prompts: PromptInfo[],
+	tools: FileInfo[],
+	resources: FileInfo[],
+	prompts: FileInfo[],
 ): {
 	mcpServer: string;
 	tools: string;
@@ -172,10 +128,9 @@ function generateTypeDefinitions(
 	];
 
 	for (const tool of tools) {
-		const toolName = tool.name || tool.relativePath.replace(/\.(ts|tsx)$/, "");
 		const importPath = `../${relative(root, tool.path).replace(/\.(ts|tsx)$/, "")}`;
 
-		toolsLines.push(`    "${toolName}": {`);
+		toolsLines.push(`    "${tool.name}": {`);
 		toolsLines.push(`      /** Import path: ${importPath} */`);
 		toolsLines.push(
 			`      input: typeof import("${importPath}").tool.config extends { inputSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
@@ -191,9 +146,7 @@ function generateTypeDefinitions(
 
 	// Export tool names as a union type
 	if (tools.length > 0) {
-		const toolNames = tools
-			.map((t) => `"${t.name || t.relativePath.replace(/\.(ts|tsx)$/, "")}"`)
-			.join(" | ");
+		const toolNames = tools.map((t) => `"${t.name}"`).join(" | ");
 		toolsLines.push(`  export type ToolName = ${toolNames};`);
 	} else {
 		toolsLines.push("  export type ToolName = never;");
@@ -210,10 +163,12 @@ function generateTypeDefinitions(
 	];
 
 	for (const resource of resources) {
-		const resourceName =
-			resource.name || resource.relativePath.replace(/\.ts$/, "");
-		resourcesLines.push(`    "${resourceName}": {`);
-		resourcesLines.push(`      uri: "${resource.uri || "unknown"}";`);
+		const importPath = `../${relative(root, resource.path).replace(/\.ts$/, "")}`;
+
+		resourcesLines.push(`    "${resource.name}": {`);
+		resourcesLines.push(
+			`      uri: typeof import("${importPath}").resource.config extends { uri: infer U } ? U : string;`,
+		);
 		resourcesLines.push("    };");
 	}
 
@@ -221,9 +176,7 @@ function generateTypeDefinitions(
 	resourcesLines.push("");
 
 	if (resources.length > 0) {
-		const resourceNames = resources
-			.map((r) => `"${r.name || r.relativePath.replace(/\.ts$/, "")}"`)
-			.join(" | ");
+		const resourceNames = resources.map((r) => `"${r.name}"`).join(" | ");
 		resourcesLines.push(`  export type ResourceName = ${resourceNames};`);
 	} else {
 		resourcesLines.push("  export type ResourceName = never;");
@@ -240,10 +193,9 @@ function generateTypeDefinitions(
 	];
 
 	for (const prompt of prompts) {
-		const promptName = prompt.name || prompt.relativePath.replace(/\.ts$/, "");
 		const importPath = `../${relative(root, prompt.path).replace(/\.ts$/, "")}`;
 
-		promptsLines.push(`    "${promptName}": {`);
+		promptsLines.push(`    "${prompt.name}": {`);
 		promptsLines.push(
 			`      args: typeof import("${importPath}").prompt.config extends { argsSchema: infer S } ? import("zod").infer<import("zod").ZodObject<S>> : Record<string, unknown>;`,
 		);
@@ -254,9 +206,7 @@ function generateTypeDefinitions(
 	promptsLines.push("");
 
 	if (prompts.length > 0) {
-		const promptNames = prompts
-			.map((p) => `"${p.name || p.relativePath.replace(/\.ts$/, "")}"`)
-			.join(" | ");
+		const promptNames = prompts.map((p) => `"${p.name}"`).join(" | ");
 		promptsLines.push(`  export type PromptName = ${promptNames};`);
 	} else {
 		promptsLines.push("  export type PromptName = never;");
