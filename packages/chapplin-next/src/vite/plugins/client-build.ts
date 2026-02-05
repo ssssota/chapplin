@@ -243,6 +243,12 @@ function getJsxConfig(target: string | undefined): {
 				jsxFactory: "h",
 				jsxFragment: "Fragment",
 			};
+		case "hono":
+			// Hono uses hono/jsx
+			return {
+				jsx: "automatic",
+				jsxImportSource: "hono/jsx",
+			};
 		default:
 			return {};
 	}
@@ -263,7 +269,8 @@ function generateClientEntry(file: string, target: string | undefined): string {
 			return `
 import { useState, useEffect, createElement as h } from "react";
 import { createRoot } from "react-dom/client";
-import { App as UserApp } from "${file}";
+import { app as appDef } from "${file}";
+const UserApp = appDef.ui;
 import { useApp, useHostStyleVariables } from "@modelcontextprotocol/ext-apps/react";
 
 function AppWrapper() {
@@ -322,7 +329,8 @@ root.render(h(AppWrapper));
 			return `
 import { useState, useEffect } from "preact/hooks";
 import { render, createElement as h } from "preact";
-import { App as UserApp } from "${file}";
+import { app as appDef } from "${file}";
+const UserApp = appDef.ui;
 import { App } from "@modelcontextprotocol/ext-apps";
 
 function AppWrapper() {
@@ -384,7 +392,8 @@ render(h(AppWrapper), document.getElementById("root"));
 			return `
 import { createSignal, onMount, onCleanup, Show, createEffect } from "solid-js";
 import { render } from "solid-js/web";
-import { App as UserApp } from "${file}";
+import { app as appDef } from "${file}";
+const UserApp = appDef.ui;
 import { App } from "@modelcontextprotocol/ext-apps";
 
 function AppWrapper() {
@@ -463,10 +472,70 @@ const root = document.getElementById("root");
 const wrapper = AppWrapper();
 wrapper(root);
 `;
-		default:
-			// Generic entry - vanilla JS
+		case "hono":
+			// Hono with hono/jsx - use render from hono/jsx/dom
 			return `
-import { App as UserApp } from "${file}";
+import { app as appDef } from "${file}";
+const UserApp = appDef.ui;
+import { jsx, render } from "hono/jsx/dom";
+import { App, applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
+
+const rootEl = document.getElementById("root");
+
+const app = new App(
+  { name: "chapplin-app", version: "1.0.0" },
+  {}
+);
+
+let state = {
+  input: {},
+  output: null,
+  meta: null,
+};
+
+function renderApp() {
+  rootEl.innerHTML = "";
+  render(jsx(UserApp, state), rootEl);
+}
+
+app.ontoolinput = (params) => {
+  state.input = params.arguments ?? {};
+  renderApp();
+};
+
+app.ontoolresult = (params) => {
+  state.output = params.structuredContent ?? null;
+  renderApp();
+};
+
+app.onhostcontextchanged = (params) => {
+  state.meta = { ...state.meta, ...params };
+  applyHostStyleVariables();
+  renderApp();
+};
+
+app.connect().then(() => {
+  const context = app.getHostContext();
+  if (context) {
+    if (context.toolInput?.arguments) {
+      state.input = context.toolInput.arguments;
+    }
+    if (context.toolResult?.structuredContent) {
+      state.output = context.toolResult.structuredContent;
+    }
+    state.meta = context;
+    applyHostStyleVariables();
+  }
+  renderApp();
+}).catch((err) => {
+  rootEl.innerHTML = '<div style="color: red; padding: 20px;">Error: ' + err.message + '</div>';
+});
+`;
+		default:
+			// Generic entry (vanilla / other)
+			return `
+import { app as appDef } from "${file}";
+const UserApp = appDef.ui;
 import { App, applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
 
 const rootEl = document.getElementById("root");

@@ -6,7 +6,8 @@
 		"target": "ES2022",
 		"jsx": "react-jsx",
 		"skipLibCheck": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"rootDirs": [".", "./.chapplin/types"]
 	},
-	"include": ["src", "tools", "resources", "prompts"]
+	"include": ["src", "tools", "resources", "prompts", ".chapplin/types"]
 }

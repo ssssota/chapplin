@@ -139,13 +139,12 @@ export function devServer(opts: Options): Plugin[] {
 						new RegExp(`^\\0${VIRTUAL_MODULE_PREFIX}/`),
 						"",
 					);
-					console.log(path, root);
 					const resolvedPath = join(root, path);
 					this.addWatchFile(resolvedPath);
 					return [
-						`import {init} from 'chapplin-next/client/${resolvedOpts.target}';`,
-						`import {App} from '${resolvedPath}';`,
-						`init(App);`,
+						`import { init } from 'chapplin-next/client/${resolvedOpts.target}';`,
+						`import { app } from '${resolvedPath}';`,
+						`init(app.ui);`,
 					].join("\n");
 				},
 			},

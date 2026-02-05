@@ -14,6 +14,7 @@ chapplin は、Model Context Protocol (MCP) サーバーと MCP Apps（インタ
 - **Type-safe**: config → handler → app の型推論チェーン
 - **Vite プラグイン**: ビルドと開発サーバーを提供
 - **単一 HTML 出力**: MCP Apps は vite-plugin-singlefile で単一ファイルにバンドル
+- **UI はすべて JSX**: MCP App の UI は React / Preact / Solid / Hono いずれも **JSX で記述**。Hono を選ぶ場合は **`hono/jsx` モジュール**を前提とし、ブラウザでは `hono/jsx/dom` の `render` で描画する。
 
 ### 1.3 依存関係
 
@@ -99,222 +100,179 @@ project/
 
 ## 4. ファイル仕様
 
+ツール・リソース・プロンプトは、いずれも **define\*** API で 1 ファイル 1 定義として export します。これにより「名前・設定・ハンドラー」が一括で型推論され、App は対応する tool の型を参照できます。
+
 ### 4.1 Tools
 
 #### 4.1.1 基本ツール（UI なし）
 
 ```typescript
 // tools/weather.ts
+import { defineTool } from "chapplin-next";
 import { z } from "zod";
 
-/** ツール名（一意識別子） */
-export const name = "get_weather";
-
-/** ツール設定 */
-export const config = {
-  title: "Weather Lookup",           // UI 表示用（オプション）
-  description: "指定した都市の天気を取得", // 必須：LLM が参照
-  inputSchema: {
-    city: z.string().describe("都市名"),
-    unit: z.enum(["celsius", "fahrenheit"]).default("celsius"),
-  },
-  outputSchema: {                    // オプション
-    temperature: z.number(),
-    condition: z.string(),
-  },
-  annotations: {                     // オプション
-    readOnlyHint: true,
-  },
-};
-
-/** ツールハンドラー */
-export async function handler(
-  args: { city: string; unit: "celsius" | "fahrenheit" },
-  extra: RequestHandlerExtra
-): Promise<CallToolResult> {
-  const weather = await fetchWeather(args.city, args.unit);
-  return {
-    content: [{ type: "text", text: `${args.city}: ${weather.temp}°` }],
-    structuredContent: {
-      temperature: weather.temp,
-      condition: weather.condition,
+export const tool = defineTool({
+  name: "get_weather",
+  config: {
+    title: "Weather Lookup",
+    description: "指定した都市の天気を取得",
+    inputSchema: {
+      city: z.string().describe("都市名"),
+      unit: z.enum(["celsius", "fahrenheit"]).default("celsius"),
     },
-  };
-}
+    outputSchema: {
+      temperature: z.number(),
+      condition: z.string(),
+    },
+    annotations: { readOnlyHint: true },
+  },
+  async handler(args, extra) {
+    const weather = await fetchWeather(args.city, args.unit);
+    return {
+      content: [{ type: "text", text: `${args.city}: ${weather.temp}°` }],
+      structuredContent: {
+        temperature: weather.temp,
+        condition: weather.condition,
+      },
+    };
+  },
+});
 ```
 
 #### 4.1.2 UI 付きツール（MCP App）
 
+ツール定義に続けて、**defineApp** で UI とメタデータを定義します。ジェネリックで `typeof tool` を渡すことで、`input` / `output` の型が tool から推論されます。
+
 ```tsx
 // tools/chart.tsx
+import { defineTool, defineApp } from "chapplin-next";
 import { z } from "zod";
 
-export const name = "show_chart";
-
-export const config = {
-  description: "データをチャートで可視化",
-  inputSchema: {
-    data: z.array(z.object({
-      label: z.string(),
-      value: z.number(),
-    })),
-    chartType: z.enum(["bar", "line", "pie"]).default("bar"),
+export const tool = defineTool({
+  name: "show_chart",
+  config: {
+    description: "データをチャートで可視化",
+    inputSchema: {
+      data: z.array(z.object({ label: z.string(), value: z.number() })),
+      chartType: z.enum(["bar", "line", "pie"]).default("bar"),
+    },
+    outputSchema: { chartId: z.string() },
   },
-  outputSchema: {
-    chartId: z.string(),
+  async handler(args, extra) {
+    const chartId = generateId();
+    return {
+      content: [{ type: "text", text: `Chart ${chartId} created` }],
+      structuredContent: { chartId },
+    };
   },
-};
+});
 
-export async function handler(args, extra) {
-  const chartId = generateId();
-  return {
-    content: [{ type: "text", text: `Chart ${chartId} created` }],
-    structuredContent: { chartId },
-  };
-}
-
-/** MCP App のメタデータ（UI がある場合は必須） */
-export const appMeta = {
-  // CSP 設定（オプション）
-  csp: {
-    connectDomains: ["https://api.example.com"],
-    resourceDomains: ["https://cdn.example.com"],
+export const app = defineApp<typeof tool>({
+  meta: {
+    csp: {
+      connectDomains: ["https://api.example.com"],
+      resourceDomains: ["https://cdn.example.com"],
+    },
+    permissions: {},
+    prefersBorder: true,
   },
-  // サンドボックス権限（オプション）
-  permissions: {},
-  // 境界線の表示（オプション）
-  prefersBorder: true,
-};
-
-/** MCP App コンポーネント */
-export function App(props: {
-  input: { data: Array<{ label: string; value: number }>; chartType: string };
-  output: { chartId: string } | null;
-  meta: Record<string, unknown> | null;
-}) {
-  const { input, output } = props;
-  return (
+  ui: (props) => (
     <div>
-      <h1>Chart: {output?.chartId}</h1>
-      <Chart type={input.chartType} data={input.data} />
+      <h1>Chart: {props.output?.chartId}</h1>
+      <Chart type={props.input.chartType} data={props.input.data} />
     </div>
-  );
-}
+  ),
+});
 ```
+
+- **meta**: MCP App のメタデータ（CSP・権限・prefersBorder など）。`@modelcontextprotocol/ext-apps` の AppMeta に準拠。
+- **ui**: すべて JSX で記述する。React/Preact/Solid は各ランタイムの JSX、**Hono は `hono/jsx` モジュールを前提とする**（後述）。`props` は `{ input, output, meta }` で、型は `typeof tool` から推論。
 
 #### 4.1.3 型定義
 
 ```typescript
-// config の型
-interface ToolConfig<TInput, TOutput> {
-  title?: string;
-  description: string;                    // 必須
-  inputSchema?: Record<string, ZodType>;  // Zod スキーマ
-  outputSchema?: Record<string, ZodType>; // Zod スキーマ
-  annotations?: {
-    title?: string;
-    readOnlyHint?: boolean;
-    openWorldHint?: boolean;
-  };
-}
+// defineTool の型（イメージ）
+function defineTool<TConfig extends ToolConfig>(options: {
+  name: string;
+  config: TConfig;
+  handler: ToolHandler<InferInput<TConfig>, InferOutput<TConfig>>;
+}): DefinedTool<TConfig>;
 
-// handler の型（config.inputSchema から推論）
-type ToolHandler<TInput, TOutput> = (
-  args: TInput,
-  extra: RequestHandlerExtra
-) => Promise<CallToolResult & { structuredContent?: TOutput }>;
+// defineApp の型（イメージ）
+// ui はすべて JSX。Hono の場合は hono/jsx の JSXNode / Child を返す
+function defineApp<TTool extends DefinedTool>(options: {
+  meta?: AppMeta;
+  ui: (props: AppProps<TTool>) => ReactNode;  // React/Preact/Solid: 各 JSX。Hono: hono/jsx の Child
+}): DefinedApp<TTool>;
 
-// CallToolResult
-interface CallToolResult {
-  content: Array<
-    | { type: "text"; text: string }
-    | { type: "image"; data: string; mimeType: string }
-    | { type: "resource_link"; uri: string; name: string; mimeType?: string }
-  >;
-  structuredContent?: object;
-  isError?: boolean;
-}
-
-// appMeta の型（@modelcontextprotocol/ext-apps より）
-interface AppMeta {
-  csp?: {
-    connectDomains?: string[];
-    resourceDomains?: string[];
-    frameDomains?: string[];
-    baseUriDomains?: string[];
-  };
-  permissions?: {
-    camera?: {};
-    microphone?: {};
-    geolocation?: {};
-    clipboardWrite?: {};
-  };
-  domain?: string;
-  prefersBorder?: boolean;
-}
-
-// App コンポーネントの props 型（handler から推論）
-interface AppProps<TInput, TOutput, TMeta> {
-  input: TInput;
-  output: TOutput | null;
-  meta: TMeta | null;
-}
+// CallToolResult / AppMeta / AppProps 等は従来どおり
+interface ToolConfig<TInput, TOutput> { ... }
+interface AppMeta { ... }
+interface AppProps<TInput, TOutput, TMeta> { input: TInput; output: TOutput | null; meta: TMeta | null; }
 ```
+
+#### 4.1.4 懸念・注意点
+
+- **既存実装との差**: 現在の実装は `export const name` / `export const config` / `export function handler` 等の**個別 export** をパースしています。define* 形式に合わせるには、ファイル収集・型生成・仮想モジュール生成のいずれも「`defineTool` / `defineResource` / `definePrompt` の呼び出し」および「`defineApp<typeof tool>` の有無」を解析する形に変更する必要があります。
+- **export 名**: `tool` / `resource` / `prompt` / `app` を標準の export 名として扱う想定です。複数 export は想定せず、1 ファイル 1 つの define* にします。
+- **型生成**: 生成される `.chapplin/types/` の参照先は「そのファイルの default または named export された define* の戻り値」になり、`typeof import("./tools/weather").tool` のように `tool` を参照する形に変わります。
+- **Hono と hono/jsx**: target が `hono` のときは **`hono/jsx` モジュールを前提**とする。UI はすべて JSX で書くため、他 target と同様にコンポーネント（JSX）を渡す。ランタイムでは `hono/jsx/dom` の `jsx` / `render` でレンダリングする。
 
 ### 4.2 Resources
 
 ```typescript
 // resources/config.ts
-import { z } from "zod";
+import { defineResource } from "chapplin-next";
 
-export const name = "app-config";
-
-export const config = {
-  uri: "config://app/settings",  // リソース URI
-  title: "App Configuration",
-  description: "アプリケーション設定",
-  mimeType: "application/json",   // デフォルト: application/json
-};
-
-export async function handler(uri: URL): Promise<ResourceResult> {
-  return {
-    contents: [{
-      uri: uri.href,
-      mimeType: "application/json",
-      text: JSON.stringify({ theme: "dark", language: "ja" }),
-    }],
-  };
-}
+export const resource = defineResource({
+  name: "app-config",
+  config: {
+    uri: "config://app/settings",
+    title: "App Configuration",
+    description: "アプリケーション設定",
+    mimeType: "application/json",
+  },
+  async handler(uri) {
+    return {
+      contents: [{
+        uri: uri.href,
+        mimeType: "application/json",
+        text: JSON.stringify({ theme: "dark", language: "ja" }),
+      }],
+    };
+  },
+});
 ```
 
 ### 4.3 Prompts
 
 ```typescript
 // prompts/code-review.ts
+import { definePrompt } from "chapplin-next";
 import { z } from "zod";
 
-export const name = "code-review";
-
-export const config = {
-  title: "Code Review",
-  description: "コードレビューを実施",
-  argsSchema: {
-    code: z.string().describe("レビュー対象のコード"),
-    language: z.string().optional().describe("プログラミング言語"),
+export const prompt = definePrompt({
+  name: "code-review",
+  config: {
+    title: "Code Review",
+    description: "コードレビューを実施",
+    argsSchema: {
+      code: z.string().describe("レビュー対象のコード"),
+      language: z.string().optional().describe("プログラミング言語"),
+    },
   },
-};
-
-export function handler(args: { code: string; language?: string }) {
-  return {
-    messages: [{
-      role: "user" as const,
-      content: {
-        type: "text" as const,
-        text: `Please review this ${args.language || ""} code:\n\n${args.code}`,
-      },
-    }],
-  };
-}
+  handler(args) {
+    return {
+      messages: [{
+        role: "user" as const,
+        content: {
+          type: "text" as const,
+          text: `Please review this ${args.language ?? ""} code:\n\n${args.code}`,
+        },
+      }],
+    };
+  },
+});
 ```
 
 ---
@@ -386,40 +344,29 @@ interface Options {
 
 ```typescript
 // 生成されるコード（イメージ）
+// defineTool / defineResource / definePrompt の戻り値から .name, .config, .handler を参照する
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-// ツールのインポート（自動生成）
-import * as tool_weather from "./tools/weather.ts";
-import * as tool_chart from "./tools/chart.tsx";
+import { tool as tool_weather } from "./tools/weather.ts";
+import { tool as tool_chart, app as app_chart } from "./tools/chart.tsx";
 import tool_chart_html from "virtual:chapplin-app-html:show_chart";
 
-// リソースのインポート（自動生成）
-import * as resource_config from "./resources/config.ts";
+import { resource as resource_config } from "./resources/config.ts";
+import { prompt as prompt_review } from "./prompts/code-review.ts";
 
-// プロンプトのインポート（自動生成）
-import * as prompt_review from "./prompts/code-review.ts";
-
-/**
- * Create a new MCP server instance with all registered tools, resources, and prompts.
- */
 export function createMcpServer() {
   const server = new McpServer({
     name: "chapplin-server",
     version: "1.0.0",
   });
 
-  // ツール登録
   server.registerTool(tool_weather.name, tool_weather.config, tool_weather.handler);
 
-  // UI 付きツール登録
   {
     const uri = `ui://${tool_chart.name}/app.html`;
     server.registerTool(
       tool_chart.name,
-      {
-        ...tool_chart.config,
-        _meta: { ui: { resourceUri: uri } },
-      },
+      { ...tool_chart.config, _meta: { ui: { resourceUri: uri } } },
       tool_chart.handler
     );
     server.registerResource(
@@ -428,19 +375,14 @@ export function createMcpServer() {
       {
         description: tool_chart.config.description,
         mimeType: "text/html;profile=mcp-app",
-        _meta: { ui: tool_chart.appMeta ?? {} },
+        _meta: { ui: app_chart.meta ?? {} },
       },
       async () => ({
-        contents: [{
-          uri,
-          mimeType: "text/html;profile=mcp-app",
-          text: tool_chart_html,
-        }],
+        contents: [{ uri, mimeType: "text/html;profile=mcp-app", text: tool_chart_html }],
       })
     );
   }
 
-  // リソース登録
   server.registerResource(
     resource_config.name,
     resource_config.config.uri,
@@ -448,14 +390,13 @@ export function createMcpServer() {
     resource_config.handler
   );
 
-  // プロンプト登録
   server.registerPrompt(
     prompt_review.name,
     prompt_review.config,
     prompt_review.handler
   );
 
-return server;
+  return server;
 }
 
 export default createMcpServer;
@@ -527,9 +468,20 @@ React Router や SvelteKit のように、ツール定義から型を自動生�
 
 ### 7.2 生成される型ファイル
 
-```typescript
-// .chapplin/types.d.ts（自動生成）
+型定義は `.chapplin/types/` ディレクトリに複数のファイルとして生成されます：
 
+```
+.chapplin/types/
+├── mcp-server.d.ts    # chapplin:mcp-server の型定義
+├── tools.d.ts         # chapplin:tools の型定義
+├── resources.d.ts     # chapplin:resources の型定義
+└── prompts.d.ts       # chapplin:prompts の型定義
+```
+
+各ファイルの内容：
+
+```typescript
+// .chapplin/types/mcp-server.d.ts（自動生成）
 declare module "chapplin:mcp-server" {
   import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
   /**
@@ -540,7 +492,10 @@ declare module "chapplin:mcp-server" {
   export function createMcpServer(): McpServer;
   export default createMcpServer;
 }
+```
 
+```typescript
+// .chapplin/types/tools.d.ts（自動生成）
 declare module "chapplin:tools" {
   export interface Tools {
     get_weather: {
@@ -555,7 +510,20 @@ declare module "chapplin:tools" {
 }
 ```
 
-### 7.3 MCP App 内での型安全な callTool
+### 7.3 TypeScript 設定
+
+`tsconfig.json` で `rootDirs` を設定することで、生成された型定義を適切に解決できます：
+
+```json
+{
+  "compilerOptions": {
+    "rootDirs": [".", "./.chapplin/types"]
+  },
+  "include": ["src", "tools", "resources", "prompts", ".chapplin/types"]
+}
+```
+
+### 7.4 MCP App 内での型安全な callTool
 
 ```tsx
 // tools/chart.tsx 内
@@ -777,7 +745,7 @@ interface AppProps {
 - **React**: `createRoot` と `react/jsx-runtime` の `jsx` 関数を使用（JSX記法を使わない）
 - **Preact**: `render` と `preact/jsx-runtime` の `jsx` 関数を使用（JSX記法を使わない）
 - **Solid**: `createComponent` を使用（JSX記法を使わない）
-- **Hono**: `hono/jsx/dom` の `jsx` と `render` 関数を使用
+- **Hono**: **`hono/jsx` モジュール前提**。`hono/jsx/dom` の `jsx` と `render` でレンダリングする。UI も他 target と同様に JSX で記述する。
 
 これにより、ランタイムでのJSX変換を避け、パフォーマンスを最適化します。
 
@@ -937,20 +905,23 @@ vite dev
 | タスク | 説明 | 状態 |
 |--------|------|------|
 | 4.1 | ファイル解析（export 抽出） | [x] |
-| 4.2 | 型定義ファイル生成（`.chapplin/types.d.ts`） | [x] |
+| 4.2 | 型定義ファイル生成（`.chapplin/types/`） | [x] |
 
 ### Phase 5: 開発サーバー [Medium]
 
 | タスク | 説明 | 状態 |
 |--------|------|------|
 | 5.1 | プレビュー UI（ホスト側） | [x] |
-| 5.1.1 | Preact SPA として再実装 | [ ] |
-| 5.1.2 | preact-iso によるルーティング実装 | [ ] |
-| 5.1.3 | コンポーネント設計（ToolList, Preview など） | [ ] |
-| 5.1.4 | Hono による API サーバー実装 | [ ] |
-| 5.1.5 | vite-plugin-dev-api による統合 | [ ] |
-| 5.2 | MCP サーバー起動 | [ ] |
-| 5.3 | HMR 対応 | [ ] |
+| 5.1.1 | Preact SPA として再実装 | [x] |
+| 5.1.2 | preact-iso によるルーティング実装 | [x] |
+| 5.1.3 | コンポーネント設計（ToolList, Preview など） | [x] |
+| 5.1.4 | Hono による API サーバー実装 | [x] |
+| 5.1.5 | vite-plugin-dev-api による統合 | [x] |
+| 5.2 | クライアントモジュール実装（react/preact/solid/hono） | [x] |
+| 5.3 | 仮想モジュール `virtual:chapplin-client` 実装 | [x] |
+| 5.4 | iframe 配信機能（`/iframe/tools/`） | [x] |
+| 5.5 | MCP サーバー起動 | [ ] |
+| 5.6 | HMR 対応 | [ ] |
 
 ### Phase 6: テスト・ドキュメント [Low]
 

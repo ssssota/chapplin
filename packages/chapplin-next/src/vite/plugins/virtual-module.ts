@@ -60,40 +60,42 @@ function generateVirtualModuleCode(
 	const resourceRegistrations: string[] = [];
 	const promptRegistrations: string[] = [];
 
-	// Generate imports and registrations for tools
+	// Generate imports and registrations for tools (defineTool / defineApp)
 	for (const tool of files.tools) {
 		const identifier = nameToIdentifier(tool.name.replace(/\//g, "_"));
-		const importName = `tool_${identifier}`;
-		imports.push(`import * as ${importName} from "${tool.path}";`);
+		const toolVar = `tool_${identifier}`;
 
 		if (tool.hasApp) {
-			// Tool with UI - use virtual module for HTML
-			const htmlImportName = `${importName}_html`;
+			const appVar = `app_${identifier}`;
+			imports.push(
+				`import { tool as ${toolVar}, app as ${appVar} } from "${tool.path}";`,
+			);
+			const htmlImportName = `${toolVar}_html`;
 			imports.push(
 				`import ${htmlImportName} from "${APP_HTML_PREFIX}${tool.name}";`,
 			);
 			toolRegistrations.push(
-				generateAppToolRegistration(importName, htmlImportName),
+				generateAppToolRegistration(toolVar, appVar, htmlImportName),
 			);
 		} else {
-			// Basic tool
-			toolRegistrations.push(generateBasicToolRegistration(importName));
+			imports.push(`import { tool as ${toolVar} } from "${tool.path}";`);
+			toolRegistrations.push(generateBasicToolRegistration(toolVar));
 		}
 	}
 
-	// Generate imports and registrations for resources
+	// Generate imports and registrations for resources (defineResource)
 	for (const resource of files.resources) {
 		const identifier = nameToIdentifier(resource.name.replace(/\//g, "_"));
 		const importName = `resource_${identifier}`;
-		imports.push(`import * as ${importName} from "${resource.path}";`);
+		imports.push(`import { resource as ${importName} } from "${resource.path}";`);
 		resourceRegistrations.push(generateResourceRegistration(importName));
 	}
 
-	// Generate imports and registrations for prompts
+	// Generate imports and registrations for prompts (definePrompt)
 	for (const prompt of files.prompts) {
 		const identifier = nameToIdentifier(prompt.name.replace(/\//g, "_"));
 		const importName = `prompt_${identifier}`;
-		imports.push(`import * as ${importName} from "${prompt.path}";`);
+		imports.push(`import { prompt as ${importName} } from "${prompt.path}";`);
 		promptRegistrations.push(generatePromptRegistration(importName));
 	}
 
@@ -137,33 +139,34 @@ function generateBasicToolRegistration(importName: string): string {
 }
 
 /**
- * Generate registration code for a tool with UI
+ * Generate registration code for a tool with UI (defineApp; app.meta used for _meta)
  */
 function generateAppToolRegistration(
-	importName: string,
+	toolVar: string,
+	appVar: string,
 	htmlImportName: string,
 ): string {
 	return `
 {
-  const uri = \`ui://\${${importName}.name}/app.html\`;
+  const uri = \`ui://\${${toolVar}.name}/app.html\`;
   server.registerTool(
-    ${importName}.name,
+    ${toolVar}.name,
     {
-      ...${importName}.config,
+      ...${toolVar}.config,
       _meta: {
-        ...${importName}.config._meta,
+        ...${toolVar}.config._meta,
         ui: { resourceUri: uri },
       },
     },
-    ${importName}.handler
+    ${toolVar}.handler
   );
   server.registerResource(
-    ${importName}.name,
+    ${toolVar}.name,
     uri,
     {
-      description: ${importName}.config.description,
+      description: ${toolVar}.config.description,
       mimeType: "${RESOURCE_MIME_TYPE}",
-      _meta: { ui: ${importName}.appMeta ?? {} },
+      _meta: { ui: ${appVar}.meta ?? {} },
     },
     async () => ({
       contents: [{
