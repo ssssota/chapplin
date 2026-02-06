@@ -1,4 +1,5 @@
-import { createMcpServer } from "chapplin:mcp-server";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { register } from "chapplin:register";
 import { StreamableHTTPTransport } from "@hono/mcp";
 import { serve } from "@hono/node-server";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -8,7 +9,11 @@ const mode = process.argv[2] || "http";
 
 if (mode === "stdio") {
 	// STDIO transport mode (for CLI usage)
-	const server = createMcpServer();
+	const server = new McpServer({
+		name: "chapplin-next-sample",
+		version: "1.0.0",
+	});
+	register(server);
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 	console.error("MCP server started in STDIO mode");
@@ -19,9 +24,13 @@ if (mode === "stdio") {
 	// Health check endpoint
 	app.get("/health", (c) => c.json({ status: "ok" }));
 
-	// MCP endpoint using StreamableHTTPTransport
+	// MCP endpoint using StreamableHTTPTransport (new server per request)
 	app.all("/mcp", async (c) => {
-		const server = createMcpServer();
+		const server = new McpServer({
+			name: "chapplin-next-sample",
+			version: "1.0.0",
+		});
+		register(server);
 		const transport = new StreamableHTTPTransport();
 		await server.connect(transport);
 		return transport.handleRequest(c);

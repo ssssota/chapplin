@@ -49,8 +49,8 @@ export function typeGeneration(_opts: ResolvedOptions): Plugin {
 
 			// Write each module to a separate file
 			await writeFile(
-				join(outputDir, "mcp-server.d.ts"),
-				typeDefinitions.mcpServer,
+				join(outputDir, "register.d.ts"),
+				typeDefinitions.register,
 				"utf-8",
 			);
 			await writeFile(
@@ -93,7 +93,7 @@ function generateTypeDefinitions(
 	resources: FileInfo[],
 	prompts: FileInfo[],
 ): {
-	mcpServer: string;
+	register: string;
 	tools: string;
 	resources: string;
 	prompts: string;
@@ -104,18 +104,15 @@ function generateTypeDefinitions(
 		"",
 	].join("\n");
 
-	// Generate module declaration for chapplin:mcp-server
-	const mcpServerLines = [
+	// Generate module declaration for chapplin:register
+	const registerLines = [
 		header,
 		`declare module "${VIRTUAL_MODULE_ID}" {`,
 		'  import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";',
 		"  /**",
-		"   * Create a new MCP server instance with all registered tools, resources, and prompts.",
-		"   * Each call creates a fresh instance, which is needed for transports like StreamableHTTPTransport",
-		"   * that require a new server per request.",
+		"   * Register all tools, resources, and prompts from this project onto the given MCP server.",
 		"   */",
-		"  export function createMcpServer(): McpServer;",
-		"  export default createMcpServer;",
+		"  export function register(server: McpServer): void;",
 		"}",
 		"",
 	];
@@ -216,7 +213,7 @@ function generateTypeDefinitions(
 	promptsLines.push("");
 
 	return {
-		mcpServer: mcpServerLines.join("\n"),
+		register: registerLines.join("\n"),
 		tools: toolsLines.join("\n"),
 		resources: resourcesLines.join("\n"),
 		prompts: promptsLines.join("\n"),

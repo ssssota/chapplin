@@ -47,23 +47,22 @@ chapplin is an all-in-one framework for building MCP Server includes MCP Apps (o
 初期設定では、以下のようなコードになっている（仮）
 
 ```ts
-import mcpServer from 'chapplin:mcp-server';
-import { Hono } from 'hono';
-const app = new Hono();
-app.post('/mcp', () => {
-  // ... handle MCP requests
-});
-export default app;
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { register } from "chapplin:register";
+import { Hono } from "hono";
+
+const server = new McpServer({ name: "my-app", version: "1.0.0" });
+register(server);
+// ... connect transport, serve
 ```
 
-`chapplin:mcp-server` はchapplinが提供する仮想モジュール。MCPServerのインスタンスがdefault exportされる。
-`chapplin:mcp-server` は `tools/`, `resources/`, `prompts/` 以下のファイルを自動的にインポートし、MCPサーバーに登録する。
-MCP Appのためのリソースは単一HTMLファイルにした状態でリソースとして登録するので、ビルド時に、vite-plugin-singlefileでクライアントビルドも行う。出力したHTMLファイルは `export default ${JSON.stringify(htmlContent)}` のような形でモジュール化され、 `chapplin:mcp-server` 内でインポート、登録される。
+`chapplin:register` は chapplin が提供する仮想モジュールで、`register(server: McpServer): void` を export する。渡した MCP サーバーに、`tools/`・`resources/`・`prompts/` 以下の定義を一括で登録する。サーバーの生成やトランスポート接続は利用側で行う。
+MCP App 用リソースは、ビルド時に vite-plugin-singlefile で単一 HTML にバンドルされ、`export default "..."` の形でモジュール化されて `chapplin:register` 内でインポート・登録される。
 
 ### 開発サーバー
 
-開発サーバーでは、MCP Appのプレビューと、MCPサーバーが起動する。
-MCP Appのプレビューは、実際のアプリケーションを動作するiframeと、それをコントロールするホスト側UIで構築される。
-MCPサーバーは `chapplin:mcp-server` をオンデマンドでビルドし、起動する。
+開発サーバーでは、MCP App のプレビューと MCP サーバーが起動する。
+MCP App のプレビューは、実際のアプリを動かす iframe と、それを操作するホスト UI で構成される。
+MCP サーバーは `chapplin:register` を利用したエントリをオンデマンドでビルドし、起動する。
 
 プレビュー UI は Preact ベースの SPA として実装される。HTML のベタ書きでは限界があるため、コンポーネントベースの設計により、機能追加や変更が容易になる。

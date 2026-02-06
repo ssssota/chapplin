@@ -382,15 +382,13 @@ interface Options {
 
 ## 6. 仮想モジュール
 
-### 6.1 `chapplin:mcp-server`
+### 6.1 `chapplin:register`
 
-自動生成される MCP サーバーファクトリ関数を提供します。`createMcpServer()` を呼び出すたびに新しいサーバーインスタンスが生成されます。これは `StreamableHTTPTransport` のように、リクエストごとに新しいサーバーインスタンスが必要なトランスポートをサポートするためです。
+自動生成される **登録関数** を提供します。`register(server: McpServer): void` を呼び出すと、渡した MCP サーバーに tools / resources / prompts を一括で登録します。サーバーの生成・名前・バージョン・トランスポート接続は利用側で行うため、StreamableHTTP のように「リクエストごとに新しいサーバー」にするか、1 インスタンスを再利用するかも自由に選べます。
 
 ```typescript
 // 生成されるコード（イメージ）
 // defineTool / defineResource / definePrompt の戻り値から .name, .config, .handler を参照する
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-
 import { tool as tool_weather } from "./tools/weather.ts";
 import { tool as tool_chart, app as app_chart } from "./tools/chart.tsx";
 import tool_chart_html from "virtual:chapplin-app-html:show_chart";
@@ -398,12 +396,11 @@ import tool_chart_html from "virtual:chapplin-app-html:show_chart";
 import { resource as resource_config } from "./resources/config.ts";
 import { prompt as prompt_review } from "./prompts/code-review.ts";
 
-export function createMcpServer() {
-  const server = new McpServer({
-    name: "chapplin-server",
-    version: "1.0.0",
-  });
-
+/**
+ * @param {import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} server
+ */
+export function register(server) {
+  // Register tools
   server.registerTool(tool_weather.name, tool_weather.config, tool_weather.handler);
 
   {
@@ -427,6 +424,7 @@ export function createMcpServer() {
     );
   }
 
+  // Register resources
   server.registerResource(
     resource_config.name,
     resource_config.config.uri,
@@ -434,23 +432,21 @@ export function createMcpServer() {
     resource_config.handler
   );
 
+  // Register prompts
   server.registerPrompt(
     prompt_review.name,
     prompt_review.config,
     prompt_review.handler
   );
-
-  return server;
 }
-
-export default createMcpServer;
 ```
 
 ### 6.2 使用例
 
 ```typescript
 // src/index.ts (HTTP mode with StreamableHTTPTransport)
-import { createMcpServer } from "chapplin:mcp-server";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { register } from "chapplin:register";
 import { StreamableHTTPTransport } from "@hono/mcp";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
@@ -458,7 +454,8 @@ import { Hono } from "hono";
 const app = new Hono();
 
 app.all("/mcp", async (c) => {
-  const server = createMcpServer();
+  const server = new McpServer({ name: "my-server", version: "1.0.0" });
+  register(server);
   const transport = new StreamableHTTPTransport();
   await server.connect(transport);
   return transport.handleRequest(c);
@@ -469,10 +466,12 @@ serve({ fetch: app.fetch, port: 3000 });
 
 ```typescript
 // src/index.ts (STDIO mode)
-import { createMcpServer } from "chapplin:mcp-server";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { register } from "chapplin:register";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-const server = createMcpServer();
+const server = new McpServer({ name: "my-server", version: "1.0.0" });
+register(server);
 const transport = new StdioServerTransport();
 await server.connect(transport);
 ```
@@ -516,7 +515,7 @@ React Router や SvelteKit のように、ツール定義から型を自動生�
 
 ```
 .chapplin/types/
-├── mcp-server.d.ts    # chapplin:mcp-server の型定義
+├── register.d.ts      # chapplin:register の型定義
 ├── tools.d.ts         # chapplin:tools の型定義
 ├── resources.d.ts     # chapplin:resources の型定義
 └── prompts.d.ts       # chapplin:prompts の型定義
@@ -525,16 +524,13 @@ React Router や SvelteKit のように、ツール定義から型を自動生�
 各ファイルの内容：
 
 ```typescript
-// .chapplin/types/mcp-server.d.ts（自動生成）
-declare module "chapplin:mcp-server" {
+// .chapplin/types/register.d.ts（自動生成）
+declare module "chapplin:register" {
   import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
   /**
-   * Create a new MCP server instance with all registered tools, resources, and prompts.
-   * Each call creates a fresh instance, which is needed for transports like StreamableHTTPTransport
-   * that require a new server per request.
+   * Register all tools, resources, and prompts from this project onto the given MCP server.
    */
-  export function createMcpServer(): McpServer;
-  export default createMcpServer;
+  export function register(server: McpServer): void;
 }
 ```
 
@@ -602,7 +598,7 @@ export function App(props) {
 3. **UI ツールのクライアントビルド**: `app` エクスポートを持つツールをクライアントビルド
 4. **単一 HTML 化**: vite-plugin-singlefile で HTML をインライン化
 5. **モジュール化**: HTML を `export default "<!doctype html>..."` 形式で出力
-6. **仮想モジュール生成**: `chapplin:mcp-server` のコードを生成
+6. **仮想モジュール生成**: `chapplin:register` のコードを生成
 
 ### 8.2 出力構成
 
@@ -633,7 +629,7 @@ node dist/index.js
 ### 9.1 機能
 
 1. **MCP App プレビュー**: iframe + ホスト UI で実際の動作を確認
-2. **MCP サーバー**: `chapplin:mcp-server` をオンデマンドビルドして起動
+2. **MCP サーバー**: `chapplin:register` を利用したエントリをオンデマンドビルドして起動
 3. **HMR**: ツール/リソース/プロンプトの変更を検知してリロード
 
 ### 9.2 プレビュー UI
@@ -940,7 +936,7 @@ vite dev
 | タスク | 説明 | 状態 |
 |--------|------|------|
 | 3.1 | メインプラグイン `chapplin()` | [x] |
-| 3.2 | 仮想モジュール解決 `chapplin:mcp-server` | [x] |
+| 3.2 | 仮想モジュール解決 `chapplin:register` | [x] |
 | 3.3 | ファイル収集（tools/resources/prompts） | [x] |
 | 3.4 | クライアントビルド（UI 付きツール） | [x] |
 
@@ -1035,7 +1031,7 @@ registerAppResource(server, name, uri, config, handler);
 | 項目 | 既存 (v0.2.x) | chapplin-next |
 |------|--------------|---------------|
 | ツール定義 | `defineTool()` 関数 | ファイルベース (export) |
-| 仮想モジュール | なし | `chapplin:mcp-server` |
+| 仮想モジュール | なし | `chapplin:register` |
 | 型生成 | なし | 自動生成 |
 | リソース/プロンプト | 未対応 | 対応 |
 | UI MIME | `text/html+skybridge` | `text/html;profile=mcp-app` |

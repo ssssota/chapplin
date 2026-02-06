@@ -13,7 +13,7 @@ import { getCollectedFiles } from "./file-collector.js";
 const APP_HTML_PREFIX = "virtual:chapplin-app-html:";
 
 /**
- * Plugin that provides the virtual module `chapplin:mcp-server`
+ * Plugin that provides the virtual module `chapplin:register`
  */
 export function virtualModule(opts: ResolvedOptions): Plugin {
 	return {
@@ -88,35 +88,33 @@ function generateVirtualModuleCode(
 		promptRegistrations.push(generatePromptRegistration(ns));
 	}
 
-	return `
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+	const indent = (s: string) =>
+		s
+			.trim()
+			.split("\n")
+			.map((line) => `  ${line}`)
+			.join("\n");
+	const registrationBody = [
+		"  // Register tools",
+		...toolRegistrations.map(indent),
+		"",
+		"  // Register resources",
+		...resourceRegistrations.map(indent),
+		"",
+		"  // Register prompts",
+		...promptRegistrations.map(indent),
+	].join("\n");
 
+	return `
 ${imports.join("\n")}
 
 /**
- * Create a new MCP server instance with all registered tools, resources, and prompts.
- * Each call creates a fresh instance, which is needed for transports like StreamableHTTPTransport
- * that require a new server per request.
+ * Register all tools, resources, and prompts from this project onto the given MCP server.
+ * @param {import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} server
  */
-export function createMcpServer() {
-  const server = new McpServer({
-    name: "chapplin-server",
-    version: "1.0.0",
-  });
-
-  // Register tools
-  ${toolRegistrations.join("\n  ")}
-
-  // Register resources
-  ${resourceRegistrations.join("\n  ")}
-
-  // Register prompts
-  ${promptRegistrations.join("\n  ")}
-
-  return server;
+export function register(server) {
+${registrationBody}
 }
-
-export default createMcpServer;
 `.trim();
 }
 

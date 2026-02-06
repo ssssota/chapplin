@@ -10,14 +10,13 @@ import type { ResolvedOptions } from "../types.js";
 export function ssrBuild(opts: ResolvedOptions): Plugin {
 	return {
 		name: "chapplin:ssr-build",
-		config(_, { command }) {
-			if (command === "build") {
-				return {
-					build: {
-						ssr: opts.entry,
-					},
-				};
-			}
+		apply: "build",
+		config() {
+			return {
+				build: {
+					ssr: opts.entry,
+				},
+			};
 		},
 	};
 }
