@@ -246,6 +246,13 @@ describe("defineApp", () => {
 
 		expect(app).toBeDefined();
 	});
+
+	it("should require a type argument (type error when omitted)", () => {
+		defineApp({
+			// @ts-expect-error — defineApp requires defineApp<typeof tool>({ ... })
+			ui: () => "Hello",
+		});
+	});
 });
 
 describe("defineResource", () => {

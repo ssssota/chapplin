@@ -101,8 +101,7 @@ function getClientBuildPlugins(
 	const KEEP_PREFIXES = [
 		"vite:react", // React (vite:react-babel, vite:react-refresh, etc.)
 		"vite:preact", // Preact
-		"vite:vue", // Vue
-		"vite:svelte", // Svelte
+    "preact:",
 		"solid", // Solid.js (vite-plugin-solid)
 	];
 

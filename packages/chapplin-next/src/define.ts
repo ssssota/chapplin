@@ -133,7 +133,10 @@ type ExtractMeta<T> = T extends {
 
 /**
  * Define an MCP App with type inference.
- * Use with typeof tool to get type-safe input/output/meta props:
+ *
+ * You must pass a type argument: `defineApp<typeof tool>({ ... })`. Omitting it
+ * will cause a type error so that `props.input`, `props.output`, and `props.meta`
+ * in the UI are correctly typed from the tool definition.
  *
  * @example
  * ```tsx
@@ -146,9 +149,9 @@ type ExtractMeta<T> = T extends {
  * });
  * export const app = defineApp<typeof tool>({
  *   ui: (props) => {
- *     // props.meta has type { chartData: ... } | null
+ *     // props.meta is typed as { chartData: ... } | null
  *     return <Chart data={props.meta?.chartData} />;
- *   }
+ *   },
  * });
  * ```
  */
@@ -156,13 +159,17 @@ export function defineApp<
 	TTool extends {
 		config: { inputSchema: ZodRawShape; outputSchema: ZodRawShape };
 		handler: (...args: never[]) => Promise<CallToolResult>;
-	},
+	} = never,
 >(
-	app: AppDefinition<
-		TTool["config"]["inputSchema"],
-		TTool["config"]["outputSchema"],
-		ExtractMeta<TTool>
-	>,
+	app: [TTool] extends [never]
+		? {
+				"defineApp requires a type argument: defineApp<typeof tool>({ ... })": never;
+			}
+		: AppDefinition<
+				TTool["config"]["inputSchema"],
+				TTool["config"]["outputSchema"],
+				ExtractMeta<TTool>
+			>,
 ): typeof app {
 	return app;
 }

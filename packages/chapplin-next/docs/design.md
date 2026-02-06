@@ -36,7 +36,6 @@ chapplin は、Model Context Protocol (MCP) サーバーと MCP Apps（インタ
     "@modelcontextprotocol/ext-apps": "^1.0.1",
     "vite-plugin-singlefile": "*",
     "magic-string": "*",
-    "preact-iso": "*",
     "vite-plugin-dev-api": "*"
   }
 }
@@ -328,7 +327,7 @@ export const prompt = definePrompt({
 ```typescript
 // vite.config.ts
 import { defineConfig } from "vite";
-import { chapplin } from "chapplin/vite";
+import { chapplin } from "chapplin/vite";  // 注: 現状のパッケージ名は chapplin-next、のちに chapplin に変更予定
 import react from "@vitejs/plugin-react";  // または preact, solid
 
 export default defineConfig({
@@ -364,7 +363,7 @@ export function chapplin(opts: Options): Plugin[] {
 ```typescript
 interface Options {
   /** エントリーポイント @default './src/index.ts' */
-  entry?: string | string[];
+  entry?: string;
   /** tsconfig パス @default 'tsconfig.json' */
   tsconfigPath?: string;
   /** UI フレームワーク */
@@ -488,16 +487,16 @@ virtual:chapplin-client/{toolPath}
 // ↓
 // 生成されるコード
 import { init } from 'chapplin-next/client/react';
-import { App } from '/path/to/tools/chart.tsx';
-init(App);
+import { app } from '/path/to/tools/chart.tsx';
+init(app.ui);
 ```
 
 この仮想モジュールは、`dev-server.ts` プラグインの `load` hook で処理され、以下の動作をします：
 
 1. 仮想モジュールIDからツールファイルのパスを抽出
-2. ツールファイルから `App` コンポーネントをインポート
+2. ツールファイルから `app`（defineApp の戻り値）をインポート
 3. 設定された `target`（react/preact/solid/hono）に応じた `init` 関数をインポート
-4. `init(App)` を呼び出してDOMにレンダリング
+4. `init(app.ui)` を呼び出して DOM にレンダリング
 
 `/iframe/tools/{toolFile}` パスでアクセスされた際に、この仮想モジュールが使用されます。
 
@@ -511,7 +510,7 @@ React Router や SvelteKit のように、ツール定義から型を自動生�
 
 ### 7.2 生成される型ファイル
 
-型定義は `.chapplin/types/` ディレクトリに複数のファイルとして生成されます：
+型定義は `.chapplin/types/` ディレクトリに複数のファイルとして生成されます。各ファイルは、対応する define* ファイルの **`.tool.config` / `.resource.config` / `.prompt.config`** を参照し、`inputSchema`・`outputSchema`・`argsSchema`・`uri` などから型を推論します。
 
 ```
 .chapplin/types/
@@ -521,7 +520,7 @@ React Router や SvelteKit のように、ツール定義から型を自動生�
 └── prompts.d.ts       # chapplin:prompts の型定義
 ```
 
-各ファイルの内容：
+各ファイルの内容（実装に基づくイメージ）：
 
 ```typescript
 // .chapplin/types/register.d.ts（自動生成）
@@ -536,17 +535,43 @@ declare module "chapplin:register" {
 
 ```typescript
 // .chapplin/types/tools.d.ts（自動生成）
+// 各ツールの input/output は import("...").tool.config の inputSchema / outputSchema から推論
 declare module "chapplin:tools" {
   export interface Tools {
     get_weather: {
+      /** Import path: ../tools/weather */
       input: { city: string; unit: "celsius" | "fahrenheit" };
       output: { temperature: number; condition: string };
     };
     show_chart: {
+      /** Import path: ../tools/chart */
       input: { data: Array<{ label: string; value: number }>; chartType: "bar" | "line" | "pie" };
       output: { chartId: string };
     };
   }
+  export type ToolName = "get_weather" | "show_chart";
+}
+```
+
+```typescript
+// .chapplin/types/resources.d.ts（自動生成）
+// 各リソースの uri は import("...").resource.config から推論
+declare module "chapplin:resources" {
+  export interface Resources {
+    "app-config": { uri: "config://app/settings"; };
+  }
+  export type ResourceName = "app-config";
+}
+```
+
+```typescript
+// .chapplin/types/prompts.d.ts（自動生成）
+// 各プロンプトの args は import("...").prompt.config の argsSchema から推論
+declare module "chapplin:prompts" {
+  export interface Prompts {
+    "code-review": { args: { code: string; language?: string }; };
+  }
+  export type PromptName = "code-review";
 }
 ```
 
@@ -602,14 +627,11 @@ export function App(props) {
 
 ### 8.2 出力構成
 
+MCP App の HTML はビルド時にメモリ上で生成され、`chapplin:register` 仮想モジュール内で `virtual:chapplin-app-html:*` 経由で参照される。`dist/` に `__chapplin__` ディレクトリは出力しない。
+
 ```
 dist/
-├── index.js              # サーバーエントリー
-├── __chapplin__/
-│   └── mcp/
-│       ├── chart.js      # export default "<html>..."
-│       └── other-ui.js
-└── ...
+└── index.js              # サーバーエントリー（SSR ビルド）
 ```
 
 ### 8.3 ビルドコマンド
@@ -687,8 +709,7 @@ packages/chapplin-next/
     │   │   ├── ToolList.tsx
     │   │   ├── ResourceList.tsx
     │   │   ├── PromptList.tsx
-    │   │   ├── ToolPreview.tsx
-    │   │   └── ServerLog.tsx
+    │   │   └── ToolPreview.tsx
     │   ├── App.tsx
     │   └── main.tsx
     ├── index.html
@@ -699,14 +720,12 @@ packages/chapplin-next/
 #### 9.4.2 技術スタック
 
 - **フレームワーク**: Preact（軽量で React 互換）
-- **ルーティング**: `preact-iso` - Preact のためのルーティングライブラリ
 - **API サーバー**: Hono - 軽量で高速な Web フレームワーク
 - **Vite プラグイン**: `vite-plugin-dev-api` - 開発サーバーに Hono を簡単に統合
 
 #### 9.4.3 実装の詳細
 
 - **エントリーポイント**: `dev-ui/src/main.tsx` で Preact アプリを起動
-- **ルーティング**: `preact-iso` を使用したクライアントサイドルーティング
 - **API 通信**: `/__chapplin__/api/*` エンドポイントと通信（Hono で実装）
 - **ビルド**: Vite で開発サーバー UI をビルドし、プラグイン内で配信
 - **HMR**: Vite の HMR を活用して開発中の UI 変更を即座に反映
@@ -808,8 +827,8 @@ interface AppProps {
 // ↓
 // 生成されるコード
 import { init } from 'chapplin-next/client/react';
-import { App } from '/path/to/tools/chart.tsx';
-init(App);
+import { app } from '/path/to/tools/chart.tsx';
+init(app.ui);
 ```
 
 生成されたコードは、以下のHTMLテンプレートに埋め込まれます：
@@ -830,7 +849,7 @@ init(App);
 </html>
 ```
 
-このHTMLは、プレビューUIのiframe内で表示され、ツールの `App` コンポーネントがレンダリングされます。
+このHTMLは、プレビューUIのiframe内で表示され、ツールの `app.ui` コンポーネントがレンダリングされます。
 
 #### 9.4.7 API エンドポイント設計
 
@@ -905,7 +924,7 @@ vite dev
 
 ## 10. 今後の検討事項
 
-- [ ] stdio トランスポートのサポート
+- [x] stdio トランスポートのサポート（ユーザーが `StdioServerTransport` を利用し `register(server)` で登録すれば利用可能）
 - [ ] 複数サーバーインスタンスのサポート
 - [ ] テスト用ユーティリティの提供
 - [ ] VS Code 拡張との連携
@@ -953,7 +972,7 @@ vite dev
 |--------|------|------|
 | 5.1 | プレビュー UI（ホスト側） | [x] |
 | 5.1.1 | Preact SPA として再実装 | [x] |
-| 5.1.2 | preact-iso によるルーティング実装 | [x] |
+| 5.1.2 | dev-ui ルーティング実装 | [x] |
 | 5.1.3 | コンポーネント設計（ToolList, Preview など） | [x] |
 | 5.1.4 | Hono による API サーバー実装 | [x] |
 | 5.1.5 | vite-plugin-dev-api による統合 | [x] |
