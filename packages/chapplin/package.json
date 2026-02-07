@@ -35,8 +35,7 @@
 		"./client/hono": {
 			"types": "./dist/client/hono.d.ts",
 			"default": "./dist/client/hono.js"
-		},
-		"./iframe.html": "./iframe.html"
+		}
 	},
 	"files": [
 		"dist",
