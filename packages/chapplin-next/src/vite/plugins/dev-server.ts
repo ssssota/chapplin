@@ -4,15 +4,17 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { styleText } from "node:util";
 import { Hono } from "hono";
-import type { Plugin, ViteDevServer } from "vite";
+import { runnerImport, type Plugin, type ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
 import type { ResolvedOptions } from "../types.js";
 import { app as apiApp } from "./api-app.js";
+import { getBuiltAppHtml } from "./client-build.js";
 import {
 	type DevMcpServerInfo,
 	getDevMcpServerInfo,
 	handleDevMcpRequest,
 } from "./dev-mcp-server.js";
+import { getCollectedFiles } from "./file-collector.js";
 
 /** Dev server preview UI path */
 const PREVIEW_PATH = "/__chapplin__";
@@ -65,6 +67,44 @@ const IFRAME_HTML = `<!doctype html>
 </html>`;
 
 const VIRTUAL_MODULE_PREFIX = "virtual:chapplin-client";
+
+type UnknownRecord = Record<string, unknown>;
+
+interface ToolExportLike {
+	name?: unknown;
+}
+
+function normalizeToolName(rawToolName: string): string {
+	const withoutQuery = rawToolName.split("?")[0] ?? rawToolName;
+	const decoded = decodeURIComponent(withoutQuery);
+	return decoded.replace(/\.(?:tsx?|jsx?)$/, "");
+}
+
+async function resolveToolFileByIdentifier(
+	toolIdentifier: string,
+	root: string,
+) {
+	const files = await getCollectedFiles();
+	const direct = files.tools.find((candidate) => candidate.name === toolIdentifier);
+	if (direct) return direct;
+
+	for (const candidate of files.tools) {
+		try {
+			const imported = await runnerImport<UnknownRecord>(candidate.path, {
+				root,
+				configFile: false,
+			});
+			const tool = imported.module.tool as ToolExportLike | undefined;
+			if (typeof tool?.name === "string" && tool.name === toolIdentifier) {
+				return candidate;
+			}
+		} catch {
+			// ignore import errors during lookup and continue
+		}
+	}
+
+	return null;
+}
 
 /**
  * Setup preview URL logging (inspired by UnoCSS Inspector)
@@ -221,17 +261,40 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 
 						// Serve tool UI directly (for iframe)
 						if (req.url.startsWith("/iframe/tools/")) {
-							const toolFile = req.url.replace("/iframe/tools/", "");
-							res.setHeader("content-type", "text/html");
-							const toolPath = `/${opts.toolsDir}/${toolFile}`;
+							const rawToolIdentifier = req.url.replace("/iframe/tools/", "");
+							const toolIdentifier = normalizeToolName(rawToolIdentifier);
+							const toolFile = await resolveToolFileByIdentifier(
+								toolIdentifier,
+								root,
+							);
+
+							if (!toolFile) {
+								res.statusCode = 404;
+								res.end(`Tool not found: ${toolIdentifier}`);
+								return;
+							}
+
+							const builtHtml = await getBuiltAppHtml(toolFile.name);
+							if (builtHtml) {
+								res.setHeader("content-type", "text/html");
+								res.end(builtHtml);
+								return;
+							}
+
+							const toolPath = `/${toolFile.relativePath.replaceAll("\\", "/")}`;
 							const script = await server.transformRequest(
 								`${VIRTUAL_MODULE_PREFIX}${toolPath}`,
 							);
+
 							if (!script) {
 								res.statusCode = 404;
-								res.end("Tool not found");
+								res.end(
+									`Tool entry could not be transformed: ${toolIdentifier}`,
+								);
 								return;
 							}
+
+							res.setHeader("content-type", "text/html");
 							res.end(IFRAME_HTML.replace(SCRIPT_PLACEHOLDER, script.code));
 							return;
 						}

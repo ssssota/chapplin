@@ -511,7 +511,7 @@ init(app.ui);
 3. 設定された `target`（react/preact/solid/hono）に応じた `init` 関数をインポート
 4. `init(app.ui)` を呼び出して DOM にレンダリング
 
-`/iframe/tools/{toolFile}` パスでアクセスされた際に、この仮想モジュールが使用されます。
+`/iframe/tools/{toolName}` パスでアクセスされた際に、この仮想モジュールが使用されます（ビルド済み HTML が無い場合のフォールバック）。
 
 ---
 
@@ -665,8 +665,9 @@ node dist/index.js
 
 1. **MCP App プレビュー**: iframe + ホスト UI で実際の動作を確認
 2. **MCP サーバー起動**: `/mcp` エンドポイントを提供し、`chapplin:register` で収集済み定義を登録して `StreamableHTTPServerTransport` で処理
-3. **ファイル一覧 API**: tools/resources/prompts の収集結果を `/__chapplin__/api/files` で取得
-4. **ツール実行 API（プレースホルダ）**: `/__chapplin__/api/tools/:name/execute` は現状 `Not implemented` を返す
+3. **MCP ツール一覧取得**: dev-ui の Tools タブは `/mcp` への `tools/list` で取得
+4. **補助 API**: `/__chapplin__/api/files`（resources/prompts 表示用）と `/__chapplin__/api/tools/:name/execute`（未使用プレースホルダ）
+5. **MCP Apps ホスト統合**: プレビューUIの iframe ホスト側で `@modelcontextprotocol/ext-apps` の `app-bridge` を使い、実 MCP（`/mcp`）へ接続して本番相当の挙動を再現
 
 ### 9.2 プレビュー UI
 
@@ -693,8 +694,11 @@ node dist/index.js
 ### 9.3 ホスト UI の機能
 
 - ツール一覧の表示
-- JSON 入力編集と API 実行結果（output）の表示
+- JSON 入力編集と `tools/call` 実行結果（output）の表示
 - MCP App の iframe 表示
+- iframe ホスト側で MCP Apps の host bridge を初期化
+- host bridge 経由で `/mcp` に接続し、tool 呼び出し・resource 読み出し・host context 更新を実 MCP で検証
+- ツール一覧は `tool.name` のみを表示し、ファイル名は UI に露出しない
 
 ### 9.4 プレビュー UI の実装方針
 
@@ -723,6 +727,9 @@ packages/chapplin-next/
     │   │   └── ToolPreview.tsx
     │   ├── api/
     │   │   └── client.ts      # Hono RPC クライアント
+    │   ├── mcp/
+    │   │   ├── host-bridge.ts # iframe host と MCP 接続の橋渡し
+    │   │   └── client.ts      # /mcp 向け MCP クライアント（StreamableHTTP）
     │   ├── App.tsx
     │   └── main.tsx
     ├── index.html
@@ -741,7 +748,8 @@ packages/chapplin-next/
 #### 9.4.3 実装の詳細
 
 - **エントリーポイント**: `dev-ui/src/main.tsx` で Preact アプリを起動
-- **API 通信**: `/__chapplin__/api/*` エンドポイントと通信（`src/vite/plugins/api-app.ts` の Hono アプリ）
+- **API 通信**: `/__chapplin__/api/files` を resources/prompts の表示に使用（`src/vite/plugins/api-app.ts`）
+- **MCP 通信**: `/mcp` へ接続し、tools/list・tools/call を含む MCP Apps の実通信で動作確認
 - **配信**: `dist/dev-ui/index.html` を優先配信
 - **フォールバック**: `dist/dev-ui/index.html` が無い場合は `dev-ui/index.html` を読み込み、Vite 変換を適用
 
@@ -751,10 +759,11 @@ packages/chapplin-next/
 
 1. `vite-plugin-dev-api` を使用して Hono アプリ（`api-app.ts`）を開発サーバーに統合
 2. `/__chapplin__/` パスで dev-ui SPA を配信（ビルド済み優先、未ビルド時はソースへフォールバック）
-3. `/__chapplin__/api/*` で Hono の API エンドポイントを提供
+3. `/__chapplin__/api/*` で Hono の補助 API（主に resources/prompts 表示）を提供
 4. `/mcp` で `chapplin:register` を動的ロードし、`StreamableHTTPServerTransport` で MCP リクエストを処理
 5. `virtual:chapplin-client/*` を解決して iframe 用スクリプトを生成
-6. `/iframe/tools/{toolFile}` でツール UI を iframe として配信
+6. `/iframe/tools/{toolName}` でツール UI を iframe として配信
+7. dev-ui の host bridge からの MCP リクエストを `/mcp` で受け、実 MCP サーバーとして処理
 
 #### 9.4.5 クライアントモジュール
 
@@ -838,19 +847,17 @@ interface AppProps {
 
 #### 9.4.6 仮想モジュール `virtual:chapplin-client` と iframe 配信
 
-開発サーバーでは、ツールUIをiframeで表示するために `virtual:chapplin-client/{toolPath}` という仮想モジュールを提供します。
+開発サーバーでは、`/iframe/tools/{toolName}` へのアクセス時に、まずツール識別子から実ファイルを解決します。
 
-**パス**: `/iframe/tools/{toolFile}`
+1. 収集済み `files.tools[].name` で一致を確認
+2. 一致しない場合は各 tool ファイルを `runnerImport` して `export const tool.name` と照合
+3. 解決したファイル名で `getBuiltAppHtml()` を確認し、存在すればビルド済み HTML を返却
+4. 未ビルド時は `virtual:chapplin-client/{toolPath}` を生成して `load` hook で解決し、HTML に埋め込んで返却
 
-このパスにアクセスすると、以下の処理が行われます：
-
-1. `toolFile` からツールファイルのパスを構築（例: `chart.tsx` → `/tools/chart.tsx`）
-2. `virtual:chapplin-client/tools/chart.tsx` という仮想モジュールIDを生成
-3. `dev-server.ts` プラグインの `load` hook で仮想モジュールを解決
-4. 解決されたコードをHTMLに埋め込み、iframeとして配信
+この方式により、UI は `tool.name` だけを扱い、ファイル名を `_meta` や画面表示に持ち込まずに iframe 配信できます。
 
 ```typescript
-// 仮想モジュールの解決例
+// 仮想モジュールの解決例（フォールバック）
 // virtual:chapplin-client/tools/chart.tsx
 // ↓
 // 生成されるコード
@@ -881,16 +888,14 @@ init(app.ui);
 
 #### 9.4.7 API エンドポイント設計
 
-Hono で実装する API エンドポイント：
+Hono で実装する API エンドポイント（補助用途）：
 
 ```typescript
 // src/vite/plugins/api-app.ts
 import { Hono } from "hono";
-import { logger } from "hono/logger";
 import { getCollectedFiles } from "./file-collector.js";
 
 export const app = new Hono()
-  .use(logger())
   .get("/files", async (c) => {
     const files = await getCollectedFiles();
     return c.json(files);
@@ -907,7 +912,25 @@ export const app = new Hono()
 export type ApiType = typeof app;
 ```
 
-#### 9.4.8 Vite 設定例
+`/__chapplin__/api/*` は dev-ui の補助 API（主に resources/prompts 表示）に限定し、tools 一覧と実行は `/mcp`（`tools/list` / `tools/call`）に一本化します。
+
+#### 9.4.8 MCP Apps ホスト統合（app-bridge）
+
+プレビュー UI では、`iframe` の親側に `@modelcontextprotocol/ext-apps` の `app-bridge` を組み込みます。  
+参照: https://github.com/modelcontextprotocol/ext-apps/blob/main/src/app-bridge.ts
+
+- `ToolPreview` はまず `about:blank` iframe に対して host bridge を接続し、接続後に `src=/iframe/tools/{toolName}` を設定する（`ui/initialize` のタイムアウト回避）
+- host bridge から `/mcp`（StreamableHTTP endpoint）へ接続する MCP クライアントを呼び出す
+- tool input / tool result / host context を bridge 経由で iframe に通知する
+- UI 側が `App` / `useApp` で受け取るイベントと同じ経路を通し、本番の MCP Apps ホストに近い条件でデバッグする
+
+設計上の責務分離:
+
+- `dev-ui/src/mcp/host-bridge.ts`: iframe と app-bridge のライフサイクル管理
+- `dev-ui/src/mcp/client.ts`: `/mcp` との JSON-RPC 通信
+- `ToolPreview.tsx`: JSON 入力の編集、bridge 経由の実行トリガー、結果表示
+
+#### 9.4.9 Vite 設定例
 
 `dev-ui/vite.config.ts` の設定例：
 
@@ -1001,7 +1024,8 @@ vite dev
 | 5.3 | 仮想モジュール `virtual:chapplin-client` 実装 | [x] |
 | 5.4 | iframe 配信機能（`/iframe/tools/`） | [x] |
 | 5.5 | MCP サーバー起動 | [x] |
-| 5.6 | HMR 対応 | [ ] |
+| 5.6 | MCP Apps host bridge（`app-bridge`）統合 | [x] |
+| 5.7 | HMR 対応 | [ ] |
 
 ### Phase 6: テスト・ドキュメント [Low]
 

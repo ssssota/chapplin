@@ -1,8 +1,11 @@
-import { useEffect, useState } from "preact/hooks";
-import type { CollectedFile } from "../../../src/vite/types";
+export interface ToolListItem {
+	name: string;
+	description?: string;
+	hasApp: boolean;
+}
 
 interface ToolListProps {
-	tools: CollectedFile[];
+	tools: ToolListItem[];
 	onPreview?: (toolName: string) => void;
 }
 

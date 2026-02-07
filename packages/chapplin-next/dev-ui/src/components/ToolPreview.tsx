@@ -1,5 +1,8 @@
-import { useState } from "preact/hooks";
-import { client } from "../api/client.js";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import {
+	createPreviewHostBridge,
+	type PreviewHostBridge,
+} from "../mcp/host-bridge.js";
 
 interface ToolPreviewProps {
 	toolName: string;
@@ -7,27 +10,91 @@ interface ToolPreviewProps {
 }
 
 export function ToolPreview({ toolName }: ToolPreviewProps) {
+	const iframeRef = useRef<HTMLIFrameElement>(null);
+	const bridgeRef = useRef<PreviewHostBridge | null>(null);
+	const setupSequenceRef = useRef(0);
+	const [iframeSrc, setIframeSrc] = useState("about:blank");
 	const [input, setInput] = useState("{}");
 	const [output, setOutput] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	const [isConnecting, setIsConnecting] = useState(false);
+	const [isRunning, setIsRunning] = useState(false);
+
+	const disposeBridge = useCallback(async () => {
+		if (!bridgeRef.current) return;
+		const bridge = bridgeRef.current;
+		bridgeRef.current = null;
+		await bridge.dispose();
+	}, []);
+
+	const connectBridge = useCallback(async () => {
+		const iframe = iframeRef.current;
+		if (!iframe) return;
+
+		const sequence = ++setupSequenceRef.current;
+		setIsConnecting(true);
+		setError(null);
+
+		try {
+			await disposeBridge();
+			const bridge = await createPreviewHostBridge({ iframe, toolName });
+
+			if (sequence !== setupSequenceRef.current) {
+				await bridge.dispose();
+				return;
+			}
+
+			bridgeRef.current = bridge;
+			setIframeSrc(`/iframe/tools/${encodeURIComponent(toolName)}`);
+		} catch (e) {
+			if (sequence === setupSequenceRef.current) {
+				setError(e instanceof Error ? e.message : "Unknown error");
+			}
+		} finally {
+			if (sequence === setupSequenceRef.current) {
+				setIsConnecting(false);
+			}
+		}
+	}, [disposeBridge, toolName]);
+
+	useEffect(() => {
+		setOutput(null);
+		setError(null);
+		setIframeSrc("about:blank");
+		void connectBridge();
+	}, [toolName, connectBridge]);
+
+	useEffect(() => {
+		return () => {
+			setupSequenceRef.current += 1;
+			void disposeBridge();
+		};
+	}, [disposeBridge]);
 
 	const handleUpdateInput = async () => {
 		try {
 			const parsedInput = JSON.parse(input);
-			const res = await client.tools[":name"].execute.$post({
-				param: { name: toolName },
-			});
-
-			if (!res.ok) {
-				throw new Error(`HTTP error! status: ${res.status}`);
+			if (
+				parsedInput === null ||
+				Array.isArray(parsedInput) ||
+				typeof parsedInput !== "object"
+			) {
+				throw new Error("Input must be a JSON object");
 			}
 
-			const result = await res.json();
+			if (!bridgeRef.current) {
+				throw new Error("Preview host is not connected yet");
+			}
+
+			setIsRunning(true);
+			const result = await bridgeRef.current.executeTool(parsedInput);
 			setOutput(JSON.stringify(result, null, 2));
 			setError(null);
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Unknown error");
 			setOutput(null);
+		} finally {
+			setIsRunning(false);
 		}
 	};
 
@@ -45,9 +112,15 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 					type="button"
 					class="px-5 py-2.5 mt-2.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
 					onClick={handleUpdateInput}
+					disabled={isConnecting || isRunning}
 				>
-					Update
+					{isRunning ? "Running..." : "Run"}
 				</button>
+				{isConnecting && (
+					<div class="text-sm text-gray-600 mt-2.5">
+						Connecting MCP host bridge...
+					</div>
+				)}
 
 				<h2 class="text-lg font-semibold">Output</h2>
 				<textarea
@@ -62,9 +135,10 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 				<h2 class="text-lg font-semibold">App Preview</h2>
 				<iframe
 					id="frame"
+					ref={iframeRef}
 					class="w-full h-[500px] border border-gray-800 bg-white rounded"
 					title={`Preview of ${toolName}`}
-					src={`/iframe/tools/${toolName}.tsx`}
+					src={iframeSrc}
 				/>
 			</div>
 		</div>

@@ -1,15 +1,21 @@
 import { useEffect, useState } from "preact/hooks";
 import { LocationProvider } from "preact-iso";
-import type { CollectedFiles } from "../../src/vite/types.js";
+import type { CollectedFile } from "../../src/vite/types.js";
 import { client } from "./api/client.js";
 import { PromptList } from "./components/PromptList.js";
 import { ResourceList } from "./components/ResourceList.js";
-import { ToolList } from "./components/ToolList.js";
+import { ToolList, type ToolListItem } from "./components/ToolList.js";
 import { ToolPreview } from "./components/ToolPreview.js";
+import { listDevTools } from "./mcp/client.js";
+
+interface FilePanelsState {
+	resources: CollectedFile[];
+	prompts: CollectedFile[];
+}
 
 export function App() {
-	const [files, setFiles] = useState<CollectedFiles>({
-		tools: [],
+	const [tools, setTools] = useState<ToolListItem[]>([]);
+	const [filePanels, setFilePanels] = useState<FilePanelsState>({
 		resources: [],
 		prompts: [],
 	});
@@ -20,22 +26,33 @@ export function App() {
 	const [previewTool, setPreviewTool] = useState<string | null>(null);
 
 	useEffect(() => {
-		client.files
-			.$get()
-			.then(async (res) => {
-				if (res.ok) {
-					const data = await res.json();
-					setFiles(data);
-					setLoading(false);
-				} else {
-					console.error("Failed to load files:", res.status);
-					setLoading(false);
+		const load = async () => {
+			try {
+				const [toolsFromMcp, filesRes] = await Promise.all([
+					listDevTools(),
+					client.files.$get(),
+				]);
+
+				setTools(toolsFromMcp);
+
+				if (!filesRes.ok) {
+					console.error("Failed to load files:", filesRes.status);
+					return;
 				}
-			})
-			.catch((err) => {
-				console.error("Failed to load files:", err);
+
+				const data = await filesRes.json();
+				setFilePanels({
+					resources: data.resources,
+					prompts: data.prompts,
+				});
+			} catch (err) {
+				console.error("Failed to load dev UI data:", err);
+			} finally {
 				setLoading(false);
-			});
+			}
+		};
+
+		void load();
 	}, []);
 
 	return (
@@ -88,8 +105,8 @@ export function App() {
 						<div id="tools" class={activeTab === "tools" ? "block" : "hidden"}>
 							<h2 class="text-xl font-semibold mb-4">Tools</h2>
 							<ToolList
-								tools={files.tools}
-								onPreview={(name) => setPreviewTool(name)}
+								tools={tools}
+								onPreview={(toolName) => setPreviewTool(toolName)}
 							/>
 						</div>
 
@@ -98,7 +115,7 @@ export function App() {
 							class={activeTab === "resources" ? "block" : "hidden"}
 						>
 							<h2 class="text-xl font-semibold mb-4">Resources</h2>
-							<ResourceList resources={files.resources} />
+							<ResourceList resources={filePanels.resources} />
 						</div>
 
 						<div
@@ -106,7 +123,7 @@ export function App() {
 							class={activeTab === "prompts" ? "block" : "hidden"}
 						>
 							<h2 class="text-xl font-semibold mb-4">Prompts</h2>
-							<PromptList prompts={files.prompts} />
+							<PromptList prompts={filePanels.prompts} />
 						</div>
 
 						{previewTool && (
