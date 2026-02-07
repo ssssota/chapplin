@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { styleText } from "node:util";
 import { Hono } from "hono";
-import { runnerImport, type Plugin, type ViteDevServer } from "vite";
+import { type Plugin, runnerImport, type ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
 import type { ResolvedOptions } from "../types.js";
 import { app as apiApp } from "./api-app.js";
@@ -26,8 +26,8 @@ const PREVIEW_PATH = "/__chapplin__";
 function getPackageRoot(): string {
 	const require = createRequire(import.meta.url);
 	try {
-		// Try to resolve package.json from chapplin-next package
-		const packageJsonPath = require.resolve("chapplin-next/package.json");
+		// Try to resolve package.json from chapplin package
+		const packageJsonPath = require.resolve("chapplin/package.json");
 		return dirname(packageJsonPath);
 	} catch {
 		// Fallback: find package.json by traversing up from current file
@@ -35,9 +35,9 @@ function getPackageRoot(): string {
 		while (currentDir !== dirname(currentDir)) {
 			try {
 				const packageJsonPath = join(currentDir, "package.json");
-				// Check if it's chapplin-next package
+				// Check if it's chapplin package
 				const pkg = require(packageJsonPath);
-				if (pkg.name === "chapplin-next") {
+				if (pkg.name === "chapplin") {
 					return currentDir;
 				}
 			} catch {
@@ -45,7 +45,7 @@ function getPackageRoot(): string {
 			}
 			currentDir = dirname(currentDir);
 		}
-		throw new Error("Could not find chapplin-next package root");
+		throw new Error("Could not find chapplin package root");
 	}
 }
 
@@ -85,7 +85,9 @@ async function resolveToolFileByIdentifier(
 	root: string,
 ) {
 	const files = await getCollectedFiles();
-	const direct = files.tools.find((candidate) => candidate.name === toolIdentifier);
+	const direct = files.tools.find(
+		(candidate) => candidate.name === toolIdentifier,
+	);
 	if (direct) return direct;
 
 	for (const candidate of files.tools) {
@@ -192,7 +194,7 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 					const resolvedPath = join(root, path);
 					this.addWatchFile(resolvedPath);
 					return [
-						`import { init } from 'chapplin-next/client/${opts.target}';`,
+						`import { init } from 'chapplin/client/${opts.target}';`,
 						`import { app } from '${resolvedPath}';`,
 						`init(app.ui);`,
 					].join("\n");

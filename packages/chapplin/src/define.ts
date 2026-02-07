@@ -1,5 +1,5 @@
 /**
- * define* API for chapplin-next.
+ * define* API for chapplin.
  * Use defineTool, defineApp, defineResource, definePrompt in tool/resource/prompt files.
  */
 

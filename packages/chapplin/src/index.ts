@@ -1,5 +1,5 @@
 /**
- * chapplin-next
+ * chapplin
  * All-in-one framework for building MCP Server with MCP Apps
  */
 

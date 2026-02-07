@@ -124,7 +124,7 @@ describe("file-collector regex patterns", () => {
 	describe("pattern combinations in realistic code", () => {
 		it("should detect tool and app in same file", () => {
 			const code = `
-import { defineTool, defineApp } from "chapplin-next";
+import { defineTool, defineApp } from "chapplin";
 import z from "zod";
 
 export const tool = defineTool({
@@ -145,7 +145,7 @@ export const app = defineApp<typeof tool>({
 
 		it("should detect resource only", () => {
 			const code = `
-import { defineResource } from "chapplin-next";
+import { defineResource } from "chapplin";
 
 export const resource = defineResource({
   name: "config",
@@ -161,7 +161,7 @@ export const resource = defineResource({
 
 		it("should detect prompt only", () => {
 			const code = `
-import { definePrompt } from "chapplin-next";
+import { definePrompt } from "chapplin";
 import z from "zod";
 
 export const prompt = definePrompt({

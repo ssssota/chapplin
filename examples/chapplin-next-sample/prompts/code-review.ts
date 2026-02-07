@@ -1,4 +1,4 @@
-import { definePrompt } from "chapplin-next";
+import { definePrompt } from "chapplin";
 import z from "zod";
 
 export const prompt = definePrompt({

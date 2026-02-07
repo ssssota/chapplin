@@ -125,7 +125,7 @@ describe.sequential("dev server e2e", () => {
 			"pnpm",
 			[
 				"--filter",
-				"chapplin-next-sample",
+				"chapplin-sample",
 				"run",
 				"dev",
 				"--port",

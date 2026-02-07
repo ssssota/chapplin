@@ -17,7 +17,7 @@ export type { Options, ResolvedOptions, Target } from "./types.js";
  * ```ts
  * // vite.config.ts
  * import { defineConfig } from "vite";
- * import { chapplin } from "chapplin-next/vite";
+ * import { chapplin } from "chapplin/vite";
  * import react from "@vitejs/plugin-react";
  *
  * export default defineConfig({

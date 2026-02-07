@@ -1,4 +1,4 @@
-import { defineApp, defineTool } from "chapplin-next";
+import { defineApp, defineTool } from "chapplin";
 import z from "zod";
 
 const todos = [

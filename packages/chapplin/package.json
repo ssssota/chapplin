@@ -1,5 +1,5 @@
 {
-	"name": "chapplin-next",
+	"name": "chapplin",
 	"type": "module",
 	"version": "0.0.1",
 	"description": "All-in-one framework for building MCP Server with MCP Apps",

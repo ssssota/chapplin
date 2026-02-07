@@ -1,4 +1,4 @@
-import { defineResource } from "chapplin-next";
+import { defineResource } from "chapplin";
 
 export const resource = defineResource({
 	name: "app-config",

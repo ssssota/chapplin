@@ -1,5 +1,5 @@
 {
-	"name": "chapplin-next-sample",
+	"name": "chapplin-sample",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@hono/node-server": "^1.19.6",
 		"@vitejs/plugin-react": "^4.5.2",
-		"chapplin-next": "workspace:*",
+		"chapplin": "workspace:*",
 		"vite": "catalog:"
 	},
 	"dependencies": {

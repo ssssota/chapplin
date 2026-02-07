@@ -1,4 +1,4 @@
-import { defineTool } from "chapplin-next";
+import { defineTool } from "chapplin";
 import z from "zod";
 
 export const tool = defineTool({
