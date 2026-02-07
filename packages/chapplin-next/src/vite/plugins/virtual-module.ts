@@ -18,30 +18,38 @@ const APP_HTML_PREFIX = "virtual:chapplin-app-html:";
 export function virtualModule(opts: ResolvedOptions): Plugin {
 	return {
 		name: "chapplin:virtual-module",
-		resolveId(id) {
-			if (id === VIRTUAL_MODULE_ID) {
-				return RESOLVED_VIRTUAL_MODULE_ID;
-			}
-			// Resolve app HTML virtual modules
-			if (id.startsWith(APP_HTML_PREFIX)) {
-				return `\0${id}`;
-			}
-		},
-		async load(id) {
-			if (id === RESOLVED_VIRTUAL_MODULE_ID) {
-				const files = await getCollectedFiles();
-				return generateVirtualModuleCode(files, opts);
-			}
-			// Load app HTML virtual modules
-			if (id.startsWith(`\0${APP_HTML_PREFIX}`)) {
-				const toolName = id.slice(`\0${APP_HTML_PREFIX}`.length);
-				const html = await getBuiltAppHtml(toolName);
-				if (html) {
-					return `export default ${JSON.stringify(html)};`;
+		resolveId: {
+			filter: { id: new RegExp(`^(${VIRTUAL_MODULE_ID}|${APP_HTML_PREFIX})`) },
+			handler(id) {
+				if (id === VIRTUAL_MODULE_ID) {
+					return RESOLVED_VIRTUAL_MODULE_ID;
 				}
-				// Return empty placeholder if not built yet
-				return `export default "";`;
-			}
+				// Resolve app HTML virtual modules
+				if (id.startsWith(APP_HTML_PREFIX)) {
+					return `\0${id}`;
+				}
+			},
+		},
+		load: {
+			filter: {
+				id: new RegExp(`^(\\x00${VIRTUAL_MODULE_ID}|\\x00${APP_HTML_PREFIX})`),
+			},
+			async handler(id) {
+				if (id === RESOLVED_VIRTUAL_MODULE_ID) {
+					const files = await getCollectedFiles();
+					return generateVirtualModuleCode(files, opts);
+				}
+				// Load app HTML virtual modules
+				if (id.startsWith(`\0${APP_HTML_PREFIX}`)) {
+					const toolName = id.slice(`\0${APP_HTML_PREFIX}`.length);
+					const html = await getBuiltAppHtml(toolName);
+					if (html) {
+						return `export default ${JSON.stringify(html)};`;
+					}
+					// Return empty placeholder if not built yet
+					return `export default "";`;
+				}
+			},
 		},
 	};
 }

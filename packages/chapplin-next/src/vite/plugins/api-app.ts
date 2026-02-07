@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { logger } from "hono/logger";
 import { getCollectedFiles } from "./file-collector.js";
 
 /**
@@ -8,7 +7,6 @@ import { getCollectedFiles } from "./file-collector.js";
  * Base path is set to /__chapplin__/api
  */
 export const app = new Hono()
-	.use(logger())
 	.get("/files", async (c) => {
 		const files = await getCollectedFiles();
 		return c.json(files);

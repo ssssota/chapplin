@@ -21,22 +21,28 @@ chapplin は、Model Context Protocol (MCP) サーバーと MCP Apps（インタ
 ```json
 {
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": ">=1.23",
+    "@modelcontextprotocol/ext-apps": ">=1.0.0",
+    "@modelcontextprotocol/sdk": ">=1.22",
+    "hono": ">=4.0.0",
+    "preact": ">=10.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "solid-js": ">=1.0.0",
     "vite": ">=6",
-    "zod": ">=4"
+    "zod": ">=3"
   },
-  "optionalPeerDependencies": {
-    "hono": ">=4",
-    "react": ">=18",
-    "react-dom": ">=18",
-    "preact": ">=10",
-    "solid-js": ">=1.9"
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/ext-apps": { "optional": true },
+    "hono": { "optional": true },
+    "preact": { "optional": true },
+    "react": { "optional": true },
+    "react-dom": { "optional": true },
+    "solid-js": { "optional": true }
   },
   "dependencies": {
-    "@modelcontextprotocol/ext-apps": "^1.0.1",
-    "vite-plugin-singlefile": "*",
     "magic-string": "*",
-    "vite-plugin-dev-api": "*"
+    "vite-plugin-dev-api": "^0.2.1",
+    "vite-plugin-singlefile": "*"
   }
 }
 ```
@@ -256,9 +262,9 @@ ui: (props) => (
 
 #### 4.1.5 懸念・注意点
 
-- **既存実装との差**: 現在の実装は `export const name` / `export const config` / `export function handler` 等の**個別 export** をパースしています。define* 形式に合わせるには、ファイル収集・型生成・仮想モジュール生成のいずれも「`defineTool` / `defineResource` / `definePrompt` の呼び出し」および「`defineApp<typeof tool>` の有無」を解析する形に変更する必要があります。
+- **ファイル収集の判定精度**: 現在の実装は AST 解析ではなく、`defineTool` / `defineApp` / `defineResource` / `definePrompt` の文字列検出（正規表現）で収集対象を判定します。コメントや文字列リテラル内の一致でもヒットし得ます。
 - **export 名**: `tool` / `resource` / `prompt` / `app` を標準の export 名として扱う想定です。複数 export は想定せず、1 ファイル 1 つの define* にします。
-- **型生成**: 生成される `.chapplin/types/` の参照先は「そのファイルの default または named export された define* の戻り値」になり、`typeof import("./tools/weather").tool` のように `tool` を参照する形に変わります。
+- **型生成**: 生成される `.chapplin/types/` の参照先は「そのファイルの named export された define* の戻り値」になり、`typeof import("./tools/weather").tool` のように `tool` を参照する形に変わります（default export は対象外）。
 - **Hono と hono/jsx**: target が `hono` のときは **`hono/jsx` モジュールを前提**とする。UI はすべて JSX で書くため、他 target と同様にコンポーネント（JSX）を渡す。ランタイムでは `hono/jsx/dom` の `jsx` / `render` でレンダリングする。
 
 ### 4.2 Resources
@@ -327,7 +333,7 @@ export const prompt = definePrompt({
 ```typescript
 // vite.config.ts
 import { defineConfig } from "vite";
-import { chapplin } from "chapplin/vite";  // 注: 現状のパッケージ名は chapplin-next、のちに chapplin に変更予定
+import { chapplin } from "chapplin-next/vite";
 import react from "@vitejs/plugin-react";  // または preact, solid
 
 export default defineConfig({
@@ -349,11 +355,12 @@ chapplin は複数の Vite プラグインで構成されます：
 ```typescript
 export function chapplin(opts: Options): Plugin[] {
   return [
-    build(opts),              // ビルド時の処理
-    clientToolResolver(opts), // クライアント側ツール解決
-    devServer(),              // 開発サーバー
-    virtualModules(),         // 仮想モジュール
-    typeGeneration(),         // 型生成
+    ssrBuild(opts),           // SSR ビルド設定
+    fileCollector(opts),      // ファイル収集
+    virtualModule(opts),      // chapplin:register 仮想モジュール
+    clientBuild(opts),        // UI 付きツールのクライアントビルド
+    typeGeneration(opts),     // 型生成
+    ...devServer(opts),       // 開発サーバー（複数プラグイン）
   ];
 }
 ```
@@ -367,7 +374,7 @@ interface Options {
   /** tsconfig パス @default 'tsconfig.json' */
   tsconfigPath?: string;
   /** UI フレームワーク */
-  target?: "react" | "preact" | "hono" | "solid";
+  target: "react" | "preact" | "hono" | "solid";
   /** ツールディレクトリ @default 'tools' */
   toolsDir?: string;
   /** リソースディレクトリ @default 'resources' */
@@ -388,34 +395,40 @@ interface Options {
 ```typescript
 // 生成されるコード（イメージ）
 // defineTool / defineResource / definePrompt の戻り値から .name, .config, .handler を参照する
-import { tool as tool_weather } from "./tools/weather.ts";
-import { tool as tool_chart, app as app_chart } from "./tools/chart.tsx";
+import * as tool_weather from "./tools/weather.ts";
+import * as tool_chart from "./tools/chart.tsx";
 import tool_chart_html from "virtual:chapplin-app-html:show_chart";
 
-import { resource as resource_config } from "./resources/config.ts";
-import { prompt as prompt_review } from "./prompts/code-review.ts";
+import * as resource_config from "./resources/config.ts";
+import * as prompt_review from "./prompts/code-review.ts";
 
 /**
  * @param {import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} server
  */
 export function register(server) {
   // Register tools
-  server.registerTool(tool_weather.name, tool_weather.config, tool_weather.handler);
+  server.registerTool(tool_weather.tool.name, tool_weather.tool.config, tool_weather.tool.handler);
 
   {
-    const uri = `ui://${tool_chart.name}/app.html`;
+    const uri = `ui://${tool_chart.tool.name}/app.html`;
     server.registerTool(
-      tool_chart.name,
-      { ...tool_chart.config, _meta: { ui: { resourceUri: uri } } },
-      tool_chart.handler
+      tool_chart.tool.name,
+      {
+        ...tool_chart.tool.config,
+        _meta: {
+          ...tool_chart.tool.config._meta,
+          ui: { resourceUri: uri },
+        },
+      },
+      tool_chart.tool.handler
     );
     server.registerResource(
-      tool_chart.name,
+      tool_chart.tool.name,
       uri,
       {
-        description: tool_chart.config.description,
+        description: tool_chart.tool.config.description,
         mimeType: "text/html;profile=mcp-app",
-        _meta: { ui: app_chart.meta ?? {} },
+        _meta: { ui: tool_chart.app.meta ?? {} },
       },
       async () => ({
         contents: [{ uri, mimeType: "text/html;profile=mcp-app", text: tool_chart_html }],
@@ -425,17 +438,17 @@ export function register(server) {
 
   // Register resources
   server.registerResource(
-    resource_config.name,
-    resource_config.config.uri,
-    resource_config.config,
-    resource_config.handler
+    resource_config.resource.name,
+    resource_config.resource.config.uri,
+    resource_config.resource.config,
+    resource_config.resource.handler
   );
 
   // Register prompts
   server.registerPrompt(
-    prompt_review.name,
-    prompt_review.config,
-    prompt_review.handler
+    prompt_review.prompt.name,
+    prompt_review.prompt.config,
+    prompt_review.prompt.handler
   );
 }
 ```
@@ -651,8 +664,9 @@ node dist/index.js
 ### 9.1 機能
 
 1. **MCP App プレビュー**: iframe + ホスト UI で実際の動作を確認
-2. **MCP サーバー**: `chapplin:register` を利用したエントリをオンデマンドビルドして起動
-3. **HMR**: ツール/リソース/プロンプトの変更を検知してリロード
+2. **MCP サーバー起動**: `/mcp` エンドポイントを提供し、`chapplin:register` で収集済み定義を登録して `StreamableHTTPServerTransport` で処理
+3. **ファイル一覧 API**: tools/resources/prompts の収集結果を `/__chapplin__/api/files` で取得
+4. **ツール実行 API（プレースホルダ）**: `/__chapplin__/api/tools/:name/execute` は現状 `Not implemented` を返す
 
 ### 9.2 プレビュー UI
 
@@ -660,7 +674,7 @@ node dist/index.js
 +------------------------------------------+
 | chapplin Dev Server                      |
 +------------------------------------------+
-| Tools | Resources | Prompts | Server Log |
+| Tools | Resources | Prompts              |
 +------------------------------------------+
 | > get_weather                            |
 |   show_chart    [Preview]                |
@@ -672,17 +686,15 @@ node dist/index.js
 | |                                      | |
 | +--------------------------------------+ |
 | Input:  { "data": [...], "chartType": "bar" }
-| Output: { "chartId": "abc123" }          |
+| Output: { "success": false, ... }        |
 +------------------------------------------+
 ```
 
 ### 9.3 ホスト UI の機能
 
 - ツール一覧の表示
-- ツール入力（input）のフォーム生成
-- ツール実行と出力（output）の表示
+- JSON 入力編集と API 実行結果（output）の表示
 - MCP App の iframe 表示
-- ホスト ↔ App 間の通信シミュレーション
 
 ### 9.4 プレビュー UI の実装方針
 
@@ -700,21 +712,24 @@ packages/chapplin-next/
 ├── src/
 │   └── vite/
 │       └── plugins/
-│           └── dev-server.ts
+│           ├── dev-server.ts
+│           └── api-app.ts
 └── dev-ui/                    # 開発サーバー UI 用のディレクトリ
     ├── src/
-    │   ├── api/
-    │   │   └── index.ts       # Hono アプリの定義
     │   ├── components/
     │   │   ├── ToolList.tsx
     │   │   ├── ResourceList.tsx
     │   │   ├── PromptList.tsx
     │   │   └── ToolPreview.tsx
+    │   ├── api/
+    │   │   └── client.ts      # Hono RPC クライアント
     │   ├── App.tsx
     │   └── main.tsx
     ├── index.html
+    ├── uno.config.ts
+    ├── tsconfig.json
+    ├── tsconfig.node.json
     ├── vite.config.ts
-    └── package.json
 ```
 
 #### 9.4.2 技術スタック
@@ -726,20 +741,20 @@ packages/chapplin-next/
 #### 9.4.3 実装の詳細
 
 - **エントリーポイント**: `dev-ui/src/main.tsx` で Preact アプリを起動
-- **API 通信**: `/__chapplin__/api/*` エンドポイントと通信（Hono で実装）
-- **ビルド**: Vite で開発サーバー UI をビルドし、プラグイン内で配信
-- **HMR**: Vite の HMR を活用して開発中の UI 変更を即座に反映
+- **API 通信**: `/__chapplin__/api/*` エンドポイントと通信（`src/vite/plugins/api-app.ts` の Hono アプリ）
+- **配信**: `dist/dev-ui/index.html` を優先配信
+- **フォールバック**: `dist/dev-ui/index.html` が無い場合は `dev-ui/index.html` を読み込み、Vite 変換を適用
 
 #### 9.4.4 プラグインとの統合
 
 `dev-server.ts` プラグインは以下のように動作します：
 
-1. 開発モード時、`dev-ui/` を Vite のサブビルドとして起動
-2. `/__chapplin__/` パスで Preact SPA を配信
-3. `vite-plugin-dev-api` を使用して Hono アプリを開発サーバーに統合
-4. `/__chapplin__/api/*` で Hono の API エンドポイントを提供
-5. ビルド済みの HTML/JS/CSS をメモリ上に保持して配信
-6. `/iframe/tools/{toolFile}` パスでツールUIをiframeとして配信
+1. `vite-plugin-dev-api` を使用して Hono アプリ（`api-app.ts`）を開発サーバーに統合
+2. `/__chapplin__/` パスで dev-ui SPA を配信（ビルド済み優先、未ビルド時はソースへフォールバック）
+3. `/__chapplin__/api/*` で Hono の API エンドポイントを提供
+4. `/mcp` で `chapplin:register` を動的ロードし、`StreamableHTTPServerTransport` で MCP リクエストを処理
+5. `virtual:chapplin-client/*` を解決して iframe 用スクリプトを生成
+6. `/iframe/tools/{toolFile}` でツール UI を iframe として配信
 
 #### 9.4.5 クライアントモジュール
 
@@ -753,7 +768,10 @@ import { createRoot } from "react-dom/client";
 
 export function init(App: ComponentType<AppProps>): void {
   const root = document.getElementById("root");
-  if (!root) return;
+  if (!root) {
+    console.error("Root element not found");
+    return;
+  }
   const reactRoot = createRoot(root);
   reactRoot.render(jsx(App, { input: {}, output: null, meta: null }));
 }
@@ -765,7 +783,10 @@ import { jsx } from "preact/jsx-runtime";
 
 export function init(App: ComponentType<AppProps>): void {
   const root = document.getElementById("root");
-  if (!root) return;
+  if (!root) {
+    console.error("Root element not found");
+    return;
+  }
   render(jsx(App, { input: {}, output: null, meta: null }), root);
 }
 
@@ -775,7 +796,10 @@ import { createComponent, render } from "solid-js/web";
 
 export function init(App: Component<AppProps>): void {
   const root = document.getElementById("root");
-  if (!root) return;
+  if (!root) {
+    console.error("Root element not found");
+    return;
+  }
   render(
     () => createComponent(App, { input: {}, output: null, meta: null }),
     root
@@ -785,10 +809,14 @@ export function init(App: Component<AppProps>): void {
 // chapplin-next/client/hono
 import type { Child, JSXNode } from "hono/jsx";
 import { jsx, render } from "hono/jsx/dom";
+type Component = (props: unknown) => JSXNode;
 
 export function init(App: (props: AppProps) => Child): void {
   const root = document.getElementById("root");
-  if (!root) return;
+  if (!root) {
+    console.error("Root element not found");
+    return;
+  }
   render(jsx(App as Component, { input: {}, output: null, meta: null }), root);
 }
 
@@ -856,31 +884,27 @@ init(app.ui);
 Hono で実装する API エンドポイント：
 
 ```typescript
-// dev-ui/src/api/index.ts
+// src/vite/plugins/api-app.ts
 import { Hono } from "hono";
+import { logger } from "hono/logger";
+import { getCollectedFiles } from "./file-collector.js";
 
-const app = new Hono();
+export const app = new Hono()
+  .use(logger())
+  .get("/files", async (c) => {
+    const files = await getCollectedFiles();
+    return c.json(files);
+  })
+  .post("/tools/:name/execute", async (c) => {
+    c.req.param("name");
+    await c.req.json();
+    return c.json({ success: false, error: "Not implemented" });
+  })
+  .get("/server/status", async (c) => {
+    return c.json({ status: "running" });
+  });
 
-// ファイル一覧取得
-app.get("/api/files", async (c) => {
-  const files = getCollectedFiles();
-  return c.json(files);
-});
-
-// ツール実行
-app.post("/api/tools/:name/execute", async (c) => {
-  const { name } = c.req.param();
-  const args = await c.req.json();
-  const result = await executeTool(name, args);
-  return c.json(result);
-});
-
-// MCP サーバー状態
-app.get("/api/server/status", async (c) => {
-  return c.json({ status: "running" });
-});
-
-export default app;
+export type ApiType = typeof app;
 ```
 
 #### 9.4.8 Vite 設定例
@@ -891,21 +915,17 @@ export default app;
 // dev-ui/vite.config.ts
 import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
-import { devApi } from "vite-plugin-dev-api";
-import api from "./src/api/index.ts";
+import unocss from "unocss/vite";
+import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig({
-  plugins: [
-    preact(),
-    devApi({
-      handler: api,
-      path: "/__chapplin__/api",
-    }),
-  ],
+  plugins: [preact(), unocss(), viteSingleFile()],
+  base: "/__chapplin__/",
   build: {
     outDir: "../dist/dev-ui",
     emptyOutDir: false,
   },
+  // API は dev-server plugin 側で提供
 });
 ```
 
@@ -917,7 +937,8 @@ vite dev
 
 # デフォルトポート: 5173
 # プレビュー UI: http://localhost:5173/__chapplin__/
-# MCP サーバー: http://localhost:5173/mcp (SSE)
+# API: http://localhost:5173/__chapplin__/api/*
+# MCP サーバー: http://localhost:5173/mcp (StreamableHTTPServerTransport)
 ```
 
 ---
@@ -979,7 +1000,7 @@ vite dev
 | 5.2 | クライアントモジュール実装（react/preact/solid/hono） | [x] |
 | 5.3 | 仮想モジュール `virtual:chapplin-client` 実装 | [x] |
 | 5.4 | iframe 配信機能（`/iframe/tools/`） | [x] |
-| 5.5 | MCP サーバー起動 | [ ] |
+| 5.5 | MCP サーバー起動 | [x] |
 | 5.6 | HMR 対応 | [ ] |
 
 ### Phase 6: テスト・ドキュメント [Low]
@@ -1049,7 +1070,7 @@ registerAppResource(server, name, uri, config, handler);
 
 | 項目 | 既存 (v0.2.x) | chapplin-next |
 |------|--------------|---------------|
-| ツール定義 | `defineTool()` 関数 | ファイルベース (export) |
+| ツール定義 | `defineTool()` 関数 | `define*` + ファイルベース自動収集 |
 | 仮想モジュール | なし | `chapplin:register` |
 | 型生成 | なし | 自動生成 |
 | リソース/プロンプト | 未対応 | 対応 |

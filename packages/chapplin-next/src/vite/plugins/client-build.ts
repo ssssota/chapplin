@@ -101,7 +101,7 @@ function getClientBuildPlugins(
 	const KEEP_PREFIXES = [
 		"vite:react", // React (vite:react-babel, vite:react-refresh, etc.)
 		"vite:preact", // Preact
-    "preact:",
+		"preact:",
 		"solid", // Solid.js (vite-plugin-solid)
 	];
 
@@ -143,20 +143,29 @@ async function buildClientApp(
 	// Create a virtual entry that renders the App
 	const entryPlugin: Plugin = {
 		name: "chapplin:client-entry",
-		resolveId(id) {
-			if (id === "virtual:chapplin-entry" || id === ENTRY_ID) {
-				return ENTRY_ID;
-			}
-			if (id === "virtual:chapplin-entry.html" || id === HTML_ID) {
-				return HTML_ID;
-			}
+		resolveId: {
+			filter: {
+				id: /^(virtual:chapplin-entry(?:\.html)?|\0virtual:chapplin-entry(?:\.js|\.html))$/,
+			},
+			handler(id) {
+				if (id === "virtual:chapplin-entry" || id === ENTRY_ID) {
+					return ENTRY_ID;
+				}
+				if (id === "virtual:chapplin-entry.html" || id === HTML_ID) {
+					return HTML_ID;
+				}
+			},
 		},
-		load(id) {
-			if (id === ENTRY_ID) {
-				return generateClientEntry(context.file, context.target);
-			}
-			if (id === HTML_ID) {
-				return `<!DOCTYPE html>
+		load: {
+			filter: {
+				id: /^\0virtual:chapplin-entry\.(js|html)$/,
+			},
+			handler(id) {
+				if (id === ENTRY_ID) {
+					return generateClientEntry(context.file, context.target);
+				}
+				if (id === HTML_ID) {
+					return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -167,7 +176,8 @@ async function buildClientApp(
   <script type="module" src="virtual:chapplin-entry"></script>
 </body>
 </html>`;
-			}
+				}
+			},
 		},
 	};
 

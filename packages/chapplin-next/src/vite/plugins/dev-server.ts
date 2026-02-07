@@ -8,6 +8,11 @@ import type { Plugin, ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
 import type { ResolvedOptions } from "../types.js";
 import { app as apiApp } from "./api-app.js";
+import {
+	type DevMcpServerInfo,
+	getDevMcpServerInfo,
+	handleDevMcpRequest,
+} from "./dev-mcp-server.js";
 
 /** Dev server preview UI path */
 const PREVIEW_PATH = "/__chapplin__";
@@ -90,12 +95,17 @@ function setupPreviewUrlLogging(server: ViteDevServer) {
 					: appUrl.slice(0, -1); // remove the trailing slash
 			// we removed the trailing slash from serverUrl when removing the base, add it back
 			const previewUrl = `${serverUrl}${PREVIEW_PATH}/`;
+			const mcpUrl = `${serverUrl}/mcp`;
 			// Apply cyan color to the entire URL, then make port bold
-			const cyanUrl = styleText("cyan", previewUrl);
-			const coloredUrl = colorUrl(cyanUrl);
-			// eslint-disable-next-line no-console
+			const previewColoredUrl = colorUrl(styleText("cyan", previewUrl));
+			const mcpColoredUrl = colorUrl(styleText("cyan", mcpUrl));
+			// Preview URL
 			console.log(
-				`  ${styleText("green", "➜")}  ${styleText("bold", "chapplin Preview")}: ${coloredUrl}`,
+				`  ${styleText("green", "➜")}  ${styleText("bold", "chapplin Preview")}: ${previewColoredUrl}`,
+			);
+			// MCP URL
+			console.log(
+				`  ${styleText("green", "➜")}  ${styleText("bold", "chapplin MCP")}: ${mcpColoredUrl}`,
 			);
 		}
 	};
@@ -106,6 +116,7 @@ function setupPreviewUrlLogging(server: ViteDevServer) {
  */
 export function devServer(opts: ResolvedOptions): Plugin[] {
 	let root: string;
+	let serverInfo: DevMcpServerInfo;
 
 	return [
 		{
@@ -121,6 +132,7 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 			apply: "serve",
 			configResolved(config) {
 				root = config.root;
+				serverInfo = getDevMcpServerInfo(root);
 			},
 			resolveId: {
 				order: "pre",
@@ -153,6 +165,11 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 
 					server.middlewares.use(async (req, res, next) => {
 						if (!req.url) return next();
+
+						// Serve MCP endpoint in dev mode
+						if (await handleDevMcpRequest(server, req, res, serverInfo)) {
+							return;
+						}
 
 						// Serve dev-ui SPA
 						if (req.url.startsWith(PREVIEW_PATH)) {
