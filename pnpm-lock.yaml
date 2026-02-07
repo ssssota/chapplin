@@ -84,7 +84,7 @@ importers:
         specifier: ^4.0.14
         version: 4.0.15(@types/node@24.10.1)(jiti@2.6.1)
 
-  examples/chapplin-next-sample:
+  examples/chapplin-sample:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
