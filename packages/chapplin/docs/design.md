@@ -1,4 +1,4 @@
-# chapplin-next 設計書
+# chapplin 設計書
 
 > MCP Server と MCP Apps を構築するためのオールインワンフレームワーク
 

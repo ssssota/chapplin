@@ -63,11 +63,10 @@ async function main() {
 			targetDir = defaultTargetDir;
 		}
 	}
-	const root = path.join(cwd, targetDir);
-	fs.mkdirSync(root, { recursive: true });
+	const root = path.resolve(cwd, targetDir);
 
 	// 2. Handle directory if exist and not empty
-	if (fs.existsSync(targetDir) && !isEmpty(targetDir)) {
+	if (fs.existsSync(root) && !isEmpty(root)) {
 		let overwrite: "yes" | "no" | "ignore" | undefined = args.values.overwrite
 			? "yes"
 			: undefined;
@@ -103,13 +102,14 @@ async function main() {
 
 		switch (overwrite) {
 			case "yes":
-				emptyDir(targetDir);
+				emptyDir(root);
 				break;
 			case "no":
 				cancel();
 				return;
 		}
 	}
+	fs.mkdirSync(root, { recursive: true });
 
 	// 3. Get package name
 	let packageName = path.basename(path.resolve(targetDir));
@@ -151,7 +151,8 @@ async function main() {
 		"../../templates",
 		template,
 	);
-	copyDir(templateDir, targetDir);
+	copyDir(templateDir, root);
+	applyTemplateValues(root, packageName);
 
 	let doneMessage = "";
 	const cdProjectName = path.relative(process.cwd(), root);
@@ -231,4 +232,31 @@ function copyDir(srcDir: string, destDir: string) {
 		const destFile = path.resolve(destDir, file);
 		copy(srcFile, destFile);
 	}
+}
+
+function applyTemplateValues(root: string, packageName: string) {
+	const packageJsonPath = path.join(root, "package.json");
+	if (fs.existsSync(packageJsonPath)) {
+		const source = fs.readFileSync(packageJsonPath, "utf8");
+		const pkg = JSON.parse(source) as { name?: string };
+		pkg.name = packageName;
+		fs.writeFileSync(packageJsonPath, `${JSON.stringify(pkg, null, "\t")}\n`);
+	}
+
+	const indexFilePath = path.join(root, "src", "index.ts");
+	if (fs.existsSync(indexFilePath)) {
+		const source = fs.readFileSync(indexFilePath, "utf8");
+		const updated = source.replaceAll(
+			"__CHAPPLIN_SERVER_NAME__",
+			toServerName(packageName),
+		);
+		fs.writeFileSync(indexFilePath, updated);
+	}
+}
+
+function toServerName(packageName: string) {
+	return packageName
+		.replace(/^@/, "")
+		.replace(/\//g, "-")
+		.replace(/[^a-zA-Z0-9._~-]/g, "-");
 }
