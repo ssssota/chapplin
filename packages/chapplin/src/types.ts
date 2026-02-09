@@ -1,3 +1,8 @@
+import type {
+	McpUiHostContext,
+	McpUiToolInputNotification,
+	McpUiToolResultNotification,
+} from "@modelcontextprotocol/ext-apps";
 import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import type {
 	CallToolResult,
@@ -209,9 +214,14 @@ export interface AppProps<
 	TMeta extends Record<string, unknown> = Record<string, unknown>,
 > {
 	/** Tool input arguments */
-	input: InferShapeOutput<TInput>;
+	input: McpUiToolInputNotification["params"] & {
+		arguments?: InferShapeOutput<TInput>;
+	};
 	/** Tool output (null if not yet executed) */
-	output: InferShapeOutput<TOutput> | null;
-	/** Additional metadata */
-	meta: TMeta | null;
+	output: McpUiToolResultNotification["params"] & {
+		structuredContent?: InferShapeOutput<TOutput> | null;
+		_meta?: TMeta;
+	};
+	/** Host context from MCP UI */
+	hostContext?: McpUiHostContext;
 }

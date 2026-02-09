@@ -32,9 +32,9 @@ export const tool = defineTool({
 	async handler(args) {
 		let filteredTodos = todos;
 		if (args.filter === "completed") {
-			filteredTodos = todos.filter((t) => t.completed);
+			filteredTodos = todos.filter((todo) => todo.completed);
 		} else if (args.filter === "pending") {
-			filteredTodos = todos.filter((t) => !t.completed);
+			filteredTodos = todos.filter((todo) => !todo.completed);
 		}
 
 		return {
@@ -60,29 +60,24 @@ export const app = defineApp<typeof tool>({
 		prefersBorder: true,
 	},
 	ui: (props) => {
-		const input = props.input.arguments;
 		const output = props.output.structuredContent;
-		const filter = input?.filter ?? "all";
+		const filter = props.input.arguments?.filter ?? "all";
+
 		return (
-			<div style={{ fontFamily: "system-ui, sans-serif", padding: "20px" }}>
+			<div>
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter}</p>
 				{output ? (
-					<>
+					<div>
 						<p>合計: {output.total}件</p>
 						<ul>
 							{output.todos.map((todo) => (
-								<li
-									key={todo.id}
-									style={{
-										textDecoration: todo.completed ? "line-through" : "none",
-									}}
-								>
-									{todo.title}
+								<li key={todo.id}>
+									{todo.completed ? "[x]" : "[ ]"} {todo.title}
 								</li>
 							))}
 						</ul>
-					</>
+					</div>
 				) : (
 					<p>読み込み中...</p>
 				)}

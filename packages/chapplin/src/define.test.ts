@@ -125,6 +125,8 @@ describe("defineTool", () => {
 });
 
 describe("defineApp", () => {
+	const config = { appInfo: { name: "test-app", version: "0.0.0" } };
+
 	it("should return app definition with ui component", () => {
 		const tool = defineTool({
 			name: "test",
@@ -136,7 +138,7 @@ describe("defineApp", () => {
 			handler: async () => ({ content: [] }),
 		});
 		const ui = () => "Hello";
-		const result = defineApp<typeof tool>({ ui });
+		const result = defineApp<typeof tool>({ ui, config });
 
 		expect(result.ui).toBe(ui);
 		expect(result.meta).toBeUndefined();
@@ -154,7 +156,7 @@ describe("defineApp", () => {
 		});
 		const ui = () => "Hello";
 		const meta = { prefersBorder: true };
-		const result = defineApp<typeof tool>({ ui, meta });
+		const result = defineApp<typeof tool>({ ui, meta, config });
 
 		expect(result.ui).toBe(ui);
 		expect(result.meta).toEqual({ prefersBorder: true });
@@ -180,16 +182,19 @@ describe("defineApp", () => {
 		});
 
 		const app = defineApp<typeof tool>({
+			config,
 			ui: (props) => {
 				// Type inference check: props.input should have data and chartType
-				expectTypeOf(props.input.data).toEqualTypeOf<
+				expectTypeOf(props.input.arguments?.data).toEqualTypeOf<
 					Array<{ x: number; y: number }>
 				>();
-				expectTypeOf(props.input.chartType).toEqualTypeOf<"bar" | "line">();
+				expectTypeOf(props.input.arguments?.chartType).toEqualTypeOf<
+					"bar" | "line"
+				>();
 
 				// Type inference check: props.output should have chartId or be null
 				type ExpectedOutput = { chartId: string } | null;
-				expectTypeOf(props.output).toExtend<ExpectedOutput>();
+				expectTypeOf(props.output.structuredContent).toExtend<ExpectedOutput>();
 
 				return "chart";
 			},
@@ -230,13 +235,15 @@ describe("defineApp", () => {
 		});
 
 		const app = defineApp<typeof tool>({
+			config,
 			ui: (props) => {
-				// props.meta should be typed, access it with null check
-				if (props.meta !== null) {
+				// props.output._meta should be typed, access it with check
+				if (props.output._meta) {
 					// These should type check correctly
 					const _chartData: Array<{ x: number; y: number }> =
-						props.meta.chartData;
-					const _options: { animate: boolean } = props.meta.renderOptions;
+						props.output._meta.chartData;
+					const _options: { animate: boolean } =
+						props.output._meta.renderOptions;
 					expect(_chartData).toBeDefined();
 					expect(_options).toBeDefined();
 				}

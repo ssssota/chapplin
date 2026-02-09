@@ -1,4 +1,5 @@
 import type { Plugin } from "vite";
+import { appEntry } from "./plugins/app-entry.js";
 import { clientBuild } from "./plugins/client-build.js";
 import { devServer } from "./plugins/dev-server.js";
 import { fileCollector } from "./plugins/file-collector.js";
@@ -37,8 +38,9 @@ export function chapplin(opts: Options): Plugin[] {
 		ssrBuild(resolved),
 		fileCollector(resolved),
 		virtualModule(resolved),
+		...appEntry(resolved),
 		clientBuild(resolved),
 		typeGeneration(resolved),
-		...devServer(resolved),
+		...devServer(),
 	];
 }

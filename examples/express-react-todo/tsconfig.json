@@ -1,11 +1,13 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"module": "esnext",
+		"module": "ESNext",
 		"moduleResolution": "bundler",
+		"target": "ES2022",
 		"jsx": "react-jsx",
 		"skipLibCheck": true,
-		"outDir": "./dist",
-		"esModuleInterop": true
-	}
+		"esModuleInterop": true,
+		"rootDirs": [".", "./.chapplin/types"]
+	},
+	"include": ["src", "tools", "resources", "prompts", ".chapplin/types"]
 }

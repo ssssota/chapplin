@@ -175,6 +175,11 @@ export const tool = defineTool({
 });
 
 export const app = defineApp<typeof tool>({
+  config: {
+    appInfo: { name: "chart-app", version: "1.0.0" },
+    capabilities: {},
+    options: { autoResize: true },
+  },
   meta: {
     csp: {
       connectDomains: ["https://api.example.com"],
@@ -185,16 +190,17 @@ export const app = defineApp<typeof tool>({
   },
   ui: (props) => (
     <div>
-      <h1>Chart: {props.output?.chartId}</h1>
-      {/* props.meta is typed based on handler's _meta return */}
-      {props.meta && <Chart data={props.meta.chartData} />}
+      <h1>Chart: {props.output?.structuredContent?.chartId}</h1>
+      {/* props.output._meta is typed based on handler's _meta return */}
+      {props.output?._meta && <Chart data={props.output._meta.chartData} />}
     </div>
   ),
 });
 ```
 
+- **config (in defineApp)**: `@modelcontextprotocol/ext-apps` の `App` 初期化に渡す設定。`appInfo` は必須で、`capabilities` / `options` は任意。ここで指定した値が `chapplin/client/*` の `init` に渡される。
 - **meta (in defineApp)**: MCP App のメタデータ（CSP・権限・prefersBorder など）。`@modelcontextprotocol/ext-apps` の AppMeta に準拠。
-- **ui**: すべて JSX で記述する。React/Preact/Solid は各ランタイムの JSX、**Hono は `hono/jsx` モジュールを前提とする**（後述）。`props` は `{ input, output, meta }` で、型は `typeof tool` から推論。
+- **ui**: すべて JSX で記述する。React/Preact/Solid は各ランタイムの JSX、**Hono は `hono/jsx` モジュールを前提とする**（後述）。`props` は `{ input, output, hostContext }` で、`output._meta` に UI 専用データが含まれる。型は `typeof tool` から推論。
 - **_meta (in handler return)**: UI 専用データ。LLM に送信されず、UI のみに渡される。コンテキストの汚染を避けつつ、大きなデータや可視化用データを UI に渡す際に使用。
 
 #### 4.1.3 型定義
@@ -215,15 +221,25 @@ function defineTool<TName, TInput, TOutput, TMeta>(options: {
 // defineApp の型（イメージ）
 // TMeta is extracted from TTool and passed to AppProps
 function defineApp<TTool extends DefinedTool>(options: {
+  config: {
+    appInfo: AppInfo;
+    capabilities?: AppCapabilities;
+    options?: AppOptions;
+  };
   meta?: AppMeta;
   ui: (props: AppProps<TTool>) => ReactNode;
 }): DefinedApp<TTool>;
 
-// AppProps includes meta from handler's _meta
+// AppProps includes _meta in output and host context
 interface AppProps<TInput, TOutput, TMeta> {
-  input: TInput;
-  output: TOutput | null;
-  meta: TMeta | null;  // From handler's _meta, null if not yet executed
+  input: McpUiToolInputNotification["params"] & {
+    arguments?: InferShapeOutput<TInput>;
+  };
+  output: McpUiToolResultNotification["params"] & {
+    structuredContent?: InferShapeOutput<TOutput> | null;
+    _meta?: TMeta;
+  };
+  hostContext?: McpUiHostContext;
 }
 ```
 
@@ -249,16 +265,16 @@ async handler(args) {
   };
 }
 
-// UI で props.meta として受け取る
+// UI で props.output._meta として受け取る
 ui: (props) => (
   <div>
-    <Summary text={props.output?.summary} />
-    {props.meta && <Chart points={props.meta.chartPoints} />}
+    <Summary text={props.output?.structuredContent?.summary} />
+    {props.output?._meta && <Chart points={props.output._meta.chartPoints} />}
   </div>
 )
 ```
 
-型安全性は完全に保たれ、`props.meta` の型は `handler` の `_meta` 戻り値から自動推論されます。
+型安全性は完全に保たれ、`props.output._meta` の型は `handler` の `_meta` 戻り値から自動推論されます。
 
 #### 4.1.5 懸念・注意点
 
@@ -358,6 +374,7 @@ export function chapplin(opts: Options): Plugin[] {
     ssrBuild(opts),           // SSR ビルド設定
     fileCollector(opts),      // ファイル収集
     virtualModule(opts),      // chapplin:register 仮想モジュール
+    appEntry(opts),           // UI 用の共通 entry/HTML 生成
     clientBuild(opts),        // UI 付きツールのクライアントビルド
     typeGeneration(opts),     // 型生成
     ...devServer(opts),       // 開発サーバー（複数プラグイン）
@@ -488,9 +505,9 @@ const transport = new StdioServerTransport();
 await server.connect(transport);
 ```
 
-### 6.3 `virtual:chapplin-client`（開発サーバー専用）
+### 6.3 `virtual:chapplin-client`（開発サーバー用の thin entry）
 
-開発サーバーでツールUIをiframeで表示するために使用される仮想モジュールです。
+開発サーバーでツールUIをiframeで表示するために使用される仮想モジュールです。実際の UI 初期化は `chapplin/client/*` に集約し、dev/build の実行経路を揃えます。
 
 ```typescript
 // 仮想モジュール ID の形式
@@ -499,8 +516,8 @@ virtual:chapplin-client/{toolPath}
 // 例: virtual:chapplin-client/tools/chart.tsx
 // ↓
 // 生成されるコード
-import { init } from 'chapplin-next/client/react';
-import { app } from '/path/to/tools/chart.tsx';
+import { init } from "chapplin/client/react";
+import { app } from "/path/to/tools/chart.tsx";
 init(app.ui);
 ```
 
@@ -508,10 +525,44 @@ init(app.ui);
 
 1. 仮想モジュールIDからツールファイルのパスを抽出
 2. ツールファイルから `app`（defineApp の戻り値）をインポート
-3. 設定された `target`（react/preact/solid/hono）に応じた `init` 関数をインポート
+3. 設定された `target`（react/preact/solid/hono）に応じた `init` を `chapplin/client/{target}` からインポート
 4. `init(app.ui)` を呼び出して DOM にレンダリング
 
+`chapplin/client/*` 側で `@modelcontextprotocol/ext-apps` の `App` 初期化・host context 同期・host style variables 適用を行うため、開発プレビューと本番ビルドの挙動を一致させる。
+
 `/iframe/tools/{toolName}` パスでアクセスされた際に、この仮想モジュールが使用されます（ビルド済み HTML が無い場合のフォールバック）。
+
+### 6.4 `virtual:chapplin-app-entry`（共通 entry/HTML）
+
+dev と build で同じ entry を生成するための共通仮想モジュールです。`app-entry.ts` プラグインが提供し、`dev-server.ts` / `client-build.ts` から参照されます。
+
+```typescript
+// 仮想モジュール ID の形式
+virtual:chapplin-app-entry?file={absPath}&target={react|preact|solid|hono}
+
+// 生成されるコード（共通 entry）
+import { init } from "chapplin/client/react";
+import { app } from "/path/to/tools/chart.tsx";
+init(app.ui);
+```
+
+HTML テンプレートも `app-entry.ts` に集約し、dev-server と client-build が同一テンプレートを使用します：
+
+```html
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="virtual:chapplin-app-entry?..."></script>
+</body>
+</html>
+```
+
+この設計により、仮想 entry の差異を排除し、dev/build の UI 初期化が完全に一致する。
 
 ---
 
@@ -633,7 +684,7 @@ export function App(props) {
 
 1. **エントリーポイントのビルド**: `src/index.ts` を Vite でビルド
 2. **ツールファイルの収集**: `tools/` 以下の `.ts`, `.tsx` を収集
-3. **UI ツールのクライアントビルド**: `app` エクスポートを持つツールをクライアントビルド
+3. **UI ツールのクライアントビルド**: `app` エクスポートを持つツールごとに仮想エントリを生成し、`chapplin/client/{target}` の `init` を呼ぶ（`@modelcontextprotocol/ext-apps` の App 初期化と host context 同期をここに集約し、dev/build の構成を揃える）
 4. **単一 HTML 化**: vite-plugin-singlefile で HTML をインライン化
 5. **モジュール化**: HTML を `export default "<!doctype html>..."` 形式で出力
 6. **仮想モジュール生成**: `chapplin:register` のコードを生成
@@ -765,85 +816,36 @@ packages/chapplin-next/
 6. `/iframe/tools/{toolName}` でツール UI を iframe として配信
 7. dev-ui の host bridge からの MCP リクエストを `/mcp` で受け、実 MCP サーバーとして処理
 
-#### 9.4.5 クライアントモジュール
+#### 9.4.5 クライアントモジュール（dev/build 共通）
 
-開発サーバーでは、各フレームワーク用のクライアントモジュール `chapplin-next/client/{target}` を提供します。
+`chapplin/client/{react,preact,solid,hono}` は dev/build 共通の UI ランタイムです。`init` は UI をマウントしつつ `@modelcontextprotocol/ext-apps` の `App` を初期化し、host bridge からのイベントを `input` / `output` / `meta` に同期します。
 
 ```typescript
-// chapplin-next/client/react
-import type { ComponentType } from "react";
-import { jsx } from "react/jsx-runtime";
-import { createRoot } from "react-dom/client";
+import { init } from "chapplin/client/react";
+import { app } from "/path/to/tools/chart.tsx";
 
-export function init(App: ComponentType<AppProps>): void {
-  const root = document.getElementById("root");
-  if (!root) {
-    console.error("Root element not found");
-    return;
-  }
-  const reactRoot = createRoot(root);
-  reactRoot.render(jsx(App, { input: {}, output: null, meta: null }));
-}
-
-// chapplin-next/client/preact
-import type { ComponentType } from "preact";
-import { render } from "preact";
-import { jsx } from "preact/jsx-runtime";
-
-export function init(App: ComponentType<AppProps>): void {
-  const root = document.getElementById("root");
-  if (!root) {
-    console.error("Root element not found");
-    return;
-  }
-  render(jsx(App, { input: {}, output: null, meta: null }), root);
-}
-
-// chapplin-next/client/solid
-import type { Component } from "solid-js";
-import { createComponent, render } from "solid-js/web";
-
-export function init(App: Component<AppProps>): void {
-  const root = document.getElementById("root");
-  if (!root) {
-    console.error("Root element not found");
-    return;
-  }
-  render(
-    () => createComponent(App, { input: {}, output: null, meta: null }),
-    root
-  );
-}
-
-// chapplin-next/client/hono
-import type { Child, JSXNode } from "hono/jsx";
-import { jsx, render } from "hono/jsx/dom";
-type Component = (props: unknown) => JSXNode;
-
-export function init(App: (props: AppProps) => Child): void {
-  const root = document.getElementById("root");
-  if (!root) {
-    console.error("Root element not found");
-    return;
-  }
-  render(jsx(App as Component, { input: {}, output: null, meta: null }), root);
-}
-
-interface AppProps {
-  input: Record<string, unknown>;
-  output: unknown;
-  meta: unknown;
-}
+init(app.ui, {
+  appInfo: { name: "chapplin-app", version: "1.0.0" },
+  capabilities: {},
+  rootId: "root",
+});
 ```
 
-`init` 関数は、開発プレビュー用に App コンポーネントを DOM にレンダリングします。各フレームワークの特性に応じて、適切なレンダリング方法を使用します：
+`init` の責務（共通）:
 
-- **React**: `createRoot` と `react/jsx-runtime` の `jsx` 関数を使用（JSX記法を使わない）
-- **Preact**: `render` と `preact/jsx-runtime` の `jsx` 関数を使用（JSX記法を使わない）
-- **Solid**: `createComponent` を使用（JSX記法を使わない）
-- **Hono**: **`hono/jsx` モジュール前提**。`hono/jsx/dom` の `jsx` と `render` でレンダリングする。UI も他 target と同様に JSX で記述する。
+- `App.connect()` を実行し、`toolInput` / `toolResult` / `hostContext` を購読
+- `input` / `output` / `meta` を更新してユーザー UI に渡す
+- `applyHostStyleVariables`（React は `useHostStyleVariables`）を適用
+- 初期 `host context` 取得時も UI 状態を同期する
+- ルート要素が見つからない場合はエラー表示（または console に出力）
 
-これにより、ランタイムでのJSX変換を避け、パフォーマンスを最適化します。
+フレームワーク差分:
+
+- すべてのフレームワークで `@modelcontextprotocol/ext-apps` の `App` クラスを共通利用し、ホスト連携（connect / context 同期 / style variables）を共通化する
+- React でも基本は共通ロジックを使い、必要なら薄いラッパ（Hook）で UI 側の都合に合わせる
+- Hono は `hono/jsx` + `hono/jsx/dom` 前提（JSX で UI を記述）
+
+`dev-server.ts` の `virtual:chapplin-client/*` と `client-build.ts` のビルドエントリは、どちらもこの `init` を呼ぶだけの薄いラッパにする。
 
 #### 9.4.6 仮想モジュール `virtual:chapplin-client` と iframe 配信
 
@@ -861,7 +863,7 @@ interface AppProps {
 // virtual:chapplin-client/tools/chart.tsx
 // ↓
 // 生成されるコード
-import { init } from 'chapplin-next/client/react';
+import { init } from "chapplin/client/react";
 import { app } from '/path/to/tools/chart.tsx';
 init(app.ui);
 ```

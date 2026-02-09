@@ -3,6 +3,7 @@
  * Use defineTool, defineApp, defineResource, definePrompt in tool/resource/prompt files.
  */
 
+import type { App } from "@modelcontextprotocol/ext-apps";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type {
 	AppMeta,
@@ -110,6 +111,8 @@ export type InferToolOutput<T extends DefinedTool> =
 // App
 // =============================================================================
 
+type AppParams = ConstructorParameters<typeof App>;
+
 /** Base interface for app definition */
 export interface AppDefinition<
 	TInput extends ZodRawShape = ZodRawShape,
@@ -117,6 +120,15 @@ export interface AppDefinition<
 	TMeta extends Record<string, unknown> = Record<string, unknown>,
 > {
 	meta?: AppMeta;
+	/**
+	 * App configuration
+	 * @see {@link App}'s constructor
+	 */
+	config: {
+		appInfo: AppParams[0];
+		capabilities?: AppParams[1];
+		options?: AppParams[2];
+	};
 	ui: (props: AppProps<TInput, TOutput, TMeta>) => unknown;
 }
 
@@ -135,7 +147,7 @@ type ExtractMeta<T> = T extends {
  * Define an MCP App with type inference.
  *
  * You must pass a type argument: `defineApp<typeof tool>({ ... })`. Omitting it
- * will cause a type error so that `props.input`, `props.output`, and `props.meta`
+ * will cause a type error so that `props.input`, `props.output`, and `props.hostContext`
  * in the UI are correctly typed from the tool definition.
  *
  * @example
@@ -148,9 +160,10 @@ type ExtractMeta<T> = T extends {
  *   }),
  * });
  * export const app = defineApp<typeof tool>({
+ *   config: { appInfo: { name: "my-app", version: "1.0.0" } },
  *   ui: (props) => {
- *     // props.meta is typed as { chartData: ... } | null
- *     return <Chart data={props.meta?.chartData} />;
+ *     // props.output._meta is typed as { chartData: ... } | undefined
+ *     return <Chart data={props.output._meta?.chartData} />;
  *   },
  * });
  * ```

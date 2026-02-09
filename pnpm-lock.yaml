@@ -9,6 +9,9 @@ catalogs:
     '@hono/mcp':
       specifier: ^0.2.0
       version: 0.2.2
+    '@modelcontextprotocol/ext-apps':
+      specifier: ^1.0.1
+      version: 1.0.1
     '@modelcontextprotocol/sdk':
       specifier: ^1.22.0
       version: 1.23.0
@@ -135,12 +138,12 @@ importers:
 
   examples/express-react-todo:
     dependencies:
+      '@modelcontextprotocol/ext-apps':
+        specifier: 'catalog:'
+        version: 1.0.1(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@4.1.13)
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.23.0(zod@4.1.13)
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.10.1
       express:
         specifier: ^5.1.0
         version: 5.1.0
@@ -150,9 +153,6 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.0(react@19.2.0)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
       zod:
         specifier: 'catalog:'
         version: 4.1.13
@@ -160,6 +160,9 @@ importers:
       '@types/express':
         specifier: ^5.0.5
         version: 5.0.5
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.7
@@ -167,11 +170,14 @@ importers:
         specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.7)
       '@vitejs/plugin-react':
-        specifier: ^5.1.1
+        specifier: ^5.0.4
         version: 5.1.1(vite@7.2.6(@types/node@24.10.1)(jiti@2.6.1))
       chapplin:
         specifier: workspace:*
         version: link:../../packages/chapplin
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 7.2.6(@types/node@24.10.1)(jiti@2.6.1)
@@ -181,18 +187,15 @@ importers:
       '@hono/mcp':
         specifier: 'catalog:'
         version: 0.2.2(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(hono-rate-limiter@0.4.2(hono@4.10.7))(hono@4.10.7)(zod@4.1.13)
+      '@modelcontextprotocol/ext-apps':
+        specifier: 'catalog:'
+        version: 1.0.1(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@4.1.13)
       '@modelcontextprotocol/sdk':
         specifier: 'catalog:'
         version: 1.23.0(zod@4.1.13)
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.10.1
       hono:
         specifier: 'catalog:'
         version: 4.10.7
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
       zod:
         specifier: 'catalog:'
         version: 4.1.13
@@ -200,9 +203,15 @@ importers:
       '@hono/node-server':
         specifier: ^1.19.6
         version: 1.19.6(hono@4.10.7)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.10.1
       chapplin:
         specifier: workspace:*
         version: link:../../packages/chapplin
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 7.2.6(@types/node@24.10.1)(jiti@2.6.1)

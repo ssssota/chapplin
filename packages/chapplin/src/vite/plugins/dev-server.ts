@@ -6,8 +6,8 @@ import { styleText } from "node:util";
 import { Hono } from "hono";
 import { type Plugin, runnerImport, type ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
-import type { ResolvedOptions } from "../types.js";
 import { app as apiApp } from "./api-app.js";
+import { createAppEntryId, createAppHtml } from "./app-entry.js";
 import { getBuiltAppHtml } from "./client-build.js";
 import {
 	type DevMcpServerInfo,
@@ -52,21 +52,6 @@ function getPackageRoot(): string {
 const PACKAGE_ROOT = getPackageRoot();
 const DEV_UI_SOURCE_DIR = join(PACKAGE_ROOT, "dev-ui");
 const DEV_UI_BUILD_DIR = join(PACKAGE_ROOT, "dist", "dev-ui");
-
-const SCRIPT_PLACEHOLDER = `/*SCRIPT_PLACEHOLDER*/`;
-const IFRAME_HTML = `<!doctype html>
-<html>
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
-<body>
-	<div id="root"></div>
-	<script type="module">${SCRIPT_PLACEHOLDER}</script>
-</body>
-</html>`;
-
-const VIRTUAL_MODULE_PREFIX = "virtual:chapplin-client";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -156,7 +141,7 @@ function setupPreviewUrlLogging(server: ViteDevServer) {
 /**
  * Plugin that provides dev server functionality
  */
-export function devServer(opts: ResolvedOptions): Plugin[] {
+export function devServer(): Plugin[] {
 	let root: string;
 	let serverInfo: DevMcpServerInfo;
 
@@ -175,30 +160,6 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 			configResolved(config) {
 				root = config.root;
 				serverInfo = getDevMcpServerInfo(root);
-			},
-			resolveId: {
-				order: "pre",
-				filter: { id: new RegExp(`^${VIRTUAL_MODULE_PREFIX}/`) },
-				handler(id) {
-					return `\0${id}`;
-				},
-			},
-			load: {
-				order: "pre",
-				filter: { id: new RegExp(`^\\0${VIRTUAL_MODULE_PREFIX}/`) },
-				async handler(id) {
-					const path = id.replace(
-						new RegExp(`^\\0${VIRTUAL_MODULE_PREFIX}/`),
-						"",
-					);
-					const resolvedPath = join(root, path);
-					this.addWatchFile(resolvedPath);
-					return [
-						`import { init } from 'chapplin/client/${opts.target}';`,
-						`import { app } from '${resolvedPath}';`,
-						`init(app.ui);`,
-					].join("\n");
-				},
 			},
 			configureServer: {
 				order: "pre",
@@ -283,10 +244,8 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 								return;
 							}
 
-							const toolPath = `/${toolFile.relativePath.replaceAll("\\", "/")}`;
-							const script = await server.transformRequest(
-								`${VIRTUAL_MODULE_PREFIX}${toolPath}`,
-							);
+							const entryId = createAppEntryId(toolFile.path);
+							const script = await server.transformRequest(entryId);
 
 							if (!script) {
 								res.statusCode = 404;
@@ -297,7 +256,7 @@ export function devServer(opts: ResolvedOptions): Plugin[] {
 							}
 
 							res.setHeader("content-type", "text/html");
-							res.end(IFRAME_HTML.replace(SCRIPT_PLACEHOLDER, script.code));
+							res.end(createAppHtml({ script: script.code }));
 							return;
 						}
 

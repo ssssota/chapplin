@@ -53,27 +53,35 @@ export const tool = defineTool({
 });
 
 export const app = defineApp<typeof tool>({
+	config: {
+		appInfo: { name: "todo-app", version: "1.0.0" },
+	},
 	meta: {
 		prefersBorder: true,
 	},
-	ui: (props) => (
-		<div>
-			<h1>TODO リスト</h1>
-			<p>フィルター: {props.input.filter}</p>
-			{props.output ? (
-				<div>
-					<p>合計: {props.output.total}件</p>
-					<ul>
-						{props.output.todos.map((todo) => (
-							<li>
-								{todo.completed ? "[x]" : "[ ]"} {todo.title}
-							</li>
-						))}
-					</ul>
-				</div>
-			) : (
-				<p>読み込み中...</p>
-			)}
-		</div>
-	),
+	ui: (props) => {
+		const output = props.output.structuredContent;
+		const filter = props.input.arguments?.filter ?? "all";
+
+		return (
+			<div>
+				<h1>TODO リスト</h1>
+				<p>フィルター: {filter}</p>
+				{output ? (
+					<div>
+						<p>合計: {output.total}件</p>
+						<ul>
+							{output.todos.map((todo) => (
+								<li>
+									{todo.completed ? "[x]" : "[ ]"} {todo.title}
+								</li>
+							))}
+						</ul>
+					</div>
+				) : (
+					<p>読み込み中...</p>
+				)}
+			</div>
+		);
+	},
 });
