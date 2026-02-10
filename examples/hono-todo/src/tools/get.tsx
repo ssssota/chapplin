@@ -54,5 +54,9 @@ export default defineTool(
 				</ul>
 			</div>
 		),
+		preview: {
+			toolOutput: { todos },
+			toolResponseMetadata: { timestamp: new Date().toISOString() },
+		},
 	},
 );
