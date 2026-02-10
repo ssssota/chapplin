@@ -17,7 +17,8 @@ import {
 import { getCollectedFiles } from "./file-collector.js";
 
 /** Dev server preview UI path */
-const PREVIEW_PATH = "/__chapplin__";
+const PREVIEW_PATH = "/";
+const API_BASE_PATH = "/api";
 
 /**
  * Resolve package root directory
@@ -57,6 +58,19 @@ type UnknownRecord = Record<string, unknown>;
 
 interface ToolExportLike {
 	name?: unknown;
+}
+
+function getPathname(url: string): string {
+	return url.split("?")[0] ?? url;
+}
+
+function isPreviewRootRequest(url: string): boolean {
+	const pathname = getPathname(url);
+	return pathname === PREVIEW_PATH || pathname === "/index.html";
+}
+
+function toViteFsPath(path: string): string {
+	return `/@fs/${path.replaceAll("\\", "/")}`;
 }
 
 function normalizeToolName(rawToolName: string): string {
@@ -120,16 +134,9 @@ function setupPreviewUrlLogging(server: ViteDevServer) {
 				server.config.base && appUrl.endsWith(server.config.base)
 					? appUrl.slice(0, -server.config.base.length)
 					: appUrl.slice(0, -1); // remove the trailing slash
-			// we removed the trailing slash from serverUrl when removing the base, add it back
-			const previewUrl = `${serverUrl}${PREVIEW_PATH}/`;
 			const mcpUrl = `${serverUrl}/mcp`;
 			// Apply cyan color to the entire URL, then make port bold
-			const previewColoredUrl = colorUrl(styleText("cyan", previewUrl));
 			const mcpColoredUrl = colorUrl(styleText("cyan", mcpUrl));
-			// Preview URL
-			console.log(
-				`  ${styleText("green", "➜")}  ${styleText("bold", "chapplin Preview")}: ${previewColoredUrl}`,
-			);
 			// MCP URL
 			console.log(
 				`  ${styleText("green", "➜")}  ${styleText("bold", "chapplin MCP")}: ${mcpColoredUrl}`,
@@ -148,7 +155,7 @@ export function devServer(): Plugin[] {
 	return [
 		{
 			...devApi({
-				fetch: new Hono().route("/__chapplin__/api", apiApp).fetch,
+				fetch: new Hono().route(API_BASE_PATH, apiApp).fetch,
 				nextIf404: true,
 			}),
 			name: "chapplin:dev-api",
@@ -171,54 +178,6 @@ export function devServer(): Plugin[] {
 
 						// Serve MCP endpoint in dev mode
 						if (await handleDevMcpRequest(server, req, res, serverInfo)) {
-							return;
-						}
-
-						// Serve dev-ui SPA
-						if (req.url.startsWith(PREVIEW_PATH)) {
-							const originalUrl = req.url;
-
-							// Skip API paths (handled by vite-plugin-dev-api)
-							if (req.url.startsWith(`${PREVIEW_PATH}/api/`)) {
-								return next();
-							}
-
-							// For all paths, serve built index.html (vite-plugin-singlefile inlines everything)
-							// Fallback to source if not built
-							try {
-								let html: string;
-								try {
-									// Try to serve built HTML
-									html = await readFile(
-										join(DEV_UI_BUILD_DIR, "index.html"),
-										"utf-8",
-									);
-								} catch {
-									// Fallback to source if build doesn't exist
-									if (
-										originalUrl === PREVIEW_PATH ||
-										originalUrl === `${PREVIEW_PATH}/`
-									) {
-										html = await readFile(
-											join(DEV_UI_SOURCE_DIR, "index.html"),
-											"utf-8",
-										);
-										// Transform HTML to inject Vite client and rewrite paths
-										html = html.replace(/src\//g, `${PREVIEW_PATH}/src/`);
-										html = await server.transformIndexHtml(req.url, html);
-									} else {
-										// For other paths in source mode, rewrite to dev-ui directory
-										req.url = originalUrl.replace(PREVIEW_PATH, "");
-										next();
-										return;
-									}
-								}
-								res.setHeader("content-type", "text/html");
-								res.end(html);
-							} catch {
-								res.statusCode = 404;
-								res.end("Dev UI not found");
-							}
 							return;
 						}
 
@@ -257,6 +216,43 @@ export function devServer(): Plugin[] {
 
 							res.setHeader("content-type", "text/html");
 							res.end(createAppHtml({ script: script.code }));
+							return;
+						}
+
+						const pathname = getPathname(req.url);
+						if (
+							pathname === API_BASE_PATH ||
+							pathname.startsWith(`${API_BASE_PATH}/`)
+						) {
+							return next();
+						}
+
+						// Serve dev-ui SPA on root path
+						if (isPreviewRootRequest(req.url)) {
+							try {
+								let html: string;
+								try {
+									// Try to serve built HTML
+									html = await readFile(
+										join(DEV_UI_BUILD_DIR, "index.html"),
+										"utf-8",
+									);
+								} catch {
+									// Fallback to source if build doesn't exist
+									html = await readFile(
+										join(DEV_UI_SOURCE_DIR, "index.html"),
+										"utf-8",
+									);
+									const devUiSrcPath = `${encodeURI(toViteFsPath(join(DEV_UI_SOURCE_DIR, "src")))}/`;
+									html = html.replace(/(["'])\/src\//g, `$1${devUiSrcPath}`);
+									html = await server.transformIndexHtml(req.url, html);
+								}
+								res.setHeader("content-type", "text/html");
+								res.end(html);
+							} catch {
+								res.statusCode = 404;
+								res.end("Dev UI not found");
+							}
 							return;
 						}
 

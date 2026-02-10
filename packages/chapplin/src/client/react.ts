@@ -1,114 +1,95 @@
-import type { ComponentType } from "react";
+import { applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
+import { type ComponentType, useEffect, useState } from "react";
 import { jsx } from "react/jsx-runtime";
 import { createRoot } from "react-dom/client";
-import { App as ExtApp, applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
 import type { AppProps } from "../types.js";
+import { createApp } from "./create-app.js";
 
 /**
  * Initialize React app (dev/build shared runtime)
  */
 export function init(App: ComponentType<AppProps>, options?: InitOptions) {
-	const { appInfo, capabilities, appOptions, rootId } = resolveOptions(options);
-	const root = document.getElementById(rootId);
+	const { config } = resolveOptions(options);
+	const root = document.getElementById("root");
 	if (!root) {
-		console.error(`Root element not found: ${rootId}`);
+		console.error(`Root element not found: root`);
 		return;
 	}
 
 	const reactRoot = createRoot(root);
-	const state: AppProps = {
-		input: {},
-		output: { content: [] },
-		hostContext: undefined,
+
+	const AppWrapper: ComponentType = () => {
+		const [input, setInput] = useState<AppProps["input"]>({});
+		const [output, setOutput] = useState<AppProps["output"]>({ content: [] });
+		const [hostContext, setHostContext] =
+			useState<AppProps["hostContext"]>(undefined);
+
+		useEffect(() => {
+			let disposed = false;
+			const app = createApp(config, {
+				onToolInput: (params) => {
+					if (disposed) return;
+					setInput(params);
+				},
+				onToolResult: (params) => {
+					if (disposed) return;
+					setOutput(params);
+				},
+				onHostContextChanged: (params) => {
+					if (disposed) return;
+					setHostContext(params);
+					applyStyles(params);
+				},
+			});
+
+			const applyStyles = (context: AppProps["hostContext"]) => {
+				const styles = context?.styles?.variables;
+				if (styles) {
+					applyHostStyleVariables(styles);
+				}
+			};
+
+			void app
+				.connect()
+				.then(() => {
+					if (disposed) return;
+					const context = app.getHostContext();
+					if (!context) return;
+					setHostContext(context);
+					applyStyles(context);
+				})
+				.catch((error) => {
+					console.error("[chapplin] Failed to connect MCP App client:", error);
+				});
+
+			return () => {
+				disposed = true;
+				void app.close();
+			};
+		}, []);
+
+		return jsx(App, { input, output, hostContext });
 	};
 
-	const renderMessage = (message: string, color?: string) => {
-		reactRoot.render(
-			jsx(
-				"div",
-				{ style: { padding: "20px", color: color ?? "inherit" } },
-				message,
-			),
-		);
-	};
-
-	const renderApp = () => {
-		reactRoot.render(jsx(App, state));
-	};
-
-	renderMessage("Connecting...");
-
-	const app = new ExtApp(appInfo, capabilities, appOptions);
-
-	app.ontoolinput = (params) => {
-		state.input = params;
-		renderApp();
-	};
-
-	app.ontoolresult = (params) => {
-		state.output = params;
-		renderApp();
-	};
-
-	app.onhostcontextchanged = (params) => {
-		state.hostContext = params;
-		applyHostStyleVariables();
-		renderApp();
-	};
-
-	app
-		.connect()
-		.then(() => {
-			const context = app.getHostContext();
-			if (context) {
-				state.hostContext = context;
-				applyHostStyleVariables();
-				const maybeToolInput = getHostToolInput(context);
-				if (maybeToolInput) state.input = maybeToolInput;
-				const maybeToolResult = getHostToolResult(context);
-				if (maybeToolResult) state.output = maybeToolResult;
-			}
-			renderApp();
-		})
-		.catch((err) => {
-			const message =
-				err instanceof Error ? `Error: ${err.message}` : `Error: ${err}`;
-			renderMessage(message, "red");
-		});
-
-	window.addEventListener("beforeunload", () => app.close());
+	reactRoot.render(jsx(AppWrapper, {}));
 }
 
-type AppParams = ConstructorParameters<typeof ExtApp>;
+type AppConfig = Parameters<typeof createApp>[0];
 
 interface InitOptions {
-	appInfo?: AppParams[0];
-	capabilities?: AppParams[1];
-	options?: AppParams[2];
+	appInfo?: AppConfig["appInfo"];
+	capabilities?: AppConfig["capabilities"];
+	options?: AppConfig["options"];
 	rootId?: string;
 }
 
 function resolveOptions(options?: InitOptions) {
 	return {
-		appInfo: options?.appInfo ?? { name: "chapplin-app", version: "1.0.0" },
-		capabilities: options?.capabilities ?? {},
-		appOptions: options?.options,
+		config: {
+			appInfo: options?.appInfo ?? { name: "chapplin-app", version: "1.0.0" },
+			capabilities: options?.capabilities ?? {},
+			options: options?.options,
+		},
 		rootId: options?.rootId ?? "root",
 	};
-}
-
-function getHostToolInput(
-	context: Record<string, unknown>,
-): AppProps["input"] | null {
-	const value = context.toolInput;
-	if (!value || typeof value !== "object") return null;
-	return value as AppProps["input"];
-}
-
-function getHostToolResult(
-	context: Record<string, unknown>,
-): AppProps["output"] | null {
-	const value = context.toolResult;
-	if (!value || typeof value !== "object") return null;
-	return value as AppProps["output"];
 }

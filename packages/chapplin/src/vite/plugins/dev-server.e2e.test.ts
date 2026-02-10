@@ -148,7 +148,7 @@ describe.sequential("dev server e2e", () => {
 		});
 
 		await waitUntilAvailable(
-			`${baseUrl}/__chapplin__/api/server/status`,
+			`${baseUrl}/api/server/status`,
 			devProcess,
 			stdoutBuffer,
 			stderrBuffer,
@@ -197,8 +197,8 @@ describe.sequential("dev server e2e", () => {
 		expect(html.toLowerCase()).toContain("<!doctype html>");
 	});
 
-	it("keeps /__chapplin__/api/files for resources/prompts", async () => {
-		const response = await fetch(`${baseUrl}/__chapplin__/api/files`);
+	it("keeps /api/files for resources/prompts", async () => {
+		const response = await fetch(`${baseUrl}/api/files`);
 		expect(response.status).toBe(200);
 
 		const data = (await response.json()) as {

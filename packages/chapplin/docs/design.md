@@ -198,7 +198,7 @@ export const app = defineApp<typeof tool>({
 });
 ```
 
-- **config (in defineApp)**: `@modelcontextprotocol/ext-apps` の `App` 初期化に渡す設定。`appInfo` は必須で、`capabilities` / `options` は任意。ここで指定した値が `chapplin/client/*` の `init` に渡される。
+- **config (in defineApp)**: `@modelcontextprotocol/ext-apps` の `App` 初期化に渡す設定。`appInfo` は必須で、`capabilities` / `options` は任意。`chapplin/client/*` の `init` には `defineApp` の返り値（`app`）をそのまま渡し、この `config` が内部で使われる。
 - **meta (in defineApp)**: MCP App のメタデータ（CSP・権限・prefersBorder など）。`@modelcontextprotocol/ext-apps` の AppMeta に準拠。
 - **ui**: すべて JSX で記述する。React/Preact/Solid は各ランタイムの JSX、**Hono は `hono/jsx` モジュールを前提とする**（後述）。`props` は `{ input, output, hostContext }` で、`output._meta` に UI 専用データが含まれる。型は `typeof tool` から推論。
 - **_meta (in handler return)**: UI 専用データ。LLM に送信されず、UI のみに渡される。コンテキストの汚染を避けつつ、大きなデータや可視化用データを UI に渡す際に使用。
@@ -518,7 +518,7 @@ virtual:chapplin-client/{toolPath}
 // 生成されるコード
 import { init } from "chapplin/client/react";
 import { app } from "/path/to/tools/chart.tsx";
-init(app.ui);
+init(app);
 ```
 
 この仮想モジュールは、`dev-server.ts` プラグインの `load` hook で処理され、以下の動作をします：
@@ -526,7 +526,7 @@ init(app.ui);
 1. 仮想モジュールIDからツールファイルのパスを抽出
 2. ツールファイルから `app`（defineApp の戻り値）をインポート
 3. 設定された `target`（react/preact/solid/hono）に応じた `init` を `chapplin/client/{target}` からインポート
-4. `init(app.ui)` を呼び出して DOM にレンダリング
+4. `init(app)` を呼び出し、`app.ui` のレンダリングと `app.config` による App 初期化を行う
 
 `chapplin/client/*` 側で `@modelcontextprotocol/ext-apps` の `App` 初期化・host context 同期・host style variables 適用を行うため、開発プレビューと本番ビルドの挙動を一致させる。
 
@@ -543,7 +543,7 @@ virtual:chapplin-app-entry?file={absPath}&target={react|preact|solid|hono}
 // 生成されるコード（共通 entry）
 import { init } from "chapplin/client/react";
 import { app } from "/path/to/tools/chart.tsx";
-init(app.ui);
+init(app);
 ```
 
 HTML テンプレートも `app-entry.ts` に集約し、dev-server と client-build が同一テンプレートを使用します：
@@ -684,7 +684,7 @@ export function App(props) {
 
 1. **エントリーポイントのビルド**: `src/index.ts` を Vite でビルド
 2. **ツールファイルの収集**: `tools/` 以下の `.ts`, `.tsx` を収集
-3. **UI ツールのクライアントビルド**: `app` エクスポートを持つツールごとに仮想エントリを生成し、`chapplin/client/{target}` の `init` を呼ぶ（`@modelcontextprotocol/ext-apps` の App 初期化と host context 同期をここに集約し、dev/build の構成を揃える）
+3. **UI ツールのクライアントビルド**: `app` エクスポートを持つツールごとに仮想エントリを生成し、`defineApp` の返り値（`app`）を `chapplin/client/{target}` の `init` に渡す（`@modelcontextprotocol/ext-apps` の App 初期化と host context 同期をここに集約し、dev/build の構成を揃える）
 4. **単一 HTML 化**: vite-plugin-singlefile で HTML をインライン化
 5. **モジュール化**: HTML を `export default "<!doctype html>..."` 形式で出力
 6. **仮想モジュール生成**: `chapplin:register` のコードを生成
@@ -717,7 +717,7 @@ node dist/index.js
 1. **MCP App プレビュー**: iframe + ホスト UI で実際の動作を確認
 2. **MCP サーバー起動**: `/mcp` エンドポイントを提供し、`chapplin:register` で収集済み定義を登録して `StreamableHTTPServerTransport` で処理
 3. **MCP ツール一覧取得**: dev-ui の Tools タブは `/mcp` への `tools/list` で取得
-4. **補助 API**: `/__chapplin__/api/files`（resources/prompts 表示用）と `/__chapplin__/api/tools/:name/execute`（未使用プレースホルダ）
+4. **補助 API**: `/api/files`（resources/prompts 表示用）と `/api/tools/:name/execute`（未使用プレースホルダ）
 5. **MCP Apps ホスト統合**: プレビューUIの iframe ホスト側で `@modelcontextprotocol/ext-apps` の `app-bridge` を使い、実 MCP（`/mcp`）へ接続して本番相当の挙動を再現
 
 ### 9.2 プレビュー UI
@@ -799,7 +799,7 @@ packages/chapplin-next/
 #### 9.4.3 実装の詳細
 
 - **エントリーポイント**: `dev-ui/src/main.tsx` で Preact アプリを起動
-- **API 通信**: `/__chapplin__/api/files` を resources/prompts の表示に使用（`src/vite/plugins/api-app.ts`）
+- **API 通信**: `/api/files` を resources/prompts の表示に使用（`src/vite/plugins/api-app.ts`）
 - **MCP 通信**: `/mcp` へ接続し、tools/list・tools/call を含む MCP Apps の実通信で動作確認
 - **配信**: `dist/dev-ui/index.html` を優先配信
 - **フォールバック**: `dist/dev-ui/index.html` が無い場合は `dev-ui/index.html` を読み込み、Vite 変換を適用
@@ -809,8 +809,8 @@ packages/chapplin-next/
 `dev-server.ts` プラグインは以下のように動作します：
 
 1. `vite-plugin-dev-api` を使用して Hono アプリ（`api-app.ts`）を開発サーバーに統合
-2. `/__chapplin__/` パスで dev-ui SPA を配信（ビルド済み優先、未ビルド時はソースへフォールバック）
-3. `/__chapplin__/api/*` で Hono の補助 API（主に resources/prompts 表示）を提供
+2. `/` パスで dev-ui SPA を配信（ビルド済み優先、未ビルド時はソースへフォールバック）
+3. `/api/*` で Hono の補助 API（主に resources/prompts 表示）を提供
 4. `/mcp` で `chapplin:register` を動的ロードし、`StreamableHTTPServerTransport` で MCP リクエストを処理
 5. `virtual:chapplin-client/*` を解決して iframe 用スクリプトを生成
 6. `/iframe/tools/{toolName}` でツール UI を iframe として配信
@@ -818,26 +818,26 @@ packages/chapplin-next/
 
 #### 9.4.5 クライアントモジュール（dev/build 共通）
 
-`chapplin/client/{react,preact,solid,hono}` は dev/build 共通の UI ランタイムです。`init` は UI をマウントしつつ `@modelcontextprotocol/ext-apps` の `App` を初期化し、host bridge からのイベントを `input` / `output` / `meta` に同期します。
+`chapplin/client/{react,preact,solid,hono}` は dev/build 共通の UI ランタイムです。`init` は `defineApp` の返り値（`app`）を受け取り、まず `app.ui` をマウントし、`AppWrapper` のライフサイクル（React/Preact/Hono は `useEffect`、Solid は `onMount`）で `app.config` を使って `@modelcontextprotocol/ext-apps` の `App` を初期化し、host bridge からのイベントを `input` / `output` / `meta` に同期します。
 
 ```typescript
 import { init } from "chapplin/client/react";
 import { app } from "/path/to/tools/chart.tsx";
 
-init(app.ui, {
-  appInfo: { name: "chapplin-app", version: "1.0.0" },
-  capabilities: {},
-  rootId: "root",
-});
+init(app);
 ```
 
 `init` の責務（共通）:
 
-- `App.connect()` を実行し、`toolInput` / `toolResult` / `hostContext` を購読
+- 初期 props（`input: {}`, `output: { content: [] }`）で UI を先に描画する
+- `AppWrapper` の effect/onMount 内で `new App(...)` と `App.connect()` を実行する
+- `toolInput` / `toolResult` / `hostContext` を購読して UI 状態へ反映する
+- `toolInput` / `toolResult` は `ontoolinput` / `ontoolresult` 通知からのみ反映する（`hostContext` からは復元しない）
 - `input` / `output` / `meta` を更新してユーザー UI に渡す
-- `applyHostStyleVariables`（React は `useHostStyleVariables`）を適用
-- 初期 `host context` 取得時も UI 状態を同期する
-- ルート要素が見つからない場合はエラー表示（または console に出力）
+- `hostContext.styles.variables` がある場合に `applyHostStyleVariables` を適用する
+- 初期 `host context` 取得時は `hostContext` と style variables を同期する
+- ルート要素が見つからない場合や接続失敗時は `console.error` を出力する
+- `Connecting...` などの読み込み/エラー UI はフレームワーク側で固定表示せず、アプリ実装者が任意で表示する
 
 フレームワーク差分:
 
@@ -865,7 +865,7 @@ init(app.ui, {
 // 生成されるコード
 import { init } from "chapplin/client/react";
 import { app } from '/path/to/tools/chart.tsx';
-init(app.ui);
+init(app);
 ```
 
 生成されたコードは、以下のHTMLテンプレートに埋め込まれます：
@@ -914,7 +914,7 @@ export const app = new Hono()
 export type ApiType = typeof app;
 ```
 
-`/__chapplin__/api/*` は dev-ui の補助 API（主に resources/prompts 表示）に限定し、tools 一覧と実行は `/mcp`（`tools/list` / `tools/call`）に一本化します。
+`/api/*` は dev-ui の補助 API（主に resources/prompts 表示）に限定し、tools 一覧と実行は `/mcp`（`tools/list` / `tools/call`）に一本化します。
 
 #### 9.4.8 MCP Apps ホスト統合（app-bridge）
 
@@ -945,7 +945,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig({
   plugins: [preact(), unocss(), viteSingleFile()],
-  base: "/__chapplin__/",
+  base: "/",
   build: {
     outDir: "../dist/dev-ui",
     emptyOutDir: false,
@@ -961,8 +961,8 @@ export default defineConfig({
 vite dev
 
 # デフォルトポート: 5173
-# プレビュー UI: http://localhost:5173/__chapplin__/
-# API: http://localhost:5173/__chapplin__/api/*
+# プレビュー UI: http://localhost:5173/
+# API: http://localhost:5173/api/*
 # MCP サーバー: http://localhost:5173/mcp (StreamableHTTPServerTransport)
 ```
 

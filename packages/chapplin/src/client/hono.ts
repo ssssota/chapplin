@@ -1,6 +1,7 @@
 import type { Child, JSXNode } from "hono/jsx";
-import { jsx, render } from "hono/jsx/dom";
-import { App as ExtApp, applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
+import { jsx, render, useEffect, useState } from "hono/jsx/dom";
+import { applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
+import { createApp } from "./create-app.js";
 import type { AppProps } from "../types.js";
 
 type Component = (props: unknown) => JSXNode;
@@ -9,107 +10,85 @@ type Component = (props: unknown) => JSXNode;
  * Initialize Hono app (dev/build shared runtime)
  */
 export function init(App: (props: AppProps) => Child, options?: InitOptions) {
-	const { appInfo, capabilities, appOptions, rootId } = resolveOptions(options);
+	const { config, rootId } = resolveOptions(options);
 	const root = document.getElementById(rootId);
 	if (!root) {
 		console.error(`Root element not found: ${rootId}`);
 		return;
 	}
 
-	const state: AppProps = {
-		input: {},
-		output: { content: [] },
-		hostContext: undefined,
+	const AppWrapper = () => {
+		const [input, setInput] = useState<AppProps["input"]>({});
+		const [output, setOutput] = useState<AppProps["output"]>({ content: [] });
+		const [hostContext, setHostContext] =
+			useState<AppProps["hostContext"]>(undefined);
+
+		useEffect(() => {
+			let disposed = false;
+			const app = createApp(config, {
+				onToolInput: (params) => {
+					if (disposed) return;
+					setInput(params);
+				},
+				onToolResult: (params) => {
+					if (disposed) return;
+					setOutput(params);
+				},
+				onHostContextChanged: (params) => {
+					if (disposed) return;
+					setHostContext(params);
+					applyStyles(params);
+				},
+			});
+
+			const applyStyles = (context: AppProps["hostContext"]) => {
+				const styles = context?.styles?.variables;
+				if (styles) {
+					applyHostStyleVariables(styles);
+				}
+			};
+
+			void app
+				.connect()
+				.then(() => {
+					if (disposed) return;
+					const context = app.getHostContext();
+					if (!context) return;
+					setHostContext(context);
+					applyStyles(context);
+				})
+				.catch((error) => {
+					console.error("[chapplin] Failed to connect MCP App client:", error);
+				});
+
+			return () => {
+				disposed = true;
+				void app.close();
+			};
+		}, []);
+
+		return jsx(App as Component, { input, output, hostContext });
 	};
 
-	const renderMessage = (message: string, color?: string) => {
-		render(
-			jsx(
-				"div",
-				{ style: { padding: "20px", color: color ?? "inherit" } },
-				message,
-			),
-			root,
-		);
-	};
-
-	const renderApp = () => {
-		render(jsx(App as Component, state), root);
-	};
-
-	renderMessage("Connecting...");
-
-	const app = new ExtApp(appInfo, capabilities, appOptions);
-
-	app.ontoolinput = (params) => {
-		state.input = params;
-		renderApp();
-	};
-
-	app.ontoolresult = (params) => {
-		state.output = params;
-		renderApp();
-	};
-
-	app.onhostcontextchanged = (params) => {
-		state.hostContext = params;
-		applyHostStyleVariables();
-		renderApp();
-	};
-
-	app
-		.connect()
-		.then(() => {
-			const context = app.getHostContext();
-			if (context) {
-				state.hostContext = context;
-				applyHostStyleVariables();
-				const maybeToolInput = getHostToolInput(context);
-				if (maybeToolInput) state.input = maybeToolInput;
-				const maybeToolResult = getHostToolResult(context);
-				if (maybeToolResult) state.output = maybeToolResult;
-			}
-			renderApp();
-		})
-		.catch((err) => {
-			const message =
-				err instanceof Error ? `Error: ${err.message}` : `Error: ${err}`;
-			renderMessage(message, "red");
-		});
-
-	window.addEventListener("beforeunload", () => app.close());
+	render(jsx(AppWrapper, {}), root);
 }
 
-type AppParams = ConstructorParameters<typeof ExtApp>;
+type AppConfig = Parameters<typeof createApp>[0];
 
 interface InitOptions {
-	appInfo?: AppParams[0];
-	capabilities?: AppParams[1];
-	options?: AppParams[2];
+	appInfo?: AppConfig["appInfo"];
+	capabilities?: AppConfig["capabilities"];
+	options?: AppConfig["options"];
 	rootId?: string;
 }
 
 function resolveOptions(options?: InitOptions) {
 	return {
-		appInfo: options?.appInfo ?? { name: "chapplin-app", version: "1.0.0" },
-		capabilities: options?.capabilities ?? {},
-		appOptions: options?.options,
+		config: {
+			appInfo: options?.appInfo ?? { name: "chapplin-app", version: "1.0.0" },
+			capabilities: options?.capabilities ?? {},
+			options: options?.options,
+		},
 		rootId: options?.rootId ?? "root",
 	};
-}
-
-function getHostToolInput(
-	context: Record<string, unknown>,
-): AppProps["input"] | null {
-	const value = context.toolInput;
-	if (!value || typeof value !== "object") return null;
-	return value as AppProps["input"];
-}
-
-function getHostToolResult(
-	context: Record<string, unknown>,
-): AppProps["output"] | null {
-	const value = context.toolResult;
-	if (!value || typeof value !== "object") return null;
-	return value as AppProps["output"];
 }

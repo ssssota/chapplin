@@ -5,7 +5,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig({
 	plugins: [preact(), unocss(), viteSingleFile()],
-	base: "/__chapplin__/",
+	base: "/",
 	build: {
 		outDir: "../dist/dev-ui",
 		emptyOutDir: false,

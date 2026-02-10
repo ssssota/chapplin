@@ -4,7 +4,7 @@ import { getCollectedFiles } from "./file-collector.js";
 /**
  * Hono API app for dev server
  * This is exported so that the type can be used by dev-ui for RPC
- * Base path is set to /__chapplin__/api
+ * Base path is set to /api
  */
 export const app = new Hono()
 	.get("/files", async (c) => {
