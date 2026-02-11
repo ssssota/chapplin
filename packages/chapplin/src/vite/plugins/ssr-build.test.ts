@@ -55,17 +55,4 @@ describe("ssrBuild plugin", () => {
 			},
 		});
 	});
-
-	it("should return undefined in serve mode", () => {
-		const plugin = ssrBuild(createMockOptions());
-
-		const configHook = plugin.config as (
-			config: unknown,
-			env: { command: string },
-		) => unknown;
-
-		const result = configHook({}, { command: "serve" });
-
-		expect(result).toBeUndefined();
-	});
 });

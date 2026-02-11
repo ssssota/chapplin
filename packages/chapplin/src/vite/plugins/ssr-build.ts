@@ -12,11 +12,7 @@ export function ssrBuild(opts: ResolvedOptions): Plugin {
 		name: "chapplin:ssr-build",
 		apply: "build",
 		config() {
-			return {
-				build: {
-					ssr: opts.entry,
-				},
-			};
+			return { build: { ssr: opts.entry } };
 		},
 	};
 }
