@@ -3,8 +3,8 @@ import { join, relative } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
 import { VIRTUAL_MODULE_ID } from "../../constants.js";
 import type { ResolvedOptions } from "../types.js";
-import { getCollectedFiles } from "./file-collector.js";
 import { normalizePath } from "../utils.js";
+import { getCollectedFiles } from "./file-collector.js";
 
 /** Output directory for generated types */
 const TYPE_GEN_DIR = ".chapplin/types";
