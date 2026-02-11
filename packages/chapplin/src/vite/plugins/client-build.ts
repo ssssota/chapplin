@@ -144,20 +144,11 @@ async function buildClientApp(
 	const result = await viteBuild({
 		configFile: false,
 		appType: "spa",
-		esbuild: {
-			jsxDev: false,
-			...jsxConfig,
-		},
+		esbuild: { jsxDev: false, ...jsxConfig },
 		mode: "production",
 		logLevel: "warn",
 		plugins: [...appEntry(context.opts), ...context.plugins],
-		build: {
-			write: false,
-			ssr: false,
-			rollupOptions: {
-				input: htmlId,
-			},
-		},
+		build: { write: false, ssr: false, rollupOptions: { input: htmlId } },
 	});
 
 	if (Array.isArray(result)) {
@@ -211,7 +202,7 @@ function getJsxConfig(target: string | undefined): {
 			// Hono uses hono/jsx
 			return {
 				jsx: "automatic",
-				jsxImportSource: "hono/jsx",
+				jsxImportSource: "hono/jsx/dom",
 			};
 		default:
 			return {};
