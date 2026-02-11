@@ -1,8 +1,4 @@
-import {
-	type ChildProcessByStdio,
-	type ChildProcessWithoutNullStreams,
-	spawn,
-} from "node:child_process";
+import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import { dirname, resolve } from "node:path";
 import type Stream from "node:stream";

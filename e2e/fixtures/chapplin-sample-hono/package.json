@@ -1,24 +1,24 @@
 {
-  "name": "chapplin-sample-hono",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "start": "node ./dist/index.js"
-  },
-  "devDependencies": {
-    "@hono/node-server": "^1.19.6",
-    "chapplin": "workspace:*",
-    "vite": "catalog:"
-  },
-  "dependencies": {
-    "@hono/mcp": "catalog:",
-    "@modelcontextprotocol/ext-apps": "^1.0.1",
-    "@modelcontextprotocol/sdk": "catalog:",
-    "@types/node": "catalog:",
-    "hono": "catalog:",
-    "typescript": "catalog:",
-    "zod": "catalog:"
-  }
+	"name": "chapplin-sample-hono",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"start": "node ./dist/index.js"
+	},
+	"devDependencies": {
+		"@hono/node-server": "^1.19.6",
+		"chapplin": "workspace:*",
+		"vite": "catalog:"
+	},
+	"dependencies": {
+		"@hono/mcp": "catalog:",
+		"@modelcontextprotocol/ext-apps": "^1.0.1",
+		"@modelcontextprotocol/sdk": "catalog:",
+		"@types/node": "catalog:",
+		"hono": "catalog:",
+		"typescript": "catalog:",
+		"zod": "catalog:"
+	}
 }

@@ -1,18 +1,18 @@
 import {
 	AppBridge,
+	buildAllowAttribute,
+	getToolUiResourceUri,
 	type McpUiHostCapabilities,
 	type McpUiHostContext,
 	type McpUiResourceMeta,
 	PostMessageTransport,
-	buildAllowAttribute,
-	getToolUiResourceUri,
 } from "@modelcontextprotocol/ext-apps/app-bridge";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
-	CallToolResultSchema,
 	type CallToolResult,
+	CallToolResultSchema,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { connectDevMcp, getToolByName } from "./client.js";
 
 type ToolInput = Record<string, unknown>;
@@ -44,7 +44,9 @@ function createHostCapabilities(): McpUiHostCapabilities {
 }
 
 function createInitialHostContext(tool: Tool): McpUiHostContext {
-	const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+	const prefersDark = window.matchMedia?.(
+		"(prefers-color-scheme: dark)",
+	).matches;
 
 	return {
 		toolInfo: { tool },

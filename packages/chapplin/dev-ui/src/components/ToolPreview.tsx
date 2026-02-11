@@ -62,7 +62,7 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 		setError(null);
 		setIframeSrc("about:blank");
 		void connectBridge();
-	}, [toolName, connectBridge]);
+	}, [connectBridge]);
 
 	useEffect(() => {
 		return () => {

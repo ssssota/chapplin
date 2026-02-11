@@ -72,7 +72,7 @@ export const app = defineApp<typeof tool>({
 						<p>合計: {output.total}件</p>
 						<ul>
 							{output.todos.map((todo) => (
-								<li>
+								<li key={todo.id}>
 									{todo.completed ? "[x]" : "[ ]"} {todo.title}
 								</li>
 							))}

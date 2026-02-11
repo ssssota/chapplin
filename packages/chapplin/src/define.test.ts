@@ -243,10 +243,8 @@ describe("defineApp", () => {
 				const meta = props.output?._meta;
 				if (meta) {
 					// These should type check correctly
-					const _chartData: Array<{ x: number; y: number }> =
-						meta.chartData;
-					const _options: { animate: boolean } =
-						meta.renderOptions;
+					const _chartData: Array<{ x: number; y: number }> = meta.chartData;
+					const _options: { animate: boolean } = meta.renderOptions;
 					expect(_chartData).toBeDefined();
 					expect(_options).toBeDefined();
 				}
