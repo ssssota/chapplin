@@ -452,18 +452,6 @@ importers:
         specifier: 'catalog:'
         version: 4.1.13
 
-  packages/chatgpt-mcp-apps-compat:
-    devDependencies:
-      '@modelcontextprotocol/ext-apps':
-        specifier: ^1.0.1
-        version: 1.0.1(@modelcontextprotocol/sdk@1.23.0(zod@4.1.13))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@4.1.13)
-      '@modelcontextprotocol/sdk':
-        specifier: 'catalog:'
-        version: 1.23.0(zod@4.1.13)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-
   packages/create-chapplin:
     devDependencies:
       '@clack/prompts':

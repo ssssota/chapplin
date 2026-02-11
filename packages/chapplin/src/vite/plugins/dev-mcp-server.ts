@@ -2,12 +2,11 @@ import { readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
 import { RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+	McpServer,
+	type ResourceMetadata,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type {
-	ResourceConfig as McpResourceConfig,
-	ToolConfig as McpToolConfig,
-} from "@modelcontextprotocol/sdk/types.js";
 import { runnerImport, type ViteDevServer } from "vite";
 import { getBuiltAppHtml } from "./client-build.js";
 import { getCollectedFiles } from "./file-collector.js";
@@ -155,7 +154,7 @@ async function registerCollectedModules(
 
 		mcp.registerTool(
 			tool.name,
-			tool.config as unknown as McpToolConfig,
+			tool.config as Parameters<McpServer["registerTool"]>[1],
 			tool.handler,
 		);
 	}
@@ -174,7 +173,7 @@ async function registerCollectedModules(
 		mcp.registerResource(
 			resource.name,
 			resource.config.uri,
-			resource.config as unknown as McpResourceConfig,
+			resource.config as ResourceMetadata,
 			resource.handler,
 		);
 	}
