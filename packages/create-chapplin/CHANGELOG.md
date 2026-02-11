@@ -1,5 +1,11 @@
 # create-chapplin
 
+## 1.0.0
+
+### Major Changes
+
+- [#73](https://github.com/ssssota/chapplin/pull/73) [`cf89b1f`](https://github.com/ssssota/chapplin/commit/cf89b1f71a648836099a0c999023fa9a4004bf9d) Thanks [@ssssota](https://github.com/ssssota)! - Support MCP Apps
+
 ## 0.2.0
 
 ### Minor Changes
