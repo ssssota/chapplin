@@ -40,7 +40,7 @@ export const tool = defineTool({
 		return {
 			content: [
 				{
-					type: "text" as const,
+					type: "text",
 					text: `${filteredTodos.length}件のTODOがあります`,
 				},
 			],

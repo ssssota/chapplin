@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "chapplin-test": {
+      "type": "http",
+      "url": "http://localhost:5173/mcp"
+    }
+  }
+}
