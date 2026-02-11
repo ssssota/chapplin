@@ -59,6 +59,9 @@ test.describe("chapplin dev server", () => {
 			page.getByRole("heading", { name: /Preview: get_todos/i }),
 		).toBeVisible();
 
+		const connecting = page.getByText("Connecting MCP host bridge...");
+		await expect(connecting).toBeHidden();
+
 		const input = page.locator("#input");
 		await input.fill(JSON.stringify({ filter: "all" }, null, 2));
 
@@ -71,5 +74,70 @@ test.describe("chapplin dev server", () => {
 
 		const frame = page.frameLocator("#frame");
 		await expect(frame.getByText("TODO リスト")).toBeVisible();
+	});
+
+	test("dev-ui shows preview only for UI tools", async ({ page }) => {
+		await page.goto("/");
+
+		const todosItem = page.locator("li", { hasText: "get_todos" });
+		await expect(todosItem.getByText("App")).toBeVisible();
+		await expect(
+			todosItem.getByRole("button", { name: "[Preview]" }),
+		).toBeVisible();
+
+		const weatherItem = page.locator("li", { hasText: "get_weather" });
+		await expect(weatherItem.getByText("App")).toHaveCount(0);
+		await expect(
+			weatherItem.getByRole("button", { name: "[Preview]" }),
+		).toHaveCount(0);
+	});
+
+	test("dev-ui preview handles invalid input and recovers", async ({ page }) => {
+		await page.goto("/");
+
+		const toolItem = page.locator("li", { hasText: "get_todos" });
+		await toolItem.getByRole("button", { name: "[Preview]" }).click();
+
+		await expect(
+			page.getByRole("heading", { name: /Preview: get_todos/i }),
+		).toBeVisible();
+
+		const connecting = page.getByText("Connecting MCP host bridge...");
+		await expect(connecting).toBeHidden();
+
+		const input = page.locator("#input");
+		await input.fill("[]");
+
+		await page.getByRole("button", { name: "Run" }).click();
+
+		await expect(page.getByText("Input must be a JSON object")).toBeVisible();
+		await expect(page.locator("#output")).toHaveValue("");
+
+		await input.fill(JSON.stringify({ filter: "all" }, null, 2));
+		await page.getByRole("button", { name: "Run" }).click();
+
+		await expect(page.getByText("Input must be a JSON object")).toHaveCount(0);
+		await expect
+			.poll(async () => page.locator("#output").inputValue())
+			.toMatch(/structuredContent/);
+
+		const frame = page.frameLocator("#frame");
+		await expect(frame.getByText("TODO リスト")).toBeVisible();
+	});
+
+	test("dev-ui displays resources and prompts", async ({ page }) => {
+		await page.goto("/");
+
+		await expect(page.getByRole("heading", { name: "Tools" })).toBeVisible();
+
+		await page.getByRole("button", { name: "Resources" }).click();
+		await expect(
+			page.getByRole("heading", { name: "Resources" }),
+		).toBeVisible();
+		await expect(page.getByText("config")).toBeVisible();
+
+		await page.getByRole("button", { name: "Prompts" }).click();
+		await expect(page.getByRole("heading", { name: "Prompts" })).toBeVisible();
+		await expect(page.getByText("code-review")).toBeVisible();
 	});
 });
