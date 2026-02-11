@@ -30,4 +30,5 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
+      - run: pnpm -C e2e exec playwright install --with-deps
       - run: pnpm -r test
