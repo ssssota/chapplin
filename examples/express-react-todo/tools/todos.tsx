@@ -60,8 +60,8 @@ export const app = defineApp<typeof tool>({
 		prefersBorder: true,
 	},
 	ui: (props) => {
-		const output = props.output.structuredContent;
-		const filter = props.input.arguments?.filter ?? "all";
+		const output = props.output?.structuredContent;
+		const filter = props.input?.arguments?.filter ?? "all";
 
 		return (
 			<div>

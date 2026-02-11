@@ -20,26 +20,29 @@
 			"types": "./dist/vite/index.d.ts",
 			"default": "./dist/vite/index.js"
 		},
-		"./client/react": {
-			"types": "./dist/client/react.d.ts",
-			"default": "./dist/client/react.js"
+		"./react": {
+			"types": "./dist/react/index.d.ts",
+			"default": "./dist/react/index.js"
 		},
-		"./client/preact": {
-			"types": "./dist/client/preact.d.ts",
-			"default": "./dist/client/preact.js"
+		"./preact": {
+			"types": "./dist/preact/index.d.ts",
+			"default": "./dist/preact/index.js"
 		},
-		"./client/solid": {
-			"types": "./dist/client/solid.d.ts",
-			"default": "./dist/client/solid.js"
+		"./solid": {
+			"types": "./dist/solid/index.d.ts",
+			"default": "./dist/solid/index.js"
 		},
-		"./client/hono": {
-			"types": "./dist/client/hono.d.ts",
-			"default": "./dist/client/hono.js"
-		}
+		"./hono": {
+			"types": "./dist/hono/index.d.ts",
+			"default": "./dist/hono/index.js"
+		},
+		"./client/react": "./dist/client/react.js",
+		"./client/preact": "./dist/client/preact.js",
+		"./client/solid": "./dist/client/solid.js",
+		"./client/hono": "./dist/client/hono.js"
 	},
 	"files": [
-		"dist",
-		"iframe.html"
+		"dist"
 	],
 	"repository": {
 		"type": "git",

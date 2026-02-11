@@ -1,96 +1,60 @@
-import { applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
 import type { ComponentType } from "preact";
-import { render } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { createContext, render } from "preact";
+import { useContext, useEffect, useState } from "preact/hooks";
 import { jsx } from "preact/jsx-runtime";
 import type { AppDefinition } from "../define.js";
 import type { AppProps } from "../types.js";
-import { createApp } from "./create-app.js";
+import { type App, createApp } from "./create-app.js";
+
+// biome-ignore lint/style/noNonNullAssertion: Context is always provided by AppWrapper
+export const Context = createContext<App>(undefined!);
+
+export function useApp(): App {
+	return useContext(Context);
+}
 
 /**
  * Initialize Preact app (dev/build shared runtime)
  */
-export function init(
-	App: ComponentType<AppProps>,
-	options?: AppDefinition["config"],
-) {
-	const { config, rootId } = resolveOptions(options);
-	const root = document.getElementById(rootId);
+export function init(appDef: AppDefinition) {
+	const root = document.getElementById("root");
 	if (!root) {
-		console.error(`Root element not found: ${rootId}`);
+		console.error("Root element not found: root");
 		return;
 	}
 
+	const appController = createApp(appDef.config);
+
 	const AppWrapper: ComponentType = () => {
-		const [input, setInput] = useState<AppProps["input"]>({});
-		const [output, setOutput] = useState<AppProps["output"]>({ content: [] });
-		const [hostContext, setHostContext] =
-			useState<AppProps["hostContext"]>(undefined);
+		const [input, setInput] = useState<AppProps["input"]>();
+		const [output, setOutput] = useState<AppProps["output"]>();
+		const [hostContext, setHostContext] = useState<AppProps["hostContext"]>();
 
 		useEffect(() => {
-			let disposed = false;
-			const app = createApp(config, {
-				onToolInput: (params) => {
-					if (disposed) return;
-					setInput(params);
-				},
-				onToolResult: (params) => {
-					if (disposed) return;
-					setOutput(params);
-				},
-				onHostContextChanged: (params) => {
-					if (disposed) return;
-					setHostContext(params);
-					applyStyles(params);
-				},
-			});
-
-			const applyStyles = (context: AppProps["hostContext"]) => {
-				const styles = context?.styles?.variables;
-				if (styles) applyHostStyleVariables(styles);
-			};
-
-			void app
-				.connect()
-				.then(() => {
-					if (disposed) return;
-					const context = app.getHostContext();
-					if (!context) return;
-					setHostContext(context);
-					applyStyles(context);
-				})
-				.catch((error) => {
-					console.error("[chapplin] Failed to connect MCP App client:", error);
-				});
+			const unsubscribeToolInput = appController.subscribeToolInput(setInput);
+			const unsubscribeToolResult =
+				appController.subscribeToolResult(setOutput);
+			const unsubscribeHostContext =
+				appController.subscribeHostContext(setHostContext);
 
 			return () => {
-				disposed = true;
-				void app.close();
+				unsubscribeToolInput();
+				unsubscribeToolResult();
+				unsubscribeHostContext();
+				appController.app.close();
 			};
 		}, []);
 
-		return jsx(App, { input, output, hostContext });
+		const App = appDef.ui as ComponentType<AppProps>;
+		return jsx(Context.Provider, {
+			value: appController.app,
+			children: jsx(App, {
+				input,
+				output,
+				hostContext,
+			}),
+		});
 	};
 
 	render(jsx(AppWrapper, {}), root);
-}
-
-type AppConfig = Parameters<typeof createApp>[0];
-
-interface InitOptions {
-	appInfo?: AppConfig["appInfo"];
-	capabilities?: AppConfig["capabilities"];
-	options?: AppConfig["options"];
-	rootId?: string;
-}
-
-function resolveOptions(options?: InitOptions) {
-	return {
-		config: {
-			appInfo: options?.appInfo ?? { name: "chapplin-app", version: "1.0.0" },
-			capabilities: options?.capabilities ?? {},
-			options: options?.options,
-		},
-		rootId: options?.rootId ?? "root",
-	};
 }

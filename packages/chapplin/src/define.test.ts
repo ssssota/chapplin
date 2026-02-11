@@ -185,16 +185,18 @@ describe("defineApp", () => {
 			config,
 			ui: (props) => {
 				// Type inference check: props.input should have data and chartType
-				expectTypeOf(props.input.arguments?.data).toEqualTypeOf<
-					Array<{ x: number; y: number }>
+				expectTypeOf(props.input?.arguments?.data).toEqualTypeOf<
+					Array<{ x: number; y: number }> | undefined
 				>();
-				expectTypeOf(props.input.arguments?.chartType).toEqualTypeOf<
-					"bar" | "line"
+				expectTypeOf(props.input?.arguments?.chartType).toEqualTypeOf<
+					"bar" | "line" | undefined
 				>();
 
 				// Type inference check: props.output should have chartId or be null
 				type ExpectedOutput = { chartId: string } | null;
-				expectTypeOf(props.output.structuredContent).toExtend<ExpectedOutput>();
+				expectTypeOf(props.output?.structuredContent).toExtend<
+					ExpectedOutput | undefined
+				>();
 
 				return "chart";
 			},
@@ -238,12 +240,13 @@ describe("defineApp", () => {
 			config,
 			ui: (props) => {
 				// props.output._meta should be typed, access it with check
-				if (props.output._meta) {
+				const meta = props.output?._meta;
+				if (meta) {
 					// These should type check correctly
 					const _chartData: Array<{ x: number; y: number }> =
-						props.output._meta.chartData;
+						meta.chartData;
 					const _options: { animate: boolean } =
-						props.output._meta.renderOptions;
+						meta.renderOptions;
 					expect(_chartData).toBeDefined();
 					expect(_options).toBeDefined();
 				}

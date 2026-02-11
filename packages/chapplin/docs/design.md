@@ -538,7 +538,7 @@ dev と build で同じ entry を生成するための共通仮想モジュー�
 
 ```typescript
 // 仮想モジュール ID の形式
-virtual:chapplin-app-entry?file={absPath}&target={react|preact|solid|hono}
+// virtual:chapplin-app-entry?file={absPath}
 
 // 生成されるコード（共通 entry）
 import { init } from "chapplin/client/react";
@@ -656,7 +656,7 @@ declare module "chapplin:prompts" {
 
 ```tsx
 // tools/chart.tsx 内
-import { useApp } from "@modelcontextprotocol/ext-apps/react";
+import { useApp } from "chapplin/react";
 import type { Tools } from "chapplin:tools";
 
 export function App(props) {
@@ -818,7 +818,14 @@ packages/chapplin-next/
 
 #### 9.4.5 クライアントモジュール（dev/build 共通）
 
-`chapplin/client/{react,preact,solid,hono}` は dev/build 共通の UI ランタイムです。`init` は `defineApp` の返り値（`app`）を受け取り、まず `app.ui` をマウントし、`AppWrapper` のライフサイクル（React/Preact/Hono は `useEffect`、Solid は `onMount`）で `app.config` を使って `@modelcontextprotocol/ext-apps` の `App` を初期化し、host bridge からのイベントを `input` / `output` / `meta` に同期します。
+`chapplin/client/{react,preact,solid,hono}` は dev/build 共通の UI ランタイムです。`init` は `defineApp` の返り値（`app`）を受け取り、まず `app.ui` をマウントし、`AppWrapper` のライフサイクル（React/Preact/Hono は `useEffect`、Solid は `onMount`）で `app.config` を使って `@modelcontextprotocol/ext-apps` の `App` を初期化し、host bridge からのイベントを `input` / `output` / `hostContext` に同期します。
+
+`package.json` の `exports` では、以下のエントリを公開します：
+
+- `chapplin/react`, `chapplin/preact`, `chapplin/solid`, `chapplin/hono`  
+  UI 側で `useApp()` を使うためのフレームワーク別フックを提供（内部で `chapplin/client/*` の Context を参照）。
+- `chapplin/client/react`, `chapplin/client/preact`, `chapplin/client/solid`, `chapplin/client/hono`  
+ iframe / dev/build 共通ランタイムの `init` を提供するエントリ。
 
 ```typescript
 import { init } from "chapplin/client/react";
@@ -829,13 +836,13 @@ init(app);
 
 `init` の責務（共通）:
 
-- 初期 props（`input: {}`, `output: { content: [] }`）で UI を先に描画する
-- `AppWrapper` の effect/onMount 内で `new App(...)` と `App.connect()` を実行する
+- 初期 props は `input` / `output` / `hostContext` を `undefined` のまま UI を先に描画する
+- `createApp(app.config)` で `App` と購読関数を生成し、`Context.Provider` を通じて `useApp()` に提供する
+- `AppWrapper` の effect/onMount 内で `App.connect()` を実行する
 - `toolInput` / `toolResult` / `hostContext` を購読して UI 状態へ反映する
 - `toolInput` / `toolResult` は `ontoolinput` / `ontoolresult` 通知からのみ反映する（`hostContext` からは復元しない）
-- `input` / `output` / `meta` を更新してユーザー UI に渡す
 - `hostContext.styles.variables` がある場合に `applyHostStyleVariables` を適用する
-- 初期 `host context` 取得時は `hostContext` と style variables を同期する
+- 初期 `host context` 取得時は `getHostContext()` 経由で取得し、`hostContext` と style variables を同期する
 - ルート要素が見つからない場合や接続失敗時は `console.error` を出力する
 - `Connecting...` などの読み込み/エラー UI はフレームワーク側で固定表示せず、アプリ実装者が任意で表示する
 

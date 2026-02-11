@@ -128,6 +128,6 @@ function createAppEntryModule(file: string, target?: Target): string {
 	return [
 		`import { init } from "chapplin/client/${resolvedTarget}";`,
 		`import { app } from "${file}";`,
-		`init(app.ui, app.config);`,
+		`init(app);`,
 	].join("\n");
 }

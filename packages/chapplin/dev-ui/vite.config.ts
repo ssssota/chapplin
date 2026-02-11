@@ -7,7 +7,7 @@ export default defineConfig({
 	plugins: [preact(), unocss(), viteSingleFile()],
 	base: "/",
 	build: {
-		outDir: "../dist/dev-ui",
+		outDir: "../dist",
 		emptyOutDir: false,
 	},
 	// Note: API is handled by the dev-server plugin, not here

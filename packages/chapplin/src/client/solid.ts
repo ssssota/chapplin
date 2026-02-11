@@ -1,102 +1,69 @@
-import { applyHostStyleVariables } from "@modelcontextprotocol/ext-apps";
 import type { Component } from "solid-js";
-import { createSignal, onCleanup, onMount } from "solid-js";
+import {
+	createContext,
+	createEffect,
+	createSignal,
+	useContext,
+} from "solid-js";
 import { createComponent, render } from "solid-js/web";
+import type { AppDefinition } from "../define.js";
 import type { AppProps } from "../types.js";
-import { createApp } from "./create-app.js";
+import { type App, createApp } from "./create-app.js";
+
+export const Context = createContext<App>();
+
+export function useApp(): App {
+	// biome-ignore lint/style/noNonNullAssertion: Context is always provided by AppWrapper
+	return useContext(Context)!;
+}
 
 /**
  * Initialize Solid.js app (dev/build shared runtime)
  */
-export function init(App: Component<AppProps>, options?: InitOptions) {
-	const { config, rootId } = resolveOptions(options);
-	const root = document.getElementById(rootId);
+export function init(appDef: AppDefinition) {
+	const root = document.getElementById("root");
 	if (!root) {
-		console.error(`Root element not found: ${rootId}`);
+		console.error("Root element not found: root");
 		return;
 	}
 
+	const appController = createApp(appDef.config);
+
 	render(() => {
-		const [input, setInput] = createSignal<AppProps["input"]>({});
-		const [output, setOutput] = createSignal<AppProps["output"]>({
-			content: [],
-		});
+		const [input, setInput] = createSignal<AppProps["input"]>();
+		const [output, setOutput] = createSignal<AppProps["output"]>();
 		const [hostContext, setHostContext] =
-			createSignal<AppProps["hostContext"]>(undefined);
+			createSignal<AppProps["hostContext"]>();
 
-		let disposed = false;
-		let app: ReturnType<typeof createApp> | null = null;
+		createEffect(() => {
+			const unsubscribeToolInput = appController.subscribeToolInput(setInput);
+			const unsubscribeToolResult =
+				appController.subscribeToolResult(setOutput);
+			const unsubscribeHostContext =
+				appController.subscribeHostContext(setHostContext);
 
-		const applyStyles = (context: AppProps["hostContext"]) => {
-			const styles = context?.styles?.variables;
-			if (styles) {
-				applyHostStyleVariables(styles);
-			}
-		};
-
-		onMount(() => {
-			app = createApp(config, {
-				onToolInput: (params) => {
-					if (disposed) return;
-					setInput(params);
-				},
-				onToolResult: (params) => {
-					if (disposed) return;
-					setOutput(params);
-				},
-				onHostContextChanged: (params) => {
-					if (disposed) return;
-					setHostContext(params);
-					applyStyles(params);
-				},
-			});
-
-			void app
-				.connect()
-				.then(() => {
-					if (disposed || !app) return;
-					const context = app.getHostContext();
-					if (!context) return;
-
-					setHostContext(context);
-					applyStyles(context);
-				})
-				.catch((error) => {
-					console.error("[chapplin] Failed to connect MCP App client:", error);
-				});
+			return () => {
+				unsubscribeToolInput();
+				unsubscribeToolResult();
+				unsubscribeHostContext();
+				appController.app.close();
+			};
 		});
 
-		onCleanup(() => {
-			disposed = true;
-			if (app) {
-				void app.close();
-			}
-		});
-
-		return createComponent(App, {
-			input: input(),
-			output: output(),
-			hostContext: hostContext(),
+		const App = appDef.ui as Component<AppProps>;
+		return createComponent(Context.Provider, {
+			value: appController.app,
+			children: createComponent(App, {
+				get input() {
+					return input();
+				},
+				get output() {
+					return output();
+				},
+				get hostContext() {
+					return hostContext();
+				},
+			}),
 		});
 	}, root);
-}
-
-type AppConfig = Parameters<typeof createApp>[0];
-
-interface InitOptions {
-	appInfo?: AppConfig["appInfo"];
-	capabilities?: AppConfig["capabilities"];
-	options?: AppConfig["options"];
-	rootId?: string;
-}
-
-function resolveOptions(options?: InitOptions) {
-	return {
-		config: {
-			appInfo: options?.appInfo ?? { name: "chapplin-app", version: "1.0.0" },
-			capabilities: options?.capabilities ?? {},
-			options: options?.options,
-		},
-		rootId: options?.rootId ?? "root",
-	};
 }

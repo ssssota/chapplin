@@ -51,8 +51,7 @@ function getPackageRoot(): string {
 }
 
 const PACKAGE_ROOT = getPackageRoot();
-const DEV_UI_SOURCE_DIR = join(PACKAGE_ROOT, "dev-ui");
-const DEV_UI_BUILD_DIR = join(PACKAGE_ROOT, "dist", "dev-ui");
+const DEV_UI_BUILD_DIR = join(PACKAGE_ROOT, "dist");
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -67,10 +66,6 @@ function getPathname(url: string): string {
 function isPreviewRootRequest(url: string): boolean {
 	const pathname = getPathname(url);
 	return pathname === PREVIEW_PATH || pathname === "/index.html";
-}
-
-function toViteFsPath(path: string): string {
-	return `/@fs/${path.replaceAll("\\", "/")}`;
 }
 
 function normalizeToolName(rawToolName: string): string {
@@ -230,23 +225,10 @@ export function devServer(): Plugin[] {
 						// Serve dev-ui SPA on root path
 						if (isPreviewRootRequest(req.url)) {
 							try {
-								let html: string;
-								try {
-									// Try to serve built HTML
-									html = await readFile(
-										join(DEV_UI_BUILD_DIR, "index.html"),
-										"utf-8",
-									);
-								} catch {
-									// Fallback to source if build doesn't exist
-									html = await readFile(
-										join(DEV_UI_SOURCE_DIR, "index.html"),
-										"utf-8",
-									);
-									const devUiSrcPath = `${encodeURI(toViteFsPath(join(DEV_UI_SOURCE_DIR, "src")))}/`;
-									html = html.replace(/(["'])\/src\//g, `$1${devUiSrcPath}`);
-									html = await server.transformIndexHtml(req.url, html);
-								}
+								const html = await readFile(
+									join(DEV_UI_BUILD_DIR, "index.html"),
+									"utf-8",
+								);
 								res.setHeader("content-type", "text/html");
 								res.end(html);
 							} catch {

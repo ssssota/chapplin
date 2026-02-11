@@ -214,11 +214,11 @@ export interface AppProps<
 	TMeta extends Record<string, unknown> = Record<string, unknown>,
 > {
 	/** Tool input arguments */
-	input: McpUiToolInputNotification["params"] & {
+	input?: McpUiToolInputNotification["params"] & {
 		arguments?: InferShapeOutput<TInput>;
 	};
 	/** Tool output (null if not yet executed) */
-	output: McpUiToolResultNotification["params"] & {
+	output?: McpUiToolResultNotification["params"] & {
 		structuredContent?: InferShapeOutput<TOutput> | null;
 		_meta?: TMeta;
 	};

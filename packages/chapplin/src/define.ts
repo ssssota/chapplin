@@ -163,7 +163,7 @@ type ExtractMeta<T> = T extends {
  *   config: { appInfo: { name: "my-app", version: "1.0.0" } },
  *   ui: (props) => {
  *     // props.output._meta is typed as { chartData: ... } | undefined
- *     return <Chart data={props.output._meta?.chartData} />;
+ *     return <Chart data={props.output?._meta?.chartData} />;
  *   },
  * });
  * ```
