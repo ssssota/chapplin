@@ -82,9 +82,9 @@
 		}
 	},
 	"devDependencies": {
-		"@modelcontextprotocol/ext-apps": "^1.0.1",
+		"@modelcontextprotocol/ext-apps": "catalog:",
 		"@modelcontextprotocol/sdk": "catalog:",
-		"@preact/preset-vite": "^2.9.0",
+		"@preact/preset-vite": "^2.10.3",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
@@ -92,17 +92,17 @@
 		"hono": "catalog:",
 		"magic-string": "catalog:",
 		"preact": "catalog:",
-		"preact-iso": "^2.0.0",
+		"preact-iso": "^2.11.1",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"solid-js": "catalog:",
-		"tsdown": "^0.17.0",
+		"tsdown": "^0.20.3",
 		"typescript": "catalog:",
 		"unocss": "catalog:",
 		"vite": "catalog:",
 		"vite-plugin-dev-api": "^0.1.0",
 		"vite-plugin-singlefile": "catalog:",
-		"vitest": "^4.0.15",
+		"vitest": "^4.0.18",
 		"zod": "catalog:"
 	},
 	"dependencies": {
