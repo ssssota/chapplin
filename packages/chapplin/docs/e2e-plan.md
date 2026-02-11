@@ -17,7 +17,8 @@
 - パフォーマンスや負荷テスト
 
 ## テスト対象プロジェクト
-- 既存の `examples/chapplin-sample` を E2E フィクスチャとして使う
+- `e2e/fixtures/chapplin-sample` に E2E 用フィクスチャを配置する
+- `examples/chapplin-sample` をベースにコピーし、E2E 専用の依存関係・設定に固定する
 - `get_todos`（UI 付き）と `get_weather`（UI なし）が揃っており、MCP + UI の基本動作を検証できる
 
 ## ツール選定

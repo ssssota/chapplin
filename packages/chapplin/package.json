@@ -95,6 +95,7 @@
 		"preact-iso": "^2.0.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"solid-js": "catalog:",
 		"tsdown": "^0.17.0",
 		"typescript": "catalog:",
 		"unocss": "catalog:",

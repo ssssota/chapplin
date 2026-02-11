@@ -4,8 +4,7 @@
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"target": "ES2022",
-		"jsx": "preserve",
-		"jsxImportSource": "solid-js",
+		"jsx": "react-jsx",
 		"skipLibCheck": true,
 		"esModuleInterop": true,
 		"rootDirs": [".", "./.chapplin/types"]

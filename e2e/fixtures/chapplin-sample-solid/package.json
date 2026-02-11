@@ -1,0 +1,26 @@
+{
+  "name": "chapplin-sample-solid",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node ./dist/index.js"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.19.6",
+    "chapplin": "workspace:*",
+    "vite": "catalog:",
+    "vite-plugin-solid": "^2.11.10"
+  },
+  "dependencies": {
+    "@hono/mcp": "catalog:",
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
+    "@modelcontextprotocol/sdk": "catalog:",
+    "@types/node": "catalog:",
+    "hono": "catalog:",
+    "solid-js": "catalog:",
+    "typescript": "catalog:",
+    "zod": "catalog:"
+  }
+}
