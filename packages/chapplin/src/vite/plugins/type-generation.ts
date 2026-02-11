@@ -4,6 +4,7 @@ import type { Plugin, ResolvedConfig } from "vite";
 import { VIRTUAL_MODULE_ID } from "../../constants.js";
 import type { ResolvedOptions } from "../types.js";
 import { getCollectedFiles } from "./file-collector.js";
+import { normalizePath } from "../utils.js";
 
 /** Output directory for generated types */
 const TYPE_GEN_DIR = ".chapplin/types";
@@ -125,7 +126,7 @@ function generateTypeDefinitions(
 	];
 
 	for (const tool of tools) {
-		const importPath = `../${relative(root, tool.path).replace(/\.(ts|tsx)$/, "")}`;
+		const importPath = `../${normalizePath(relative(root, tool.path)).replace(/\.(ts|tsx)$/, "")}`;
 
 		toolsLines.push(`    "${tool.name}": {`);
 		toolsLines.push(`      /** Import path: ${importPath} */`);
@@ -160,7 +161,7 @@ function generateTypeDefinitions(
 	];
 
 	for (const resource of resources) {
-		const importPath = `../${relative(root, resource.path).replace(/\.ts$/, "")}`;
+		const importPath = `../${normalizePath(relative(root, resource.path)).replace(/\.ts$/, "")}`;
 
 		resourcesLines.push(`    "${resource.name}": {`);
 		resourcesLines.push(
@@ -190,7 +191,7 @@ function generateTypeDefinitions(
 	];
 
 	for (const prompt of prompts) {
-		const importPath = `../${relative(root, prompt.path).replace(/\.ts$/, "")}`;
+		const importPath = `../${normalizePath(relative(root, prompt.path)).replace(/\.ts$/, "")}`;
 
 		promptsLines.push(`    "${prompt.name}": {`);
 		promptsLines.push(

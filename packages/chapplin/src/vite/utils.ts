@@ -30,6 +30,13 @@ export function nameToIdentifier(name: string): string {
 }
 
 /**
+ * Normalize path separators to forward slashes for Vite/ESM import paths.
+ */
+export function normalizePath(filePath: string): string {
+	return filePath.replace(/\\/g, "/");
+}
+
+/**
  * Convert a file path to a tool/resource/prompt name
  * e.g., "tools/weather.ts" -> "weather"
  * e.g., "tools/nested/deep.ts" -> "nested/deep"

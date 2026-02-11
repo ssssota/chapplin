@@ -5,7 +5,7 @@ import {
 	VIRTUAL_MODULE_ID,
 } from "../../constants.js";
 import type { CollectedFiles, ResolvedOptions } from "../types.js";
-import { nameToIdentifier } from "../utils.js";
+import { nameToIdentifier, normalizePath } from "../utils.js";
 import { getBuiltAppHtml } from "./client-build.js";
 import { getCollectedFiles } from "./file-collector.js";
 
@@ -69,7 +69,8 @@ function generateVirtualModuleCode(
 	// Generate imports and registrations for tools (defineTool / defineApp)
 	for (const tool of files.tools) {
 		const ns = `tool_${nameToIdentifier(tool.name.replace(/\//g, "_"))}`;
-		imports.push(`import * as ${ns} from "${tool.path}";`);
+		const toolPath = normalizePath(tool.path);
+		imports.push(`import * as ${ns} from "${toolPath}";`);
 
 		if (tool.hasApp) {
 			const htmlImportName = `${ns}_html`;
@@ -85,14 +86,16 @@ function generateVirtualModuleCode(
 	// Generate imports and registrations for resources (defineResource)
 	for (const resource of files.resources) {
 		const ns = `resource_${nameToIdentifier(resource.name.replace(/\//g, "_"))}`;
-		imports.push(`import * as ${ns} from "${resource.path}";`);
+		const resourcePath = normalizePath(resource.path);
+		imports.push(`import * as ${ns} from "${resourcePath}";`);
 		resourceRegistrations.push(generateResourceRegistration(ns));
 	}
 
 	// Generate imports and registrations for prompts (definePrompt)
 	for (const prompt of files.prompts) {
 		const ns = `prompt_${nameToIdentifier(prompt.name.replace(/\//g, "_"))}`;
-		imports.push(`import * as ${ns} from "${prompt.path}";`);
+		const promptPath = normalizePath(prompt.path);
+		imports.push(`import * as ${ns} from "${promptPath}";`);
 		promptRegistrations.push(generatePromptRegistration(ns));
 	}
 
