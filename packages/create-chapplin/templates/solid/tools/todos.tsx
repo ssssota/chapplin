@@ -1,4 +1,5 @@
 import { defineApp, defineTool } from "chapplin";
+import { For, Show } from "solid-js";
 import z from "zod";
 
 const todos = [
@@ -60,27 +61,27 @@ export const app = defineApp<typeof tool>({
 		prefersBorder: true,
 	},
 	ui: (props) => {
-		const output = props.output?.structuredContent;
-		const filter = props.input?.arguments?.filter ?? "all";
+		const output = () => props.output?.structuredContent;
+		const filter = () => props.input?.arguments?.filter ?? "all";
 
 		return (
 			<div>
 				<h1>TODO リスト</h1>
-				<p>フィルター: {filter}</p>
-				{output ? (
+				<p>フィルター: {filter()}</p>
+				<Show when={output()} fallback={<p>読み込み中...</p>}>
 					<div>
-						<p>合計: {output.total}件</p>
+						<p>合計: {output()?.total}件</p>
 						<ul>
-							{output.todos.map((todo) => (
-								<li>
-									{todo.completed ? "[x]" : "[ ]"} {todo.title}
-								</li>
-							))}
+							<For each={output()?.todos}>
+								{(todo) => (
+									<li>
+										{todo.completed ? "[x]" : "[ ]"} {todo.title}
+									</li>
+								)}
+							</For>
 						</ul>
 					</div>
-				) : (
-					<p>読み込み中...</p>
-				)}
+				</Show>
 			</div>
 		);
 	},

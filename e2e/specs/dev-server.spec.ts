@@ -62,6 +62,9 @@ test.describe("chapplin dev server", () => {
 		const connecting = page.getByText("Connecting MCP host bridge...");
 		await expect(connecting).toBeHidden();
 
+		const frame = page.frameLocator("#frame");
+		await expect(frame.getByText("読み込み中...")).toBeVisible();
+
 		const input = page.locator("#input");
 		await input.fill(JSON.stringify({ filter: "all" }, null, 2));
 
@@ -72,7 +75,8 @@ test.describe("chapplin dev server", () => {
 			.poll(async () => output.inputValue())
 			.toMatch(/structuredContent/);
 
-		const frame = page.frameLocator("#frame");
+		await expect(frame.getByText("読み込み中...")).toHaveCount(0);
+		await expect(frame.getByText("牛乳を買う")).toBeVisible();
 		await expect(frame.getByText("TODO リスト")).toBeVisible();
 	});
 
