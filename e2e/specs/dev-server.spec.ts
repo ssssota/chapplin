@@ -92,7 +92,9 @@ test.describe("chapplin dev server", () => {
 		).toHaveCount(0);
 	});
 
-	test("dev-ui preview handles invalid input and recovers", async ({ page }) => {
+	test("dev-ui preview handles invalid input and recovers", async ({
+		page,
+	}) => {
 		await page.goto("/");
 
 		const toolItem = page.locator("li", { hasText: "get_todos" });
