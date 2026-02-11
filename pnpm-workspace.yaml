@@ -9,14 +9,14 @@ catalog:
   '@hono/mcp': ^0.2.0
   '@modelcontextprotocol/sdk': 1.23.0
   '@types/node': ^24.10.1
-  '@types/react': 19.2.7
+  '@types/react': 19.2.14
   '@types/react-dom': 19.2.3
   hono: ^4.10.6
   magic-string: ^0.30.21
   oxc-parser: ^0.101.0
   preact: ^10.27.2
-  react: 19.2.0
-  react-dom: 19.2.0
+  react: 19.2.4
+  react-dom: 19.2.4
   typescript: ^5.9.3
   vite: ^7.2.4
   zimmerframe: ^1.1.4
