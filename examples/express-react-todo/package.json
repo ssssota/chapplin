@@ -1,5 +1,5 @@
 {
-	"name": "todo-app",
+	"name": "express-react-todo",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -9,19 +9,20 @@
 	},
 	"devDependencies": {
 		"@types/express": "^5.0.5",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"@vitejs/plugin-react": "^5.1.1",
+		"@vitejs/plugin-react": "^5.0.4",
 		"chapplin": "workspace:*",
+		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
 	"dependencies": {
+		"@modelcontextprotocol/ext-apps": "catalog:",
 		"@modelcontextprotocol/sdk": "catalog:",
-		"@types/node": "catalog:",
 		"express": "^5.1.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
-		"typescript": "catalog:",
 		"zod": "catalog:"
 	}
 }

@@ -1,5 +1,5 @@
 {
-	"name": "todo-app",
+	"name": "chapplin-app",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -9,17 +9,18 @@
 	},
 	"devDependencies": {
 		"@hono/node-server": "^1.19.6",
-		"@preact/preset-vite": "^2",
-		"chapplin": "^0.2.1",
+		"@preact/preset-vite": "^2.10.2",
+		"@types/node": "^24.10.1",
+		"chapplin": "^0.0.1",
+		"typescript": "^5.9.3",
 		"vite": "^7.2.4"
 	},
 	"dependencies": {
 		"@hono/mcp": "^0.2.0",
+		"@modelcontextprotocol/ext-apps": "^1.0.1",
 		"@modelcontextprotocol/sdk": "^1.23.0",
-		"@types/node": "^24.10.1",
 		"hono": "^4.10.7",
-		"preact": "^10",
-		"typescript": "^5.9.3",
+		"preact": "^10.27.2",
 		"zod": "^4.1.13"
 	}
 }

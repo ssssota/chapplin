@@ -1,56 +1,45 @@
 # chapplin
 
-chapplin is a ChatGPT Apps framework.
-This allow developers to create MCP servers for [OpenAI Apps SDK](https://developers.openai.com/apps-sdk) with type-safe JSX.
+A framework for building MCP Servers with MCP Apps.
 
-* Type-safe tools
-* JSX-based app rendering
-* Framework agnostic
-  * Hono, Express, Fastify, etc. for server
-  * React, Preact, Hono for UI
+## Quick Start
 
-## Usage
-
-```sh
+```bash
 npm create chapplin@latest
 ```
 
-## Example Todo tool
+### How to define tools and apps
 
 ```tsx
-import { defineTool } from "chapplin/tool";
+// tools/chart.tsx
+import { defineTool, defineApp } from "chapplin";
 import z from "zod";
-export default defineTool(
-	"get",
-	{
-		inputSchema: {},
-		outputSchema: {
-			todos: z.array(z.object({ id: z.number(), title: z.string(), completed: z.boolean() })),
-		},
-	},
-	async () => {
-		const todos = await fetchTodos();
-		return {
-			content: [{ type: "text", text: `${todos.length} todos remaining.` }],
-			structuredContent: { todos },
-		};
-	},
-	{
-		app: ({ toolOutput }) => (
-			<div>
-				<h1>GET Tool Example</h1>
-				<p>Status: {toolOutput?.todos.length} todos remaining.</p>
-				<ul>
-					{toolOutput?.todos.map((todo) => (
-						<li key={todo.id}>
-							{todo.title} - {todo.completed ? "Completed" : "Pending"}
-						</li>
-					))}
-				</ul>
-			</div>
-		),
-	},
-);
+
+export const tool = defineTool({
+  name: "show_chart",
+  config: {
+    description: "Visualize data",
+    inputSchema: { data: z.array(z.object({ label: z.string(), value: z.number() })) },
+    outputSchema: { chartId: z.string() },
+  },
+  async handler(args) {
+    return {
+      content: [{ type: "text", text: "ok" }],
+      structuredContent: { chartId: "chart-1" },
+      _meta: { chartData: args.data },
+    };
+  },
+});
+
+export const app = defineApp<typeof tool>({
+  config: { appInfo: { name: "chart-app", version: "1.0.0" } },
+  ui: (props) => (
+    <div>
+      <h1>{props.output?.structuredContent?.chartId}</h1>
+      {props.output?._meta && <pre>{JSON.stringify(props.output._meta)}</pre>}
+    </div>
+  ),
+});
 ```
 
 ## License

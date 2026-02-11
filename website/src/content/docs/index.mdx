@@ -1,9 +1,9 @@
 ---
 title: Chapplin
-description: Build ChatGPT Apps with type-safe JSX and MCP servers
+description: Build MCP servers and MCP Apps with type-safe JSX
 template: splash
 hero:
-  tagline: A ChatGPT Apps framework for creating MCP servers with type-safe JSX
+  tagline: A framework for building MCP servers and MCP Apps with type-safe JSX
   image:
     file: /public/favicon.svg
   actions:
@@ -21,19 +21,19 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 
 ## What is Chapplin?
 
-Chapplin is a ChatGPT Apps framework that allows developers to create MCP servers for [OpenAI Apps SDK](https://developers.openai.com/apps-sdk) with type-safe JSX.
+Chapplin is a Vite-based framework for building MCP servers and MCP Apps (interactive UI) with type-safe JSX.
 
 <CardGrid>
-	<Card title="Type-Safe Tools" icon="approve-check">
-		Define tools with Zod schemas for full type safety across your application.
+	<Card title="File-Based Collection" icon="approve-check">
+		Drop files into `tools/`, `resources/`, and `prompts/` and Chapplin registers them automatically.
 	</Card>
-	<Card title="JSX-Based UI" icon="seti:html">
-		Build beautiful UI components using familiar JSX syntax for tool outputs.
+	<Card title="Type-Safe UI" icon="seti:html">
+		Define schemas once and get typed input/output in your UI components.
 	</Card>
-	<Card title="Framework Agnostic" icon="puzzle">
-		Works with Hono, Express, Fastify, and more. Choose your preferred server framework.
+	<Card title="Single-File App HTML" icon="puzzle">
+		MCP Apps are bundled into a single HTML asset ready for the host.
 	</Card>
-	<Card title="Multiple UI Libraries" icon="rocket">
-		Support for React, Preact, and Hono JSX for rendering your components.
+	<Card title="Multiple UI Targets" icon="rocket">
+		Use React, Preact, Solid, or Hono JSX with the same API.
 	</Card>
 </CardGrid>

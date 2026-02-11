@@ -1,49 +1,74 @@
 {
 	"name": "chapplin",
 	"type": "module",
-	"version": "0.2.1",
+	"version": "0.0.1",
+	"description": "All-in-one framework for building MCP Server with MCP Apps",
 	"scripts": {
-		"build": "tsc",
-		"check": "tsc --noEmit",
-		"prepare": "pnpm build"
+		"build": "tsdown && pnpm build:dev-ui",
+		"build:dev-ui": "vite build dev-ui",
+		"check": "tsc -b --noEmit",
+		"dev": "tsdown --watch",
+		"prepare": "pnpm build",
+		"test": "vitest"
 	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
 		},
-		"./tool": {
-			"types": "./dist/tool.d.ts",
-			"default": "./dist/tool.js"
-		},
-		"./_internal/tool-react": "./dist/tool-react.js",
-		"./_internal/tool-preact": "./dist/tool-preact.js",
-		"./_internal/tool-hono": "./dist/tool-hono.js",
-		"./_internal/tool-solid": "./dist/tool-solid.js",
 		"./vite": {
 			"types": "./dist/vite/index.d.ts",
 			"default": "./dist/vite/index.js"
-		}
+		},
+		"./react": {
+			"types": "./dist/react/index.d.ts",
+			"default": "./dist/react/index.js"
+		},
+		"./preact": {
+			"types": "./dist/preact/index.d.ts",
+			"default": "./dist/preact/index.js"
+		},
+		"./solid": {
+			"types": "./dist/solid/index.d.ts",
+			"default": "./dist/solid/index.js"
+		},
+		"./hono": {
+			"types": "./dist/hono/index.d.ts",
+			"default": "./dist/hono/index.js"
+		},
+		"./client/react": "./dist/client/react.js",
+		"./client/preact": "./dist/client/preact.js",
+		"./client/solid": "./dist/client/solid.js",
+		"./client/hono": "./dist/client/hono.js"
 	},
 	"files": [
 		"dist"
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ssssota/chapplin.git"
+		"url": "git+https://github.com/ssssota/chapplin.git",
+		"directory": "packages/chapplin"
 	},
 	"license": "MIT",
 	"peerDependencies": {
-		"@modelcontextprotocol/sdk": ">=1.23",
-		"hono": ">=4",
-		"preact": ">=10",
-		"react": ">=18",
-		"react-dom": ">=18",
+		"@modelcontextprotocol/ext-apps": ">=1.0.0",
+		"@modelcontextprotocol/sdk": ">=1.22",
+		"hono": ">=4.0.0",
+		"preact": ">=10.0.0",
+		"react": ">=18.0.0",
+		"react-dom": ">=18.0.0",
+		"solid-js": ">=1.0.0",
 		"vite": ">=6",
-		"zod": ">=4"
+		"zod": ">=3"
 	},
 	"peerDependenciesMeta": {
+		"@modelcontextprotocol/ext-apps": {
+			"optional": true
+		},
 		"hono": {
+			"optional": true
+		},
+		"preact": {
 			"optional": true
 		},
 		"react": {
@@ -52,29 +77,37 @@
 		"react-dom": {
 			"optional": true
 		},
-		"preact": {
+		"solid-js": {
 			"optional": true
 		}
 	},
 	"devDependencies": {
+		"@modelcontextprotocol/ext-apps": "catalog:",
 		"@modelcontextprotocol/sdk": "catalog:",
-		"@types/estree": "^1.0.8",
+		"@preact/preset-vite": "^2.10.3",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"@unocss/reset": "catalog:",
 		"hono": "catalog:",
+		"magic-string": "catalog:",
 		"preact": "catalog:",
+		"preact-iso": "^2.11.1",
 		"react": "catalog:",
 		"react-dom": "catalog:",
-		"solid-js": "^1.9.10",
+		"solid-js": "catalog:",
+		"tsdown": "^0.20.3",
 		"typescript": "catalog:",
+		"unocss": "catalog:",
 		"vite": "catalog:",
+		"vite-plugin-dev-api": "^0.1.0",
+		"vite-plugin-singlefile": "catalog:",
+		"vitest": "^4.0.18",
 		"zod": "catalog:"
 	},
 	"dependencies": {
 		"magic-string": "catalog:",
-		"oxc-parser": "catalog:",
-		"vite-plugin-singlefile": "^2.3.0",
-		"zimmerframe": "catalog:"
+		"vite-plugin-dev-api": "^0.2.1",
+		"vite-plugin-singlefile": "catalog:"
 	}
 }

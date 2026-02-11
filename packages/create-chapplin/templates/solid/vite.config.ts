@@ -3,5 +3,11 @@ import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
 export default defineConfig({
-	plugins: [chapplin(), solid()],
+	plugins: [
+		solid({ ssr: true }),
+		chapplin({
+			entry: "./src/index.ts",
+			target: "solid",
+		}),
+	],
 });

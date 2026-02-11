@@ -1,112 +1,73 @@
 ---
 title: Why Chapplin?
-description: Understand the benefits and reasons for using Chapplin to build ChatGPT Apps
+description: Why Chapplin is useful for building MCP servers and MCP Apps
 ---
 
-The [OpenAI Apps SDK](https://developers.openai.com/apps-sdk) provides only primitive specifications for building ChatGPT Apps. While this gives developers flexibility, it also introduces significant complexity when building production-ready applications.
+MCP provides the primitives (Tools, Resources, Prompts, MCP Apps), but building a production workflow around them is still a lot of work. Chapplin turns those primitives into a cohesive framework.
 
-## The Challenge with Raw OpenAI Apps SDK
+## The Problem Without Chapplin
 
-When you need to provide a UI for your ChatGPT App, the OpenAI Apps SDK expects you to register a **single HTML asset** via the Apps SDK manifest. This asset must be self-contained (JS/CSS inlined or bundled) and is loaded by ChatGPT alongside your MCP server. This presents several challenges:
+### Single-HTML MCP Apps
+MCP Apps (via `@modelcontextprotocol/ext-apps`) require a **single HTML asset** that includes your UI code and styles. Creating that asset by hand means:
+- bundling JS/CSS
+- inlining assets
+- keeping dev and prod builds aligned
 
-### Complex Build Process
+### Type Safety Gap
+Tool schemas and UI components often drift apart:
+- output types are duplicated
+- changes require manual sync
+- runtime errors slip through
 
-Creating this all-in-one HTML bundle is not trivial. You need to:
-- Set up a build pipeline that bundles JavaScript and CSS
-- Inline all assets into a single HTML string
-- Ensure the bundled code works correctly in the ChatGPT environment
-- Manage different build configurations for development and production
+### Boilerplate Everywhere
+Registering tools/resources/prompts and wiring a dev preview takes time, and every project re-implements the same pieces.
 
-Building this infrastructure from scratch requires deep knowledge of bundlers like Vite, webpack, or Rollup, along with custom plugins to handle the specific requirements of the OpenAI Apps SDK.
+## What Chapplin Gives You
 
-### Type Safety Issues
-
-Even if you successfully set up the build process, maintaining type safety across your application becomes challenging:
-
-- **Disconnected types**: The types for `toolOutput` and other runtime data are difficult to share between your server-side tool definitions and client-side UI components
-- **Manual synchronization**: When you update your tool's output schema, you must manually update the corresponding UI component types
-- **No compile-time checks**: Without proper type sharing, you won't catch type mismatches until runtime, leading to potential bugs in production
-
-This complexity increases development time, introduces more opportunities for errors, and makes maintaining the codebase more difficult.
-
-## How Chapplin Solves These Problems
-
-Chapplin abstracts away all this complexity and provides an **all-in-one, type-safe development environment** for building Apps in ChatGPT.
-
-### Hidden Build Process
-
-Chapplin includes built-in Vite plugins that handle the entire build process automatically:
-- Automatically bundles JavaScript and CSS into a single HTML string
-- Provides hot module reloading during local development (via Vite)
-- Optimizes production builds without any configuration
-- Generates the correct format expected by the OpenAI Apps SDK
-
-You can focus on writing your application logic and UI components without worrying about the build infrastructure.
+### File-Based Collection
+Drop files into `tools/`, `resources/`, and `prompts/`. Chapplin discovers and registers them automatically.
 
 ### End-to-End Type Safety
-
-With Chapplin, types flow seamlessly from your tool definitions to your UI components:
+Types flow from your schema to your UI component:
 
 ```tsx
-import { defineTool } from "chapplin/tool";
+import { defineTool, defineApp } from "chapplin";
 import z from "zod";
 
-export default defineTool(
-	"getTodos",
-	{
-		outputSchema: {
-			todos: z.array(
-				z.object({
-					id: z.number(),
-					title: z.string(),
-					completed: z.boolean(),
-				}),
-			),
-		},
-	},
-	async () => {
-		return {
-			content: [{ type: "text", text: "Fetched todos" }],
-			structuredContent: {
-				todos: [
-					{ id: 1, title: "Sample todo", completed: false },
-				],
-			},
-		};
-	},
-	{
-		// toolOutput is automatically typed based on your outputSchema!
-		app: ({ toolOutput }) => (
-			<div>
-				{toolOutput.todos.map((todo) => (
-					<div key={todo.id}>{todo.title}</div>
-				))}
-			</div>
-		),
-	},
-);
+export const tool = defineTool({
+  name: "get_todos",
+  config: {
+    description: "Get todos",
+    inputSchema: {},
+    outputSchema: {
+      todos: z.array(z.object({ id: z.number(), title: z.string() })),
+    },
+  },
+  async handler() {
+    return {
+      content: [{ type: "text", text: "ok" }],
+      structuredContent: { todos: [{ id: 1, title: "Sample" }] },
+    };
+  },
+});
+
+export const app = defineApp<typeof tool>({
+  config: { appInfo: { name: "todos", version: "1.0.0" } },
+  ui: (props) => (
+    <div>
+      {props.output?.structuredContent?.todos.map((todo) => (
+        <div key={todo.id}>{todo.title}</div>
+      ))}
+    </div>
+  ),
+});
 ```
 
-The `toolOutput` parameter in your `app` component is automatically typed based on your `outputSchema`. This means:
-- **Autocompletion**: Your IDE provides intelligent suggestions
-- **Compile-time errors**: Type mismatches are caught before runtime
-- **Refactoring safety**: Changes to schemas automatically propagate to UI code
-
-### Unified Development Experience
-
-Chapplin provides a cohesive development experience where everything works together:
-
-- Define tools with Zod schemas
-- Build UI with your preferred JSX library (React, Preact, Solid, or Hono JSX)
-- Integrate with your preferred server framework (Hono, Express, Fastify, etc.)
-- Deploy with confidence knowing types are enforced throughout
+### Built-in Vite Integration
+Chapplin ships a Vite plugin that:
+- bundles MCP Apps into a single HTML file
+- generates `chapplin:register` for MCP registration
+- provides a dev server with UI preview
 
 ## Summary
-
-While the OpenAI Apps SDK gives you the raw building blocks, Chapplin gives you a complete framework that:
-- ✅ Eliminates complex build configuration
-- ✅ Ensures type safety from tool definitions to UI components
-- ✅ Provides a smooth development experience with hot reloading
-- ✅ Reduces boilerplate and lets you focus on your app's unique features
-
-If you're building Apps in ChatGPT, Chapplin removes the friction and lets you focus on creating great user experiences.
+Chapplin removes the heavy lifting around MCP Apps and provides a clean, type-safe workflow so you can focus on your tools and UI.

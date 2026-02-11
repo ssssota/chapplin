@@ -1,0 +1,88 @@
+import { defineApp, defineTool } from "chapplin";
+import { For, Show } from "solid-js";
+import z from "zod";
+
+const todos = [
+	{ id: 1, title: "牛乳を買う", completed: false },
+	{ id: 2, title: "犬の散歩", completed: true },
+	{ id: 3, title: "本を読む", completed: false },
+	{ id: 4, title: "メールを送る", completed: true },
+];
+
+export const tool = defineTool({
+	name: "get_todos",
+	config: {
+		description: "TODOリストを取得します",
+		inputSchema: {
+			filter: z
+				.enum(["all", "completed", "pending"])
+				.default("all")
+				.describe("フィルター"),
+		},
+		outputSchema: {
+			todos: z.array(
+				z.object({
+					id: z.number(),
+					title: z.string(),
+					completed: z.boolean(),
+				}),
+			),
+			total: z.number(),
+		},
+	},
+	async handler(args) {
+		let filteredTodos = todos;
+		if (args.filter === "completed") {
+			filteredTodos = todos.filter((todo) => todo.completed);
+		} else if (args.filter === "pending") {
+			filteredTodos = todos.filter((todo) => !todo.completed);
+		}
+
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: `${filteredTodos.length}件のTODOがあります`,
+				},
+			],
+			structuredContent: {
+				todos: filteredTodos,
+				total: filteredTodos.length,
+			},
+		};
+	},
+});
+
+export const app = defineApp<typeof tool>({
+	config: {
+		appInfo: { name: "todo-app", version: "1.0.0" },
+	},
+	meta: {
+		prefersBorder: true,
+	},
+	ui: (props) => {
+		const output = () => props.output?.structuredContent;
+		const filter = () => props.input?.arguments?.filter ?? "all";
+
+		return (
+			<div>
+				<h1>TODO リスト</h1>
+				<p>フィルター: {filter()}</p>
+				<Show when={output()} fallback={<p>読み込み中...</p>}>
+					<div>
+						<p>合計: {output()?.total}件</p>
+						<ul>
+							<For each={output()?.todos}>
+								{(todo) => (
+									<li>
+										{todo.completed ? "[x]" : "[ ]"} {todo.title}
+									</li>
+								)}
+							</For>
+						</ul>
+					</div>
+				</Show>
+			</div>
+		);
+	},
+});

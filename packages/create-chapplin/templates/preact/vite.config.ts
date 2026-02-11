@@ -3,5 +3,11 @@ import { chapplin } from "chapplin/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [chapplin(), preact()],
+	plugins: [
+		preact(),
+		chapplin({
+			entry: "./src/index.ts",
+			target: "preact",
+		}),
+	],
 });
