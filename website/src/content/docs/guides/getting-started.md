@@ -1,120 +1,120 @@
 ---
 title: Getting Started
-description: Learn how to create your first ChatGPT App with Chapplin
+description: Create your first MCP server and MCP App with Chapplin
 ---
 
-Welcome to Chapplin! This guide will help you create your first ChatGPT App using the Model Context Protocol (MCP).
+Welcome to Chapplin. This guide walks you through a minimal MCP server with a UI-enabled tool.
 
-## What You'll Build
-
-In this guide, you'll create a simple MCP server with a "get todos" tool that:
-- Fetches a list of todos
-- Returns structured data
-- Renders a beautiful UI with JSX
-
-## Create Your First App
-
-The fastest way to get started is using the `create-chapplin` scaffolding tool:
+## Create a Project
 
 ```bash
 npm create chapplin@latest
 ```
 
-### Project Structure
-
-After creation, your project will have this structure:
-
-```
-my-chapplin-app/
-├── src/
-│   ├── index.ts          # Server entry point
-│   └── tools/
-│       └── get.tsx       # Example tool
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
-
-## Install Dependencies
-
-Navigate to your project and install dependencies:
+Then install dependencies and start the dev server:
 
 ```bash
 cd my-chapplin-app
 npm install
-```
-
-## Development
-
-Start the development server:
-
-```bash
 npm run dev
 ```
 
-This will:
-- Start the Vite development server
-- Preview your widgets at `http://localhost:5173`
+## Project Structure
 
-## Understanding the Example
-
-Let's examine the example tool in `src/tools/get.tsx`:
-
-```tsx
-import { defineTool } from "chapplin/tool";
-import z from "zod";
-
-export default defineTool(
-	"get",
-	{
-		inputSchema: {},
-		outputSchema: {
-			todos: z.array(
-				z.object({
-					id: z.number(),
-					title: z.string(),
-					completed: z.boolean(),
-				}),
-			),
-		},
-	},
-	async () => {
-		// Your tool logic here
-		return {
-			content: [{ type: "text", text: "Result description" }],
-			structuredContent: { todos: [...] },
-		};
-	},
-	{
-		app: ({ toolOutput }) => (
-			<div>
-				{/* Your UI here */}
-			</div>
-		),
-	},
-);
+```
+my-chapplin-app/
+├── tools/
+│   └── todos.tsx
+├── resources/
+├── prompts/
+├── src/
+│   └── index.ts
+├── vite.config.ts
+└── tsconfig.json
 ```
 
-### Key Parts:
+## Vite Config
 
-1. **Tool Name**: `"get"` - identifies the tool
-2. **Schemas**: Define input/output types with Zod
-3. **Handler**: Async function that processes requests
-4. **UI Component**: JSX for rendering the output
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import { chapplin } from "chapplin/vite";
+import react from "@vitejs/plugin-react"; // swap for preact/solid/hono
 
-## Register Your Tool
+export default defineConfig({
+  plugins: [
+    react(),
+    chapplin({
+      entry: "./src/index.ts",
+      target: "react",
+    }),
+  ],
+});
+```
 
-In `src/index.ts`, register your tool:
+## MCP Server Entry
 
-```tsx
+```ts
+// src/index.ts
+import { register } from "chapplin:register";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { applyTools } from "chapplin";
-import get from "./tools/get.js";
+import { StreamableHTTPTransport } from "@hono/mcp";
+import { Hono } from "hono";
 
-const mcp = new McpServer({
-	name: "my-mcp-server",
-	version: "1.0.0",
+const app = new Hono();
+
+app.all("/mcp", async (c) => {
+  const server = new McpServer({ name: "my-server", version: "1.0.0" });
+  register(server);
+  const transport = new StreamableHTTPTransport();
+  await server.connect(transport);
+  return transport.handleRequest(c);
 });
 
-applyTools(mcp, [get]);
+export default app;
 ```
+
+## Define a Tool + UI
+
+```tsx
+// tools/todos.tsx
+import { defineTool, defineApp } from "chapplin";
+import z from "zod";
+
+export const tool = defineTool({
+  name: "get_todos",
+  config: {
+    description: "Get todos",
+    inputSchema: {
+      filter: z.enum(["all", "completed", "pending"]).default("all"),
+    },
+    outputSchema: {
+      todos: z.array(
+        z.object({ id: z.number(), title: z.string(), completed: z.boolean() }),
+      ),
+    },
+  },
+  async handler(args) {
+    return {
+      content: [{ type: "text", text: `filter: ${args.filter}` }],
+      structuredContent: { todos: [] },
+    };
+  },
+});
+
+export const app = defineApp<typeof tool>({
+  config: { appInfo: { name: "todos", version: "1.0.0" } },
+  ui: (props) => (
+    <div>
+      <h1>Todos</h1>
+      {props.output?.structuredContent?.todos.map((todo) => (
+        <div key={todo.id}>{todo.title}</div>
+      ))}
+    </div>
+  ),
+});
+```
+
+## Preview the UI
+
+Run the dev server and open `http://localhost:5173/` to use the built-in preview UI.

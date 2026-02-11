@@ -1,104 +1,69 @@
 ---
 title: Framework Integration
-description: Integrate Chapplin with different server and UI frameworks
+description: Integrate Chapplin with server frameworks and UI libraries
 ---
 
-Chapplin is framework-agnostic and can be integrated with various server frameworks and UI libraries. This guide covers the most popular options.
+Chapplin is server-framework agnostic. You can use any HTTP framework as long as it can handle the MCP transport.
 
 ## Server Frameworks
 
 ### Hono (Recommended)
 
-Hono is a fast, lightweight framework that works great with Chapplin.
-
-#### Installation
-
-```bash
-npm install hono @hono/mcp @hono/node-server
-```
-
-#### Setup
-
-```typescript
+```ts
 // src/index.ts
+import { register } from "chapplin:register";
 import { StreamableHTTPTransport } from "@hono/mcp";
-import { serve } from "@hono/node-server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { applyTools } from "chapplin";
 import { Hono } from "hono";
-import getTodos from "./tools/get-todos.js";
 
 const app = new Hono();
 
-// Create MCP server
-const mcp = new McpServer({
-	name: "my-mcp-server",
-	version: "1.0.0",
-});
-
-// Register tools
-applyTools(mcp, [getTodos]);
-
-const transport = new StreamableHTTPTransport();
-// MCP endpoint
 app.all("/mcp", async (c) => {
-	if (!mcp.isConnected()) await mcp.connect(transport);
-	return transport.handleRequest(c);
+  const server = new McpServer({ name: "my-server", version: "1.0.0" });
+  register(server);
+  const transport = new StreamableHTTPTransport();
+  await server.connect(transport);
+  return transport.handleRequest(c);
 });
 
-// Start server
-serve(app, console.log);
+export default app;
 ```
 
 ### Express
 
-Traditional Node.js framework with extensive middleware ecosystem.
-
-#### Installation
-
-```bash
-npm install express @modelcontextprotocol/sdk
-npm install -D @types/express
-```
-
-#### Setup
-
-```typescript
-// src/index.ts
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { applyTools } from "chapplin";
+```ts
 import express from "express";
-import getTodos from "./tools/get-todos.js";
+import { register } from "chapplin:register";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from
+  "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 const app = express();
 app.use(express.json());
 
-// Create MCP server
-const mcp = new McpServer({
-	name: "my-mcp-server",
-	version: "1.0.0",
-});
-
-applyTools(mcp, [getTodos]);
-
-// MCP endpoint
 app.all("/mcp", async (req, res) => {
-	const transport = new StreamableHTTPServerTransport({
-		sessionIdGenerator: undefined,
-	});
-	await mcp.connect(transport);
-	await transport.handleRequest(req, res, req.body);
+  const server = new McpServer({ name: "my-server", version: "1.0.0" });
+  register(server);
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+  });
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
 });
 
-app.listen(3000, console.log);
+app.listen(3000);
 ```
 
-## UI Libraries
+## UI Targets
 
-You can create UI with:
+Set the UI target in `chapplin()`:
 
+```ts
+chapplin({ target: "react" }); // or preact / solid / hono
+```
+
+Supported JSX targets:
 - React
 - Preact
-- SolidJS
-- Hono
+- Solid
+- Hono (`hono/jsx`)

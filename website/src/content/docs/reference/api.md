@@ -1,177 +1,137 @@
 ---
 title: API Reference
-description: Complete API reference for Chapplin
+description: Chapplin public APIs
 ---
 
-This page provides a comprehensive reference for all Chapplin APIs.
+This page lists the public APIs used in typical Chapplin projects.
 
-## Core Functions
+## defineTool
 
-### `defineTool()`
+```ts
+import { defineTool } from "chapplin";
 
-Define a tool with schema, handler, and optional UI component.
-
-```tsx
-defineTool(
-	name: string,
-	config: ToolConfig,
-	handler: ToolHandler,
-	widget?: WidgetConfig
-): Tool
-```
-
-#### Parameters
-
-**`name`** (string)
-- Unique identifier for the tool
-- Used in MCP protocol and widget generation
-- Use kebab-case or snake_case
-
-**`config`** (ToolConfig)
-```typescript
-{
-	title?: string;           // Human-readable title
-	description?: string;     // Tool description
-	inputSchema?: ZodShape;   // Input validation schema
-	outputSchema?: ZodShape;  // Output validation schema
-	annotations?: ToolAnnotations;
-	_meta?: Record<string, unknown>;
-}
-```
-
-**`handler`** (ToolHandler)
-```typescript
-async (input, extra) => {
-	return {
-		content: Array<ContentBlock>;
-		structuredContent: OutputData;
-		_meta?: Record<string, unknown>;
-	};
-}
-```
-
-**`widget`** (WidgetConfig, optional)
-```typescript
-{
-	name?: string;           // Widget name (defaults to tool name)
-	_meta?: ComponentResourceMeta;
-	app: (props: OpenAiGlobals) => JSXElement;
-}
-```
-
-#### Returns
-
-`Tool` - A function that registers the tool with an MCP server
-
-#### Example
-
-```tsx
-import { defineTool } from "chapplin/tool";
-import z from "zod";
-
-export default defineTool(
-	"get-user",
-	{
-		title: "Get User",
-		description: "Fetch user information by ID",
-		inputSchema: {
-			userId: z.string(),
-		},
-		outputSchema: {
-			user: z.object({
-				id: z.string(),
-				name: z.string(),
-				email: z.string(),
-			}),
-		},
-	},
-	async ({ userId }) => {
-		const user = await fetchUser(userId);
-		return {
-			content: [{ type: "text", text: `Found user: ${user.name}` }],
-			structuredContent: { user },
-		};
-	},
-	{
-		app: ({ toolOutput }) => (
-			<div>
-				<h1>{toolOutput?.user.name}</h1>
-				<p>{toolOutput?.user.email}</p>
-			</div>
-		),
-	},
-);
-```
-
----
-
-### `applyTools()`
-
-Register multiple tools with an MCP server.
-
-```typescript
-applyTools(
-	server: McpServer,
-	tools: Tool[]
-): void
-```
-
-#### Parameters
-
-**`server`** (McpServer)
-- MCP server instance
-
-**`tools`** (Tool[])
-- Array of tools created with `defineTool()`
-
-#### Example
-
-```typescript
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { applyTools } from "chapplin";
-import getUser from "./tools/get-user.js";
-import createUser from "./tools/create-user.js";
-
-const mcp = new McpServer({
-	name: "my-server",
-	version: "1.0.0",
+export const tool = defineTool({
+  name: "my_tool",
+  config: {
+    description: "...",
+    inputSchema: { ... },
+    outputSchema: { ... },
+    annotations: { ... },
+  },
+  async handler(args, extra) {
+    return {
+      content: [{ type: "text", text: "..." }],
+      structuredContent: { ... },
+      _meta: { ... },
+    };
+  },
 });
-
-applyTools(mcp, [getUser, createUser]);
 ```
 
----
+- `inputSchema` / `outputSchema` use Zod object shapes
+- `_meta` is UI-only data (not sent to the LLM)
+
+## defineApp
+
+```tsx
+import { defineApp } from "chapplin";
+
+export const app = defineApp<typeof tool>({
+  config: {
+    appInfo: { name: "my-app", version: "1.0.0" },
+    capabilities: {},
+    options: {},
+  },
+  meta: {
+    prefersBorder: true,
+  },
+  ui: (props) => <div />,
+});
+```
+
+- `defineApp` **must** be used as `defineApp<typeof tool>`
+- `config` is passed to the MCP App constructor
+
+## defineResource
+
+```ts
+import { defineResource } from "chapplin";
+
+export const resource = defineResource({
+  name: "app-config",
+  config: {
+    uri: "config://app/settings",
+    mimeType: "application/json",
+  },
+  async handler(uri) {
+    return {
+      contents: [{ uri: uri.href, text: "{}" }],
+    };
+  },
+});
+```
+
+## definePrompt
+
+```ts
+import { definePrompt } from "chapplin";
+
+export const prompt = definePrompt({
+  name: "code-review",
+  config: {
+    description: "...",
+    argsSchema: { ... },
+  },
+  handler(args) {
+    return {
+      messages: [{ role: "user", content: { type: "text", text: "..." } }],
+    };
+  },
+});
+```
 
 ## Vite Plugin
 
-### `chapplin()`
-
-Vite plugin for Chapplin.
-
-```typescript
-chapplin(options?: ChapplinOptions): Plugin[]
-```
-
-#### Options
-
-```typescript
-type ChapplinOptions = {
-	toolsDir?: string;  // Tools directory (default: "./src/tools")
-}
-```
-
-#### Example
-
-```typescript
-// vite.config.ts
+```ts
 import { chapplin } from "chapplin/vite";
-import { defineConfig } from "vite";
 
-export default defineConfig({
-	plugins: [
-		chapplin({
-			toolsDir: "./src/tools",
-		}),
-	],
+chapplin({
+  entry: "./src/index.ts",
+  target: "react", // react | preact | solid | hono
+  toolsDir: "tools",
+  resourcesDir: "resources",
+  promptsDir: "prompts",
+  tsconfigPath: "tsconfig.json",
 });
+```
+
+## Virtual Module: chapplin:register
+
+```ts
+import { register } from "chapplin:register";
+
+register(server);
+```
+
+`register(server)` registers all collected tools/resources/prompts (and MCP Apps) onto the given MCP server.
+
+## Runtime Helpers
+
+- `chapplin/react`
+- `chapplin/preact`
+- `chapplin/solid`
+- `chapplin/hono`
+
+### `useApp`
+
+It provides access to the MCP App context.
+
+Check out the example usage in [model-context-protocol/ext-apps](https://github.com/modelcontextprotocol/ext-apps/blob/main/src/app.examples.ts).
+
+```tsx
+// Example usage of useApp from chapplin/react
+import { useApp } from "chapplin/react";
+
+const app = useApp();
+const openUrl = (url: string) => app.openLink({ url });
 ```
