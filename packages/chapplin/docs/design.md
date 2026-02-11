@@ -1,4 +1,6 @@
-# chapplin 設計書
+# chapplin 設計書（旧版）
+
+> 注意: このドキュメントは旧版です。最新は `packages/chapplin/docs/design-fixed.md` を参照してください。
 
 > MCP Server と MCP Apps を構築するためのオールインワンフレームワーク
 

@@ -7,7 +7,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: "Chapplin",
-			description: "Build ChatGPT Apps with type-safe JSX and MCP servers",
+			description: "Build MCP servers and MCP Apps with type-safe JSX",
 			logo: {
 				light: "./public/logo.svg",
 				dark: "./public/logo-dark.svg",
