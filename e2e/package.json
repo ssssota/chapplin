@@ -6,21 +6,22 @@
 		"test": "pnpm test:dev:all && pnpm test:build:all",
 		"test:dev": "playwright test --config playwright.dev.config.ts",
 		"test:build": "playwright test --config playwright.build.config.ts",
-		"test:dev:react": "E2E_FIXTURE=chapplin-sample-react pnpm test:dev",
-		"test:dev:preact": "E2E_FIXTURE=chapplin-sample-preact E2E_PORT=5174 pnpm test:dev",
-		"test:dev:solid": "E2E_FIXTURE=chapplin-sample-solid E2E_PORT=5175 pnpm test:dev",
-		"test:dev:hono": "E2E_FIXTURE=chapplin-sample-hono E2E_PORT=5176 pnpm test:dev",
+		"test:dev:react": "cross-env E2E_FIXTURE=chapplin-sample-react pnpm test:dev",
+		"test:dev:preact": "cross-env E2E_FIXTURE=chapplin-sample-preact pnpm test:dev",
+		"test:dev:solid": "cross-env E2E_FIXTURE=chapplin-sample-solid pnpm test:dev",
+		"test:dev:hono": "cross-env E2E_FIXTURE=chapplin-sample-hono pnpm test:dev",
 		"test:dev:all": "pnpm test:dev:react && pnpm test:dev:preact && pnpm test:dev:solid && pnpm test:dev:hono",
-		"test:build:react": "E2E_FIXTURE=chapplin-sample-react pnpm test:build",
-		"test:build:preact": "E2E_FIXTURE=chapplin-sample-preact E2E_PORT=4174 pnpm test:build",
-		"test:build:solid": "E2E_FIXTURE=chapplin-sample-solid E2E_PORT=4175 pnpm test:build",
-		"test:build:hono": "E2E_FIXTURE=chapplin-sample-hono E2E_PORT=4176 pnpm test:build",
+		"test:build:react": "cross-env E2E_FIXTURE=chapplin-sample-react pnpm test:build",
+		"test:build:preact": "cross-env E2E_FIXTURE=chapplin-sample-preact pnpm test:build",
+		"test:build:solid": "cross-env E2E_FIXTURE=chapplin-sample-solid pnpm test:build",
+		"test:build:hono": "cross-env E2E_FIXTURE=chapplin-sample-hono pnpm test:build",
 		"test:build:all": "pnpm test:build:react && pnpm test:build:preact && pnpm test:build:solid && pnpm test:build:hono"
 	},
 	"devDependencies": {
 		"@modelcontextprotocol/sdk": "catalog:",
 		"@playwright/test": "^1.50.1",
 		"@types/node": "catalog:",
+		"cross-env": "^10.1.0",
 		"typescript": "catalog:"
 	}
 }
