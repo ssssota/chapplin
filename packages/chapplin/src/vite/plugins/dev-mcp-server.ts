@@ -143,10 +143,16 @@ async function registerCollectedModules(
 				{
 					description: tool.config.description,
 					mimeType: RESOURCE_MIME_TYPE,
-					_meta: { ui: app.meta ?? {} },
 				},
 				async () => ({
-					contents: [{ uri, mimeType: RESOURCE_MIME_TYPE, text: html }],
+					contents: [
+						{
+							uri,
+							mimeType: RESOURCE_MIME_TYPE,
+							text: html,
+							_meta: { ui: app.meta ?? {} },
+						},
+					],
 				}),
 			);
 			continue;

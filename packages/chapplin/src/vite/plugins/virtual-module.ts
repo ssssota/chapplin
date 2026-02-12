@@ -163,13 +163,13 @@ function generateAppToolRegistration(
     {
       description: ${ns}.tool.config.description,
       mimeType: "${RESOURCE_MIME_TYPE}",
-      _meta: { ui: ${ns}.app.meta ?? {} },
     },
     async () => ({
       contents: [{
         uri,
         mimeType: "${RESOURCE_MIME_TYPE}",
         text: ${htmlImportName},
+        _meta: { ui: ${ns}.app.meta ?? {} },
       }],
     })
   );
