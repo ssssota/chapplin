@@ -8,6 +8,11 @@ import type {
 } from "../types.js";
 import { pathToName } from "../utils.js";
 
+type CollectionDirectories = Pick<
+	ResolvedOptions,
+	"toolsDir" | "resourcesDir" | "promptsDir"
+>;
+
 /** Regex patterns for detecting define* calls */
 const DEFINE_TOOL_PATTERN = /\bdefineTool\b/;
 const DEFINE_APP_PATTERN = /\bdefineApp\b/;
@@ -41,7 +46,7 @@ export function fileCollector(opts: ResolvedOptions): Plugin {
 		async buildStart() {
 			if (!collectionContext) return;
 
-			const files = await collectFiles(
+			const files = await collectFilesFromRoot(
 				collectionContext.root,
 				collectionContext.opts,
 			);
@@ -68,14 +73,14 @@ export function fileCollector(opts: ResolvedOptions): Plugin {
 /**
  * Collect files from tools/resources/prompts directories
  */
-async function collectFiles(
+export async function collectFilesFromRoot(
 	root: string,
-	opts: ResolvedOptions,
+	directories: CollectionDirectories,
 ): Promise<CollectedFiles> {
 	const [tools, resources, prompts] = await Promise.all([
-		collectToolFiles(root, opts.toolsDir),
-		collectResourceFiles(root, opts.resourcesDir),
-		collectPromptFiles(root, opts.promptsDir),
+		collectToolFiles(root, directories.toolsDir),
+		collectResourceFiles(root, directories.resourcesDir),
+		collectPromptFiles(root, directories.promptsDir),
 	]);
 
 	return { tools, resources, prompts };
@@ -224,7 +229,7 @@ export async function getCollectedFiles(): Promise<CollectedFiles> {
 		return { tools: [], resources: [], prompts: [] };
 	}
 	// Fetch fresh data
-	const files = await collectFiles(
+	const files = await collectFilesFromRoot(
 		collectionContext.root,
 		collectionContext.opts,
 	);

@@ -6,6 +6,7 @@ export default defineConfig({
 	entry: [
 		"./src/index.ts",
 		"./src/vite/index.ts",
+		"./src/cli.ts",
 		...frameworks.flatMap(
 			(fw) => [`./src/${fw}.ts`, `./src/client/${fw}.ts`] as const,
 		),

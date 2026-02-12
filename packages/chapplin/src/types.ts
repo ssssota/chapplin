@@ -10,18 +10,35 @@ import type {
 	ServerRequest,
 	ToolAnnotations,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { z } from "zod";
 
 // =============================================================================
 // Zod Schema Types
 // =============================================================================
 
+/**
+ * Minimal schema contract for Zod compatibility.
+ *
+ * We intentionally avoid depending on concrete `z.ZodType` from a specific
+ * zod package instance/version, because consumers can bring a different zod
+ * minor version in workspace setups.
+ */
+export type ZodSchemaLike =
+	| { _output: unknown } // zod v3/v4 classic
+	| { _zod: { output: unknown } }; // zod v4 core
+
 /** Zod raw shape (object schema definition) */
-export type ZodRawShape = Record<string, z.ZodTypeAny>;
+export type ZodRawShape = Record<string, ZodSchemaLike>;
+
+/** Infer output type from schema-like type */
+type InferSchemaOutput<TSchema> = TSchema extends { _output: infer TOutput }
+	? TOutput
+	: TSchema extends { _zod: { output: infer TOutput } }
+		? TOutput
+		: unknown;
 
 /** Infer output type from Zod raw shape */
 export type InferShapeOutput<T extends ZodRawShape> = {
-	[K in keyof T]: z.infer<T[K]>;
+	[K in keyof T]: InferSchemaOutput<T[K]>;
 };
 
 // =============================================================================

@@ -1,0 +1,5 @@
+---
+"chapplin": patch
+---
+
+Improve types
