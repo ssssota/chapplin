@@ -1,5 +1,11 @@
 # create-chapplin
 
+## 1.1.0
+
+### Minor Changes
+
+- [#81](https://github.com/ssssota/chapplin/pull/81) [`1efd79e`](https://github.com/ssssota/chapplin/commit/1efd79e2decf5107a300ee1ead8cba69e900ae28) Thanks [@ssssota](https://github.com/ssssota)! - add CLI and prepare npm-script
+
 ## 1.0.0
 
 ### Major Changes
