@@ -42,7 +42,6 @@ chapplin は、Model Context Protocol (MCP) サーバーと MCP Apps（インタ
     "solid-js": { "optional": true }
   },
   "dependencies": {
-    "magic-string": "*",
     "vite-plugin-dev-api": "^0.2.1",
     "vite-plugin-singlefile": "*"
   }

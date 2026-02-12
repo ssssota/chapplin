@@ -38,7 +38,6 @@ chapplin は Vite ベースのフレームワークで、`tools/`・`resources/`
     "zod": ">=3"
   },
   "dependencies": {
-    "magic-string": "*",
     "vite-plugin-dev-api": "^0.2.1",
     "vite-plugin-singlefile": "*"
   }
