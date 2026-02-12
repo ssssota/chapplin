@@ -15,7 +15,7 @@ catalog:
   '@unocss/reset': ^66.6.0
   hono: ^4.11.9
   magic-string: ^0.30.21
-  oxc-parser: ^0.101.0
+  oxc-parser: ^0.112.0
   preact: ^10.28.3
   react: 19.2.4
   react-dom: 19.2.4
