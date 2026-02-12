@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@hono/mcp':
-      specifier: ^0.2.0
-      version: 0.2.2
     '@modelcontextprotocol/ext-apps':
       specifier: ^1.0.1
       version: 1.0.1
@@ -97,7 +94,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
+        version: 0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.0.1
         version: 1.0.1(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.3.6)
@@ -131,7 +128,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
+        version: 0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.0.1
         version: 1.0.1(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.3.6)
@@ -171,7 +168,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
+        version: 0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.0.1
         version: 1.0.1(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.3.6)
@@ -220,7 +217,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
+        version: 0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.0.1
         version: 1.0.1(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.3.6)
@@ -260,7 +257,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
+        version: 0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.0.1
         version: 1.0.1(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.3.6)
@@ -355,7 +352,7 @@ importers:
     dependencies:
       '@hono/mcp':
         specifier: 'catalog:'
-        version: 0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
+        version: 0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)
       '@modelcontextprotocol/ext-apps':
         specifier: 'catalog:'
         version: 1.0.1(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.3.6)
@@ -1188,10 +1185,10 @@ packages:
   '@expressive-code/plugin-text-markers@0.41.6':
     resolution: {integrity: sha512-PBFa1wGyYzRExMDzBmAWC6/kdfG1oLn4pLpBeTfIRrALPjcGA/59HP3e7q9J0Smk4pC7U+lWkA2LHR8FYV8U7Q==}
 
-  '@hono/mcp@0.2.2':
-    resolution: {integrity: sha512-h1yHXsv08OWT8bXyIOoZVXw0qU1UmSDwm014fPnFXiyeS9iMMHftn907wNXTh07IorlGqPbZArev4nBz9Q3oKQ==}
+  '@hono/mcp@0.2.3':
+    resolution: {integrity: sha512-wrYKVQSjnBg4/ZinnnP/1t3jlvP3Z9fqZv8OzuhLXV4gVTLOHOHDhnXsIwD0nFVKk2pMOvA+sDfrKyRzw4yUPg==}
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.23.0
+      '@modelcontextprotocol/sdk': ^1.25.1
       hono: '*'
       hono-rate-limiter: ^0.4.2
       zod: ^3.25.0 || ^4.0.0
@@ -5293,7 +5290,7 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.41.6
 
-  '@hono/mcp@0.2.2(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)':
+  '@hono/mcp@0.2.3(@modelcontextprotocol/sdk@1.26.0(zod@4.3.6))(hono-rate-limiter@0.4.2(hono@4.11.9))(hono@4.11.9)(zod@4.3.6)':
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
       hono: 4.11.9
