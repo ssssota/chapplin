@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.1.1
+
+### Patch Changes
+
+- [#85](https://github.com/ssssota/chapplin/pull/85) [`7ea3782`](https://github.com/ssssota/chapplin/commit/7ea37827f53f0084e3e034693ea5f2bcaccd726f) Thanks [@ssssota](https://github.com/ssssota)! - Add resource meta into response
+
 ## 1.1.0
 
 ### Minor Changes
