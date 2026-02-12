@@ -11,6 +11,9 @@
 		"prepare": "pnpm build",
 		"test": "vitest"
 	},
+	"bin": {
+		"chapplin": "./bin/index.mjs"
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -42,7 +45,8 @@
 		"./client/hono": "./dist/client/hono.js"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"bin"
 	],
 	"repository": {
 		"type": "git",
