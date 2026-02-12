@@ -5,8 +5,8 @@ import {
 	DEFAULT_PROMPTS_DIR,
 	DEFAULT_RESOURCES_DIR,
 	DEFAULT_TOOLS_DIR,
+	VIRTUAL_MODULE_ID,
 } from "../../constants.js";
-import { VIRTUAL_MODULE_ID } from "../../constants.js";
 import type { ResolvedOptions } from "../types.js";
 import { normalizePath } from "../utils.js";
 import { collectFilesFromRoot } from "./file-collector.js";
@@ -60,14 +60,26 @@ export async function syncTypeGeneration(
 	const outputDir = join(root, TYPE_GEN_DIR);
 	await mkdir(outputDir, { recursive: true });
 
-	await writeFile(join(outputDir, "register.d.ts"), typeDefinitions.register, "utf-8");
-	await writeFile(join(outputDir, "tools.d.ts"), typeDefinitions.tools, "utf-8");
+	await writeFile(
+		join(outputDir, "register.d.ts"),
+		typeDefinitions.register,
+		"utf-8",
+	);
+	await writeFile(
+		join(outputDir, "tools.d.ts"),
+		typeDefinitions.tools,
+		"utf-8",
+	);
 	await writeFile(
 		join(outputDir, "resources.d.ts"),
 		typeDefinitions.resources,
 		"utf-8",
 	);
-	await writeFile(join(outputDir, "prompts.d.ts"), typeDefinitions.prompts, "utf-8");
+	await writeFile(
+		join(outputDir, "prompts.d.ts"),
+		typeDefinitions.prompts,
+		"utf-8",
+	);
 
 	return {
 		tools: files.tools.length,
