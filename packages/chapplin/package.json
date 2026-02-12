@@ -1,7 +1,7 @@
 {
 	"name": "chapplin",
 	"type": "module",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "All-in-one framework for building MCP Server with MCP Apps",
 	"scripts": {
 		"build": "tsdown && pnpm build:dev-ui",
