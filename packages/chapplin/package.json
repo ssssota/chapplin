@@ -100,7 +100,7 @@
 		"typescript": "catalog:",
 		"unocss": "catalog:",
 		"vite": "catalog:",
-		"vite-plugin-dev-api": "^0.1.0",
+		"vite-plugin-dev-api": "^0.2.0",
 		"vite-plugin-singlefile": "catalog:",
 		"vitest": "^4.0.18",
 		"zod": "catalog:"
