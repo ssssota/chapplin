@@ -47,6 +47,10 @@ export async function getBuiltAppHtml(
 				name: tool.name,
 				plugins: buildContext.plugins,
 				opts: buildContext.opts,
+				mode: buildContext.config.mode,
+				root: buildContext.config.root,
+				envDir: buildContext.config.envDir || undefined,
+				envPrefix: buildContext.config.envPrefix,
 			}).then(([, html]) => {
 				builtAppHtmlCache.set(toolName, html);
 				pendingBuilds.delete(toolName);
@@ -129,6 +133,10 @@ interface BuildContext {
 	name: string;
 	plugins: PluginOption[];
 	opts: ResolvedOptions;
+	mode: string;
+	root: string;
+	envDir?: string;
+	envPrefix: ResolvedConfig["envPrefix"];
 }
 
 /**
@@ -143,9 +151,12 @@ async function buildClientApp(
 
 	const result = await viteBuild({
 		configFile: false,
+		root: context.root,
+		envDir: context.envDir,
+		envPrefix: context.envPrefix,
 		appType: "spa",
 		esbuild: { jsxDev: false, ...jsxConfig },
-		mode: "production",
+		mode: context.mode,
 		logLevel: "warn",
 		plugins: [...appEntry(context.opts), ...context.plugins],
 		build: { write: false, ssr: false, rollupOptions: { input: htmlId } },

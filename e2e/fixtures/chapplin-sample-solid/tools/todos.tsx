@@ -8,6 +8,7 @@ const todos = [
 	{ id: 3, title: "本を読む", completed: false },
 	{ id: 4, title: "メールを送る", completed: true },
 ];
+const envFile = import.meta.env.VITE_E2E_ENV_FILE ?? "unset";
 
 export const tool = defineTool({
 	name: "get_todos",
@@ -67,6 +68,7 @@ export const app = defineApp<typeof tool>({
 			<div style={{ "font-family": "system-ui, sans-serif", padding: "20px" }}>
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter()}</p>
+				<p>ENV_FILE: {envFile}</p>
 				<Show when={output()} fallback={<p>読み込み中...</p>}>
 					<p>合計: {output()?.total}件</p>
 					<ul>

@@ -2,7 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 const fixture = process.env.E2E_FIXTURE;
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:5173`;
-const webServerCommand = [`pnpm -C fixtures/${fixture} dev`].join(" && ");
+const webServerCommand = [`pnpm -C fixtures/${fixture} dev --mode test`].join(
+	" && ",
+);
 
 export default defineConfig({
 	testDir: "./specs",

@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { callTool, listTools } from "../helpers/mcp-client.js";
 
+const ENV_FILE_MARKER = "ENV_FILE: from-env-test";
+
 test.describe("chapplin dev server", () => {
 	test("/api/files returns collected files", async ({ request }) => {
 		const response = await request.get("/api/files");
@@ -49,6 +51,11 @@ test.describe("chapplin dev server", () => {
 		expect(html).toContain('<div id="root"></div>');
 	});
 
+	test("/iframe/tools/get_todos app reads .env.test", async ({ page }) => {
+		await page.goto("/iframe/tools/get_todos");
+		await expect(page.getByText(ENV_FILE_MARKER)).toBeVisible();
+	});
+
 	test("dev-ui preview renders todo app", async ({ page }) => {
 		await page.goto("/");
 
@@ -78,6 +85,7 @@ test.describe("chapplin dev server", () => {
 		await expect(frame.getByText("読み込み中...")).toHaveCount(0);
 		await expect(frame.getByText("牛乳を買う")).toBeVisible();
 		await expect(frame.getByText("TODO リスト")).toBeVisible();
+		await expect(frame.getByText(ENV_FILE_MARKER)).toBeVisible();
 	});
 
 	test("dev-ui shows preview only for UI tools", async ({ page }) => {

@@ -3,7 +3,11 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import {
 	type CallToolResult,
 	CallToolResultSchema,
+	ListResourcesResultSchema,
 	ListToolsResultSchema,
+	ReadResourceResultSchema,
+	type Resource,
+	type ReadResourceResult,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 
@@ -25,6 +29,25 @@ export async function callTool(
 		client.request(
 			{ method: "tools/call", params: options },
 			CallToolResultSchema,
+		),
+	);
+}
+
+export async function listResources(baseURL: string): Promise<Resource[]> {
+	const result = await withMcpClient(baseURL, (client) =>
+		client.request({ method: "resources/list" }, ListResourcesResultSchema),
+	);
+	return result.resources;
+}
+
+export async function readResource(
+	baseURL: string,
+	uri: string,
+): Promise<ReadResourceResult> {
+	return withMcpClient(baseURL, (client) =>
+		client.request(
+			{ method: "resources/read", params: { uri } },
+			ReadResourceResultSchema,
 		),
 	);
 }

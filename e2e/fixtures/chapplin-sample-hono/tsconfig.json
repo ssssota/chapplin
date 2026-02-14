@@ -8,6 +8,7 @@
 		"jsxImportSource": "hono/jsx/dom",
 		"skipLibCheck": true,
 		"esModuleInterop": true,
+		"types": ["vite/client"],
 		"rootDirs": [".", "./.chapplin/types"]
 	},
 	"include": ["src", "tools", "resources", "prompts", ".chapplin/types"]
