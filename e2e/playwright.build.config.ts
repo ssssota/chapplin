@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const fixture = process.env.E2E_FIXTURE;
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:4173`;
 const webServerCommand = [
-	`pnpm -C fixtures/${fixture} build`,
+	`pnpm -C fixtures/${fixture} build --mode test`,
 	`pnpm -C fixtures/${fixture} start`,
 ].join(" && ");
 
