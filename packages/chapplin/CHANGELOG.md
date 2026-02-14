@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.1.2
+
+### Patch Changes
+
+- [#88](https://github.com/ssssota/chapplin/pull/88) [`2b6c7d5`](https://github.com/ssssota/chapplin/commit/2b6c7d5249d6b4252896984b4de1b24ed4a4e260) Thanks [@ssssota](https://github.com/ssssota)! - Load env correctly
+
 ## 1.1.1
 
 ### Patch Changes
