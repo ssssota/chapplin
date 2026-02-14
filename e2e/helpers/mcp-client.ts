@@ -5,9 +5,9 @@ import {
 	CallToolResultSchema,
 	ListResourcesResultSchema,
 	ListToolsResultSchema,
+	type ReadResourceResult,
 	ReadResourceResultSchema,
 	type Resource,
-	type ReadResourceResult,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 
