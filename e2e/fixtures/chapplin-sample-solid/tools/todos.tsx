@@ -1,6 +1,7 @@
 import { defineApp, defineTool } from "chapplin";
 import { For, Show } from "solid-js";
 import z from "zod";
+import "./todos.css";
 
 const todos = [
 	{ id: 1, title: "牛乳を買う", completed: false },
@@ -65,7 +66,10 @@ export const app = defineApp<typeof tool>({
 		const output = () => props.output?.structuredContent;
 		const filter = () => props.input?.arguments?.filter ?? "all";
 		return (
-			<div style={{ "font-family": "system-ui, sans-serif", padding: "20px" }}>
+			<div
+				class="todos-view"
+				style={{ "font-family": "system-ui, sans-serif", padding: "20px" }}
+			>
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter()}</p>
 				<p>ENV_FILE: {envFile}</p>

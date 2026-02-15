@@ -8,6 +8,7 @@ import {
 
 const ENV_FILE_LABEL = "ENV_FILE";
 const ENV_FILE_VALUE = "from-env-test";
+const IMPORTED_CSS_BORDER = "border-top:7px solid rgb(15,118,110)";
 
 test.describe("chapplin build server", () => {
 	test("/health returns ok", async ({ request }) => {
@@ -59,7 +60,25 @@ test.describe("chapplin build server", () => {
 		const content = resource.contents.find(
 			(item) => "text" in item && typeof item.text === "string",
 		);
-		expect(content?.text).toContain(ENV_FILE_LABEL);
-		expect(content?.text).toContain(ENV_FILE_VALUE);
+		if (!content || !("text" in content) || typeof content.text !== "string") {
+			throw new Error("Resource content is not in expected format");
+		}
+		expect(content.text).toContain(ENV_FILE_LABEL);
+		expect(content.text).toContain(ENV_FILE_VALUE);
+	});
+
+	test("tool UI resource includes imported CSS", async ({ baseURL }) => {
+		if (!baseURL) {
+			throw new Error("baseURL is not defined");
+		}
+
+		const resource = await readResource(baseURL, "ui://get_todos/app.html");
+		const content = resource.contents.find(
+			(item) => "text" in item && typeof item.text === "string",
+		);
+		if (!content || !("text" in content) || typeof content.text !== "string") {
+			throw new Error("Resource content is not in expected format");
+		}
+		expect(content?.text).toContain(IMPORTED_CSS_BORDER);
 	});
 });
