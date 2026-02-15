@@ -1,15 +1,21 @@
+import { getToolUiResourceUri } from "@modelcontextprotocol/ext-apps/app-bridge";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import {
+	createDevIframePathFromToolPath,
+	parseToolPathFromDevToolUiResourceUri,
+} from "../../../src/vite/plugins/dev-app-path.js";
 import {
 	createPreviewHostBridge,
 	type PreviewHostBridge,
 } from "../mcp/host-bridge.js";
 
 interface ToolPreviewProps {
-	toolName: string;
+	tool: Tool;
 	onClose?: () => void;
 }
 
-export function ToolPreview({ toolName }: ToolPreviewProps) {
+export function ToolPreview({ tool }: ToolPreviewProps) {
 	const iframeRef = useRef<HTMLIFrameElement>(null);
 	const bridgeRef = useRef<PreviewHostBridge | null>(null);
 	const setupSequenceRef = useRef(0);
@@ -36,8 +42,22 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 		setError(null);
 
 		try {
+			const appResourceUri = getToolUiResourceUri(tool);
+			if (!appResourceUri) {
+				throw new Error(
+					`Tool '${tool.name}' does not expose an app resource URI`,
+				);
+			}
+			const toolPath = parseToolPathFromDevToolUiResourceUri(appResourceUri);
+			if (!toolPath) {
+				throw new Error(`Invalid app resource URI: ${appResourceUri}`);
+			}
+
 			await disposeBridge();
-			const bridge = await createPreviewHostBridge({ iframe, toolName });
+			const bridge = await createPreviewHostBridge({
+				iframe,
+				tool,
+			});
 
 			if (sequence !== setupSequenceRef.current) {
 				await bridge.dispose();
@@ -45,7 +65,7 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 			}
 
 			bridgeRef.current = bridge;
-			setIframeSrc(`/iframe/tools/${encodeURIComponent(toolName)}`);
+			setIframeSrc(createDevIframePathFromToolPath(toolPath));
 		} catch (e) {
 			if (sequence === setupSequenceRef.current) {
 				setError(e instanceof Error ? e.message : "Unknown error");
@@ -55,7 +75,7 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 				setIsConnecting(false);
 			}
 		}
-	}, [disposeBridge, toolName]);
+	}, [disposeBridge, tool]);
 
 	useEffect(() => {
 		setOutput(null);
@@ -137,7 +157,7 @@ export function ToolPreview({ toolName }: ToolPreviewProps) {
 					id="frame"
 					ref={iframeRef}
 					class="w-full h-[500px] border border-gray-800 bg-white rounded"
-					title={`Preview of ${toolName}`}
+					title={`Preview of ${tool.name}`}
 					src={iframeSrc}
 				/>
 			</div>

@@ -1,14 +1,15 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { styleText } from "node:util";
 import { Hono } from "hono";
-import { type Plugin, runnerImport, type ViteDevServer } from "vite";
+import type { Plugin, ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
 import { app as apiApp } from "./api-app.js";
 import { createAppEntryId, createAppHtml } from "./app-entry.js";
 import { getBuiltAppHtml } from "./client-build.js";
+import { parseToolPathFromDevIframePath } from "./dev-app-path.js";
 import {
 	type DevMcpServerInfo,
 	getDevMcpServerInfo,
@@ -53,12 +54,6 @@ function getPackageRoot(): string {
 const PACKAGE_ROOT = getPackageRoot();
 const DEV_UI_BUILD_DIR = join(PACKAGE_ROOT, "dist");
 
-type UnknownRecord = Record<string, unknown>;
-
-interface ToolExportLike {
-	name?: unknown;
-}
-
 function getPathname(url: string): string {
 	return url.split("?")[0] ?? url;
 }
@@ -68,38 +63,22 @@ function isPreviewRootRequest(url: string): boolean {
 	return pathname === PREVIEW_PATH || pathname === "/index.html";
 }
 
-function normalizeToolName(rawToolName: string): string {
-	const withoutQuery = rawToolName.split("?")[0] ?? rawToolName;
-	const decoded = decodeURIComponent(withoutQuery);
-	return decoded.replace(/\.(?:tsx?|jsx?)$/, "");
+function getToolPathFromCollectedFile(
+	toolPathWithoutExt: string,
+	file: string,
+) {
+	return `${toolPathWithoutExt}${extname(file)}`;
 }
 
-async function resolveToolFileByIdentifier(
-	toolIdentifier: string,
-	root: string,
-) {
+async function resolveToolFileByPath(toolPath: string) {
 	const files = await getCollectedFiles();
-	const direct = files.tools.find(
-		(candidate) => candidate.name === toolIdentifier,
+	return (
+		files.tools.find(
+			(candidate) =>
+				getToolPathFromCollectedFile(candidate.name, candidate.path) ===
+				toolPath,
+		) ?? null
 	);
-	if (direct) return direct;
-
-	for (const candidate of files.tools) {
-		try {
-			const imported = await runnerImport<UnknownRecord>(candidate.path, {
-				root,
-				configFile: false,
-			});
-			const tool = imported.module.tool as ToolExportLike | undefined;
-			if (typeof tool?.name === "string" && tool.name === toolIdentifier) {
-				return candidate;
-			}
-		} catch {
-			// ignore import errors during lookup and continue
-		}
-	}
-
-	return null;
 }
 
 /**
@@ -144,7 +123,6 @@ function setupPreviewUrlLogging(server: ViteDevServer) {
  * Plugin that provides dev server functionality
  */
 export function devServer(): Plugin[] {
-	let root: string;
 	let serverInfo: DevMcpServerInfo;
 
 	return [
@@ -160,8 +138,7 @@ export function devServer(): Plugin[] {
 			name: "chapplin:dev-server",
 			apply: "serve",
 			configResolved(config) {
-				root = config.root;
-				serverInfo = getDevMcpServerInfo(root);
+				serverInfo = getDevMcpServerInfo(config.root);
 			},
 			configureServer: {
 				order: "pre",
@@ -177,17 +154,13 @@ export function devServer(): Plugin[] {
 						}
 
 						// Serve tool UI directly (for iframe)
-						if (req.url.startsWith("/iframe/tools/")) {
-							const rawToolIdentifier = req.url.replace("/iframe/tools/", "");
-							const toolIdentifier = normalizeToolName(rawToolIdentifier);
-							const toolFile = await resolveToolFileByIdentifier(
-								toolIdentifier,
-								root,
-							);
+						const toolPath = parseToolPathFromDevIframePath(req.url);
+						if (toolPath) {
+							const toolFile = await resolveToolFileByPath(toolPath);
 
 							if (!toolFile) {
 								res.statusCode = 404;
-								res.end(`Tool not found: ${toolIdentifier}`);
+								res.end(`Tool not found: ${toolPath}`);
 								return;
 							}
 
@@ -203,9 +176,7 @@ export function devServer(): Plugin[] {
 
 							if (!script) {
 								res.statusCode = 404;
-								res.end(
-									`Tool entry could not be transformed: ${toolIdentifier}`,
-								);
+								res.end(`Tool entry could not be transformed: ${toolPath}`);
 								return;
 							}
 

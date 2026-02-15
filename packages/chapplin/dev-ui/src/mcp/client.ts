@@ -1,4 +1,3 @@
-import { getToolUiResourceUri } from "@modelcontextprotocol/ext-apps/app-bridge";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
@@ -18,12 +17,6 @@ export interface DevMcpConnection {
 	close: () => Promise<void>;
 }
 
-export interface DevToolListItem {
-	name: string;
-	description?: string;
-	hasApp: boolean;
-}
-
 export async function connectDevMcp(path = "/mcp"): Promise<DevMcpConnection> {
 	const transport = new StreamableHTTPClientTransport(resolveMcpEndpoint(path));
 	const client = new Client(HOST_CLIENT_INFO, {
@@ -41,31 +34,11 @@ export async function connectDevMcp(path = "/mcp"): Promise<DevMcpConnection> {
 	};
 }
 
-export async function getToolByName(
-	client: Client,
-	toolName: string,
-): Promise<Tool> {
-	const { tools } = await client.listTools();
-	const tool = tools.find((candidate) => candidate.name === toolName);
-
-	if (!tool) {
-		throw new Error(`Tool '${toolName}' was not found on MCP server`);
-	}
-
-	return tool;
-}
-
-export async function listDevTools(path = "/mcp"): Promise<DevToolListItem[]> {
+export async function listDevTools(path = "/mcp"): Promise<Tool[]> {
 	const connection = await connectDevMcp(path);
 	try {
 		const { tools } = await connection.client.listTools();
-		return tools
-			.map((tool) => ({
-				name: tool.name,
-				description: tool.description,
-				hasApp: Boolean(getToolUiResourceUri(tool)),
-			}))
-			.sort((a, b) => a.name.localeCompare(b.name));
+		return [...tools].sort((a, b) => a.name.localeCompare(b.name));
 	} finally {
 		await connection.close();
 	}

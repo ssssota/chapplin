@@ -1,10 +1,11 @@
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { useEffect, useState } from "preact/hooks";
 import { LocationProvider } from "preact-iso";
 import type { CollectedFile } from "../../src/vite/types.js";
 import { client } from "./api/client.js";
 import { PromptList } from "./components/PromptList.js";
 import { ResourceList } from "./components/ResourceList.js";
-import { ToolList, type ToolListItem } from "./components/ToolList.js";
+import { ToolList } from "./components/ToolList.js";
 import { ToolPreview } from "./components/ToolPreview.js";
 import { listDevTools } from "./mcp/client.js";
 
@@ -14,7 +15,7 @@ interface FilePanelsState {
 }
 
 export function App() {
-	const [tools, setTools] = useState<ToolListItem[]>([]);
+	const [tools, setTools] = useState<Tool[]>([]);
 	const [filePanels, setFilePanels] = useState<FilePanelsState>({
 		resources: [],
 		prompts: [],
@@ -23,7 +24,7 @@ export function App() {
 	const [activeTab, setActiveTab] = useState<"tools" | "resources" | "prompts">(
 		"tools",
 	);
-	const [previewTool, setPreviewTool] = useState<string | null>(null);
+	const [previewTool, setPreviewTool] = useState<Tool | null>(null);
 
 	useEffect(() => {
 		const load = async () => {
@@ -106,7 +107,7 @@ export function App() {
 							<h2 class="text-xl font-semibold mb-4">Tools</h2>
 							<ToolList
 								tools={tools}
-								onPreview={(toolName) => setPreviewTool(toolName)}
+								onPreview={(tool) => setPreviewTool(tool)}
 							/>
 						</div>
 
@@ -129,7 +130,7 @@ export function App() {
 						{previewTool && (
 							<div class="mt-5">
 								<h2 class="text-xl font-semibold mb-4">
-									Preview: {previewTool}
+									Preview: {previewTool.name}
 								</h2>
 								<button
 									type="button"
@@ -139,7 +140,7 @@ export function App() {
 									Close Preview
 								</button>
 								<ToolPreview
-									toolName={previewTool}
+									tool={previewTool}
 									onClose={() => setPreviewTool(null)}
 								/>
 							</div>
