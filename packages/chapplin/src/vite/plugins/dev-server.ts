@@ -7,8 +7,7 @@ import { Hono } from "hono";
 import type { Plugin, ViteDevServer } from "vite";
 import { devApi } from "vite-plugin-dev-api";
 import { app as apiApp } from "./api-app.js";
-import { createAppEntryId, createAppHtml } from "./app-entry.js";
-import { getBuiltAppHtml } from "./client-build.js";
+import { createAppHtml, createDevAppEntrySrc } from "./app-entry.js";
 import { parseToolPathFromDevIframePath } from "./dev-app-path.js";
 import {
 	type DevMcpServerInfo,
@@ -164,24 +163,14 @@ export function devServer(): Plugin[] {
 								return;
 							}
 
-							const builtHtml = await getBuiltAppHtml(toolFile.name);
-							if (builtHtml) {
-								res.setHeader("content-type", "text/html");
-								res.end(builtHtml);
-								return;
-							}
-
-							const entryId = createAppEntryId(toolFile.path);
-							const script = await server.transformRequest(entryId);
-
-							if (!script) {
-								res.statusCode = 404;
-								res.end(`Tool entry could not be transformed: ${toolPath}`);
-								return;
-							}
-
+							const html = await server.transformIndexHtml(
+								req.url,
+								createAppHtml({
+									entrySrc: createDevAppEntrySrc(toolFile.path),
+								}),
+							);
 							res.setHeader("content-type", "text/html");
-							res.end(createAppHtml({ script: script.code }));
+							res.end(html);
 							return;
 						}
 
