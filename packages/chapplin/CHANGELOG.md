@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.1.3
+
+### Patch Changes
+
+- [#91](https://github.com/ssssota/chapplin/pull/91) [`2b9f114`](https://github.com/ssssota/chapplin/commit/2b9f11488807c597512f9d2f1c48df5f5033fcfe) Thanks [@ssssota](https://github.com/ssssota)! - Support css imports
+
 ## 1.1.2
 
 ### Patch Changes
