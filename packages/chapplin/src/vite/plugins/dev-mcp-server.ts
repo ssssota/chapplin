@@ -7,9 +7,12 @@ import {
 	type ResourceMetadata,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { runnerImport, type ViteDevServer } from "vite";
-import { getBuiltAppHtml } from "./client-build.js";
-import { createDevToolUiResourceUri } from "./dev-app-path.js";
+import type { ViteDevServer } from "vite";
+import { createAppHtml, createDevAppEntrySrc } from "./app-entry.js";
+import {
+	createDevIframePathFromToolPath,
+	createDevToolUiResourceUri,
+} from "./dev-app-path.js";
 import { getCollectedFiles } from "./file-collector.js";
 
 const MCP_PATH = "/mcp";
@@ -106,33 +109,29 @@ function getToolPathFromCollectedFile(
 
 async function registerCollectedModules(
 	mcp: McpServer,
-	root: string,
+	viteServer: ViteDevServer,
 ): Promise<void> {
 	const files = await getCollectedFiles();
 
 	for (const toolFile of files.tools) {
-		const imported = await runnerImport<UnknownRecord>(toolFile.path, {
-			root,
-			configFile: false,
-		});
-		const tool = readExport<ToolDefinition>(
-			imported.module,
-			"tool",
+		const imported: UnknownRecord = await viteServer.ssrLoadModule(
 			toolFile.path,
 		);
+		const tool = readExport<ToolDefinition>(imported, "tool", toolFile.path);
 
 		if (toolFile.hasApp) {
-			const app = readExport<AppDefinition>(
-				imported.module,
-				"app",
-				toolFile.path,
-			);
+			const app = readExport<AppDefinition>(imported, "app", toolFile.path);
 			const toolPath = getToolPathFromCollectedFile(
 				toolFile.name,
 				toolFile.path,
 			);
 			const uri = createDevToolUiResourceUri(toolPath);
-			const html = (await getBuiltAppHtml(toolFile.name)) ?? "";
+			const html = await viteServer.transformIndexHtml(
+				createDevIframePathFromToolPath(toolPath),
+				createAppHtml({
+					entrySrc: createDevAppEntrySrc(toolFile.path),
+				}),
+			);
 			const toolMeta =
 				tool.config._meta && typeof tool.config._meta === "object"
 					? (tool.config._meta as UnknownRecord)
@@ -178,12 +177,11 @@ async function registerCollectedModules(
 	}
 
 	for (const resourceFile of files.resources) {
-		const imported = await runnerImport<UnknownRecord>(resourceFile.path, {
-			root,
-			configFile: false,
-		});
+		const imported: UnknownRecord = await viteServer.ssrLoadModule(
+			resourceFile.path,
+		);
 		const resource = readExport<ResourceDefinition>(
-			imported.module,
+			imported,
 			"resource",
 			resourceFile.path,
 		);
@@ -197,12 +195,11 @@ async function registerCollectedModules(
 	}
 
 	for (const promptFile of files.prompts) {
-		const imported = await runnerImport<UnknownRecord>(promptFile.path, {
-			root,
-			configFile: false,
-		});
+		const imported: UnknownRecord = await viteServer.ssrLoadModule(
+			promptFile.path,
+		);
 		const prompt = readExport<PromptDefinition>(
-			imported.module,
+			imported,
 			"prompt",
 			promptFile.path,
 		);
@@ -227,7 +224,7 @@ export async function handleDevMcpRequest(
 			name: serverInfo.name,
 			version: serverInfo.version,
 		});
-		await registerCollectedModules(mcp, viteServer.config.root);
+		await registerCollectedModules(mcp, viteServer);
 
 		const transport = new StreamableHTTPServerTransport({
 			sessionIdGenerator: undefined,

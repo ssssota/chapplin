@@ -4,6 +4,7 @@ import type { ResolvedOptions, Target } from "../types.js";
 const APP_ENTRY_ID = "virtual:chapplin-app-entry";
 const APP_ENTRY_HTML_ID = "virtual:chapplin-app-entry.html";
 const SCRIPT_PLACEHOLDER = "<!--CHAPPLIN_APP_SCRIPT-->";
+const VITE_DEV_ID_PREFIX = "/@id/";
 
 const APP_HTML_TEMPLATE = `<!doctype html>
 <html>
@@ -64,6 +65,10 @@ export function createAppEntryId(file: string): string {
 	const params = new URLSearchParams();
 	params.set("file", file);
 	return `${APP_ENTRY_ID}?${params.toString()}`;
+}
+
+export function createDevAppEntrySrc(file: string): string {
+	return `${VITE_DEV_ID_PREFIX}${createAppEntryId(file)}`;
 }
 
 export function createAppEntryHtmlId(file: string): string {
