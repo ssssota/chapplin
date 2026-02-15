@@ -13,7 +13,7 @@ import {
 	CallToolResultSchema,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { connectDevMcp, getToolByName } from "./client.js";
+import { connectDevMcp } from "./client.js";
 
 type ToolInput = Record<string, unknown>;
 
@@ -24,7 +24,7 @@ export interface PreviewHostBridge {
 
 interface CreatePreviewHostBridgeOptions {
 	iframe: HTMLIFrameElement;
-	toolName: string;
+	tool: Tool;
 }
 
 const HOST_INFO = {
@@ -114,7 +114,7 @@ function normalizeCallToolResult(result: CallToolResponse): CallToolResult {
 
 export async function createPreviewHostBridge({
 	iframe,
-	toolName,
+	tool,
 }: CreatePreviewHostBridgeOptions): Promise<PreviewHostBridge> {
 	const iframeWindow = iframe.contentWindow;
 	if (!iframeWindow) {
@@ -122,7 +122,6 @@ export async function createPreviewHostBridge({
 	}
 
 	const mcp = await connectDevMcp();
-	const tool = await getToolByName(mcp.client, toolName);
 	await applyIframePermissionsFromResourceMeta(iframe, mcp.client, tool);
 
 	const bridge = new AppBridge(
@@ -181,7 +180,7 @@ export async function createPreviewHostBridge({
 			try {
 				const response = await mcp.client.callTool(
 					{
-						name: toolName,
+						name: tool.name,
 						arguments: arguments_,
 					},
 					CallToolResultSchema,

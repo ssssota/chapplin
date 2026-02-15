@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { join } from "node:path";
+import { extname, join } from "node:path";
 import { RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps";
 import {
 	McpServer,
@@ -9,6 +9,7 @@ import {
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { runnerImport, type ViteDevServer } from "vite";
 import { getBuiltAppHtml } from "./client-build.js";
+import { createDevToolUiResourceUri } from "./dev-app-path.js";
 import { getCollectedFiles } from "./file-collector.js";
 
 const MCP_PATH = "/mcp";
@@ -96,6 +97,13 @@ function readExport<T>(
 	return value as T;
 }
 
+function getToolPathFromCollectedFile(
+	toolPathWithoutExt: string,
+	file: string,
+): string {
+	return `${toolPathWithoutExt}${extname(file)}`;
+}
+
 async function registerCollectedModules(
 	mcp: McpServer,
 	root: string,
@@ -119,7 +127,11 @@ async function registerCollectedModules(
 				"app",
 				toolFile.path,
 			);
-			const uri = `ui://${tool.name}/app.html`;
+			const toolPath = getToolPathFromCollectedFile(
+				toolFile.name,
+				toolFile.path,
+			);
+			const uri = createDevToolUiResourceUri(toolPath);
 			const html = (await getBuiltAppHtml(toolFile.name)) ?? "";
 			const toolMeta =
 				tool.config._meta && typeof tool.config._meta === "object"

@@ -43,16 +43,18 @@ test.describe("chapplin dev server", () => {
 		}
 	});
 
-	test("/iframe/tools/get_todos returns HTML", async ({ request }) => {
-		const response = await request.get("/iframe/tools/get_todos");
+	test("/iframe/tools/todos.tsx/app.html returns HTML", async ({ request }) => {
+		const response = await request.get("/iframe/tools/todos.tsx/app.html");
 		expect(response.ok()).toBeTruthy();
 
 		const html = await response.text();
 		expect(html).toContain('<div id="root"></div>');
 	});
 
-	test("/iframe/tools/get_todos app reads .env.test", async ({ page }) => {
-		await page.goto("/iframe/tools/get_todos");
+	test("/iframe/tools/todos.tsx/app.html app reads .env.test", async ({
+		page,
+	}) => {
+		await page.goto("/iframe/tools/todos.tsx/app.html");
 		await expect(page.getByText(ENV_FILE_MARKER)).toBeVisible();
 	});
 
