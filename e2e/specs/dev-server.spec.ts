@@ -58,6 +58,22 @@ test.describe("chapplin dev server", () => {
 		await expect(page.getByText(ENV_FILE_MARKER)).toBeVisible();
 	});
 
+	test("/iframe/tools/todos.tsx/app.html applies imported CSS", async ({
+		page,
+	}) => {
+		await page.goto("/iframe/tools/todos.tsx/app.html");
+		const root = page.locator(".todos-view");
+		await expect(root).toBeVisible();
+		await expect
+			.poll(async () =>
+				root.evaluate((el) => {
+					const style = window.getComputedStyle(el);
+					return `${style.borderTopWidth}|${style.borderTopStyle}|${style.borderTopColor}`;
+				}),
+			)
+			.toBe("7px|solid|rgb(15, 118, 110)");
+	});
+
 	test("dev-ui preview renders todo app", async ({ page }) => {
 		await page.goto("/");
 
