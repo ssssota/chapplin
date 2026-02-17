@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.1.4
+
+### Patch Changes
+
+- [#96](https://github.com/ssssota/chapplin/pull/96) [`11fe7b0`](https://github.com/ssssota/chapplin/commit/11fe7b088f4509430ee18c57a6ed348d226592b6) Thanks [@ssssota](https://github.com/ssssota)! - Fix client entrypoint
+
 ## 1.1.3
 
 ### Patch Changes
