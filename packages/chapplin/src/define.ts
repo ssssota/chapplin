@@ -48,9 +48,9 @@ import type {
  * ```
  */
 export function defineTool<
-	const TName extends string,
-	const TInput extends ZodRawShape,
-	const TOutput extends ZodRawShape,
+	TName extends string,
+	TInput extends ZodRawShape,
+	TOutput extends ZodRawShape,
 	TMeta extends Record<string, unknown> = Record<string, unknown>,
 >(options: {
 	name: TName;
