@@ -20,7 +20,7 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@clack/prompts": "1.0.0",
+		"@clack/prompts": "1.0.1",
 		"@types/node": "catalog:",
 		"tsdown": "^0.20.3",
 		"typescript": "catalog:"
