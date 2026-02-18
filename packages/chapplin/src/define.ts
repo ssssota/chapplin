@@ -54,13 +54,7 @@ export function defineTool<
 	TMeta extends Record<string, unknown> = Record<string, unknown>,
 >(options: {
 	name: TName;
-	config: {
-		title?: string;
-		description: string;
-		inputSchema: TInput;
-		outputSchema: TOutput;
-		annotations?: ToolConfig["annotations"];
-	};
+	config: ToolConfig<TInput, TOutput>;
 	handler: (
 		args: InferShapeOutput<TInput>,
 		extra: ToolHandlerExtra,
@@ -72,13 +66,7 @@ export function defineTool<
 	>;
 }): {
 	name: TName;
-	config: {
-		title?: string;
-		description: string;
-		inputSchema: TInput;
-		outputSchema: TOutput;
-		annotations?: ToolConfig["annotations"];
-	};
+	config: ToolConfig<TInput, TOutput>;
 	handler: ToolHandler<TInput, TOutput, TMeta>;
 } {
 	return options;

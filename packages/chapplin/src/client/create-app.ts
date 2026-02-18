@@ -4,6 +4,7 @@ import {
 } from "@modelcontextprotocol/ext-apps";
 import type { AppDefinition } from "../define.js";
 import type { AppProps } from "../types.js";
+import { createOpenAiApp } from "./openai-app.js";
 
 export type App = Omit<ExtApp, `on${string}`>;
 
@@ -18,13 +19,40 @@ export function createApp(config: AppDefinition["config"]): {
 	subscribeHostContext: (
 		handler: (data: AppProps["hostContext"]) => void,
 	) => () => void;
-	syncHostContext: (context: AppProps["hostContext"]) => void;
 } {
-	const app = new ExtApp(config.appInfo, config.capabilities, config.options);
-
 	const toolInputSubscriber = createSubscriber<AppProps["input"]>();
 	const toolResultSubscriber = createSubscriber<AppProps["output"]>();
 	const hostContextSubscriber = createSubscriber<AppProps["hostContext"]>();
+
+	// Support OpenAI Apps SDK
+	if (typeof window !== "undefined" && typeof window.openai !== "undefined") {
+		const app = createOpenAiApp(
+			window.openai,
+			() => {
+				hostContextSubscriber.emit(app.getHostContext());
+				toolInputSubscriber.emit({ arguments: window.openai.toolInput });
+				toolResultSubscriber.emit({
+					content: [],
+					structuredContent: window.openai.toolOutput ?? undefined,
+					_meta: window.openai.toolResponseMetadata ?? undefined,
+				});
+			},
+			() => {
+				toolInputSubscriber.dispose();
+				toolResultSubscriber.dispose();
+				hostContextSubscriber.dispose();
+			},
+		);
+		return {
+			app,
+			subscribeHostContext: hostContextSubscriber.subscribe,
+			subscribeToolInput: toolInputSubscriber.subscribe,
+			subscribeToolResult: toolResultSubscriber.subscribe,
+		};
+	}
+
+	// MCP Apps Client
+	const app = new ExtApp(config.appInfo, config.capabilities, config.options);
 
 	app.ontoolinput = toolInputSubscriber.emit;
 	app.ontoolresult = toolResultSubscriber.emit;
@@ -36,6 +64,11 @@ export function createApp(config: AppDefinition["config"]): {
 	};
 
 	app.onhostcontextchanged = syncHostContext;
+	app.onclose = () => {
+		toolInputSubscriber.dispose();
+		toolResultSubscriber.dispose();
+		hostContextSubscriber.dispose();
+	};
 
 	app
 		.connect()
@@ -53,13 +86,13 @@ export function createApp(config: AppDefinition["config"]): {
 		subscribeToolInput: toolInputSubscriber.subscribe,
 		subscribeToolResult: toolResultSubscriber.subscribe,
 		subscribeHostContext: hostContextSubscriber.subscribe,
-		syncHostContext,
 	};
 }
 
 function createSubscriber<T>(): {
 	subscribe: (handler: (data: T) => void) => () => void;
 	emit: (data: T) => void;
+	dispose: () => void;
 } {
 	const handlers = new Set<(data: T) => void>();
 
@@ -74,6 +107,9 @@ function createSubscriber<T>(): {
 			for (const handler of handlers) {
 				handler(data);
 			}
+		},
+		dispose: () => {
+			handlers.clear();
 		},
 	};
 }

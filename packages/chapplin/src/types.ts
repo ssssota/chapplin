@@ -10,6 +10,7 @@ import type {
 	ServerRequest,
 	ToolAnnotations,
 } from "@modelcontextprotocol/sdk/types.js";
+import type { ToolDescriptorMeta } from "./openai";
 
 // =============================================================================
 // Zod Schema Types
@@ -55,11 +56,13 @@ export interface ToolConfig<
 	/** Description for LLM (required) */
 	description: string;
 	/** Input schema using Zod */
-	inputSchema?: TInput;
+	inputSchema: TInput;
 	/** Output schema using Zod (optional) */
-	outputSchema?: TOutput;
+	outputSchema: TOutput;
 	/** Tool annotations */
 	annotations?: ToolAnnotations;
+	/** Metadata */
+	_meta?: Record<string, unknown> & ToolDescriptorMeta;
 }
 
 /** Extra context passed to tool handler */
