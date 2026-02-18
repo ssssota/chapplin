@@ -56,9 +56,9 @@ export interface ToolConfig<
 	/** Description for LLM (required) */
 	description: string;
 	/** Input schema using Zod */
-	inputSchema?: TInput;
+	inputSchema: TInput;
 	/** Output schema using Zod (optional) */
-	outputSchema?: TOutput;
+	outputSchema: TOutput;
 	/** Tool annotations */
 	annotations?: ToolAnnotations;
 	/** Metadata */
