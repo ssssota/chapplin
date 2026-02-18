@@ -28,14 +28,13 @@ export function createApp(config: AppDefinition["config"]): {
 	if (typeof window !== "undefined" && typeof window.openai !== "undefined") {
 		const app = createOpenAiApp(
 			window.openai,
-			(ev) => {
-				const globals = ev.detail.globals;
+			() => {
 				hostContextSubscriber.emit(app.getHostContext());
-				toolInputSubscriber.emit({ arguments: globals.toolInput });
+				toolInputSubscriber.emit({ arguments: window.openai.toolInput });
 				toolResultSubscriber.emit({
 					content: [],
-					structuredContent: globals.toolOutput ?? undefined,
-					_meta: globals.toolResponseMetadata ?? undefined,
+					structuredContent: window.openai.toolOutput ?? undefined,
+					_meta: window.openai.toolResponseMetadata ?? undefined,
 				});
 			},
 			() => {
