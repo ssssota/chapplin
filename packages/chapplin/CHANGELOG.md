@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.2.0
+
+### Minor Changes
+
+- [#99](https://github.com/ssssota/chapplin/pull/99) [`2524ed9`](https://github.com/ssssota/chapplin/commit/2524ed9522aea776d556321f50afaa768b8aade5) Thanks [@ssssota](https://github.com/ssssota)! - Support OpenAI Apps SDK
+
 ## 1.1.4
 
 ### Patch Changes
