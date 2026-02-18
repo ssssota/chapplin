@@ -4,7 +4,7 @@
 
 export const SECURITY_SCHEMES = "securitySchemes";
 export const OUTPUT_TEMPLATE = "openai/outputTemplate";
-export const WIDGET_ACCESSIBILE = "openai/widgetAccessible";
+export const WIDGET_ACCESSIBLE = "openai/widgetAccessible";
 export const TOOL_INVOCATION_INVOKING = "openai/toolInvocation/invoking";
 export const TOOL_INVOCATION_INVOKED = "openai/toolInvocation/invoked";
 /**
@@ -18,7 +18,7 @@ export type ToolDescriptorMeta = {
 	 * Allow component→tool calls through the client bridge
 	 * @default false
 	 */
-	[WIDGET_ACCESSIBILE]?: boolean;
+	[WIDGET_ACCESSIBLE]?: boolean;
 	/**
 	 * Short status text while the tool runs
 	 * @maxLength 64

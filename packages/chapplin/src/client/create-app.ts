@@ -109,10 +109,7 @@ export function createApp(config: AppDefinition["config"]): {
 					throw notCompat("request");
 				},
 				requestDisplayMode(params, _options) {
-					window.openai.requestDisplayMode({ mode: params.mode });
-					return new Promise((resolve) => {
-						setTimeout(() => resolve({ mode: window.openai.displayMode }), 100);
-					});
+					return window.openai.requestDisplayMode(params);
 				},
 				sendLog(_params) {
 					throw notCompat("sendLog");
