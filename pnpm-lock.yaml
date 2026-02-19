@@ -30,9 +30,6 @@ catalogs:
     hono:
       specifier: ^4.11.9
       version: 4.11.9
-    preact:
-      specifier: ^10.28.3
-      version: 10.28.3
     react:
       specifier: 19.2.4
       version: 19.2.4
@@ -143,7 +140,7 @@ importers:
         version: 4.11.9
       preact:
         specifier: 'catalog:'
-        version: 10.28.3
+        version: 10.28.4
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -156,7 +153,7 @@ importers:
         version: 1.19.9(hono@4.11.9)
       '@preact/preset-vite':
         specifier: ^2.9.0
-        version: 2.10.3(@babel/core@7.29.0)(preact@10.28.3)(rollup@4.57.1)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))
+        version: 2.10.3(@babel/core@7.29.0)(preact@10.28.4)(rollup@4.57.1)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))
       chapplin:
         specifier: workspace:*
         version: link:../../../packages/chapplin
@@ -399,7 +396,7 @@ importers:
         version: 1.26.0(zod@4.3.6)
       '@preact/preset-vite':
         specifier: ^2.10.3
-        version: 2.10.3(@babel/core@7.29.0)(preact@10.28.3)(rollup@4.57.1)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))
+        version: 2.10.3(@babel/core@7.29.0)(preact@10.28.4)(rollup@4.57.1)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.13
@@ -417,10 +414,10 @@ importers:
         version: 4.11.9
       preact:
         specifier: 'catalog:'
-        version: 10.28.3
+        version: 10.28.4
       preact-iso:
         specifier: ^2.11.1
-        version: 2.11.1(preact-render-to-string@6.6.5(preact@10.28.3))(preact@10.28.3)
+        version: 2.11.1(preact-render-to-string@6.6.5(preact@10.28.4))(preact@10.28.4)
       react:
         specifier: 'catalog:'
         version: 19.2.4
@@ -3534,8 +3531,8 @@ packages:
     peerDependencies:
       preact: '>=10 || >= 11.0.0-0'
 
-  preact@10.28.3:
-    resolution: {integrity: sha512-tCmoRkPQLpBeWzpmbhryairGnhW9tKV6c6gr/w+RhoRoKEJwsjzipwp//1oCpGPOchvSLaAPlpcJi9MwMmoPyA==}
+  preact@10.28.4:
+    resolution: {integrity: sha512-uKFfOHWuSNpRFVTnljsCluEFq57OKT+0QdOiQo8XWnQ/pSvg7OpX5eNOejELXJMWy+BwM2nobz0FkvzmnpCNsQ==}
 
   prettier@2.8.8:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
@@ -5554,12 +5551,12 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@preact/preset-vite@2.10.3(@babel/core@7.29.0)(preact@10.28.3)(rollup@4.57.1)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))':
+  '@preact/preset-vite@2.10.3(@babel/core@7.29.0)(preact@10.28.4)(rollup@4.57.1)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx': 7.28.6(@babel/core@7.29.0)
       '@babel/plugin-transform-react-jsx-development': 7.27.1(@babel/core@7.29.0)
-      '@prefresh/vite': 2.4.11(preact@10.28.3)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))
+      '@prefresh/vite': 2.4.11(preact@10.28.4)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))
       '@rollup/pluginutils': 5.3.0(rollup@4.57.1)
       babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.29.0)
       debug: 4.4.3
@@ -5573,20 +5570,20 @@ snapshots:
 
   '@prefresh/babel-plugin@0.5.2': {}
 
-  '@prefresh/core@1.5.9(preact@10.28.3)':
+  '@prefresh/core@1.5.9(preact@10.28.4)':
     dependencies:
-      preact: 10.28.3
+      preact: 10.28.4
 
   '@prefresh/utils@1.2.1': {}
 
-  '@prefresh/vite@2.4.11(preact@10.28.3)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))':
+  '@prefresh/vite@2.4.11(preact@10.28.4)(vite@7.3.1(@types/node@24.10.13)(jiti@2.6.1))':
     dependencies:
       '@babel/core': 7.29.0
       '@prefresh/babel-plugin': 0.5.2
-      '@prefresh/core': 1.5.9(preact@10.28.3)
+      '@prefresh/core': 1.5.9(preact@10.28.4)
       '@prefresh/utils': 1.2.1
       '@rollup/pluginutils': 4.2.1
-      preact: 10.28.3
+      preact: 10.28.4
       vite: 7.3.1(@types/node@24.10.13)(jiti@2.6.1)
     transitivePeerDependencies:
       - supports-color
@@ -8053,16 +8050,16 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  preact-iso@2.11.1(preact-render-to-string@6.6.5(preact@10.28.3))(preact@10.28.3):
+  preact-iso@2.11.1(preact-render-to-string@6.6.5(preact@10.28.4))(preact@10.28.4):
     dependencies:
-      preact: 10.28.3
-      preact-render-to-string: 6.6.5(preact@10.28.3)
+      preact: 10.28.4
+      preact-render-to-string: 6.6.5(preact@10.28.4)
 
-  preact-render-to-string@6.6.5(preact@10.28.3):
+  preact-render-to-string@6.6.5(preact@10.28.4):
     dependencies:
-      preact: 10.28.3
+      preact: 10.28.4
 
-  preact@10.28.3: {}
+  preact@10.28.4: {}
 
   prettier@2.8.8: {}
 
