@@ -187,9 +187,9 @@ test.describe("chapplin dev server", () => {
 		await frame.getByRole("button", { name: "Open docs" }).click();
 		const popup = await popupPromise;
 
-		await expect.poll(() => popup.url()).toBe(
-			"https://example.com/chapplin-useapp-e2e",
-		);
+		await expect
+			.poll(() => popup.url())
+			.toBe("https://example.com/chapplin-useapp-e2e");
 		await popup.close();
 	});
 });
