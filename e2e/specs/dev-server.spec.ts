@@ -172,4 +172,24 @@ test.describe("chapplin dev server", () => {
 		await expect(page.getByRole("heading", { name: "Prompts" })).toBeVisible();
 		await expect(page.getByText("code-review")).toBeVisible();
 	});
+
+	test("dev-ui preview can call openLink via useApp", async ({ page }) => {
+		await page.goto("/");
+
+		const toolItem = page.locator("li", { hasText: "get_todos" });
+		await toolItem.getByRole("button", { name: "[Preview]" }).click();
+
+		const connecting = page.getByText("Connecting MCP host bridge...");
+		await expect(connecting).toBeHidden();
+
+		const frame = page.frameLocator("#frame");
+		const popupPromise = page.waitForEvent("popup");
+		await frame.getByRole("button", { name: "Open docs" }).click();
+		const popup = await popupPromise;
+
+		await expect.poll(() => popup.url()).toBe(
+			"https://example.com/chapplin-useapp-e2e",
+		);
+		await popup.close();
+	});
 });

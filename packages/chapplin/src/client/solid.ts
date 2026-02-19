@@ -53,17 +53,19 @@ export function init(appDef: AppDefinition) {
 		const App = appDef.ui as Component<AppProps>;
 		return createComponent(Context.Provider, {
 			value: appController.app,
-			children: createComponent(App, {
-				get input() {
-					return input();
-				},
-				get output() {
-					return output();
-				},
-				get hostContext() {
-					return hostContext();
-				},
-			}),
+			get children() {
+				return createComponent(App, {
+					get input() {
+						return input();
+					},
+					get output() {
+						return output();
+					},
+					get hostContext() {
+						return hostContext();
+					},
+				});
+			},
 		});
 	}, root);
 }
