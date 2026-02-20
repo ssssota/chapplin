@@ -1,4 +1,5 @@
 import { defineApp, defineTool } from "chapplin";
+import { useApp } from "chapplin/react";
 import z from "zod";
 import "./todos.css";
 
@@ -62,9 +63,12 @@ export const app = defineApp<typeof tool>({
 		prefersBorder: true,
 	},
 	ui: (props) => {
+		const app = useApp();
 		const input = props.input?.arguments;
 		const output = props.output?.structuredContent;
 		const filter = input?.filter ?? "all";
+		const linkUrl = "https://example.com/chapplin-useapp-e2e";
+		const onClick = () => app.openLink({ url: linkUrl });
 		return (
 			<div
 				className="todos-view"
@@ -73,6 +77,9 @@ export const app = defineApp<typeof tool>({
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter}</p>
 				<p>ENV_FILE: {envFile}</p>
+				<button type="button" onClick={onClick}>
+					Open docs
+				</button>
 				{output ? (
 					<>
 						<p>合計: {output.total}件</p>

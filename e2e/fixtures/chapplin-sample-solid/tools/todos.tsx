@@ -1,4 +1,5 @@
 import { defineApp, defineTool } from "chapplin";
+import { useApp } from "chapplin/solid";
 import { For, Show } from "solid-js";
 import z from "zod";
 import "./todos.css";
@@ -63,8 +64,11 @@ export const app = defineApp<typeof tool>({
 		prefersBorder: true,
 	},
 	ui: (props) => {
+		const app = useApp();
 		const output = () => props.output?.structuredContent;
 		const filter = () => props.input?.arguments?.filter ?? "all";
+		const linkUrl = "https://example.com/chapplin-useapp-e2e";
+		const onClick = () => app.openLink({ url: linkUrl });
 		return (
 			<div
 				class="todos-view"
@@ -73,6 +77,9 @@ export const app = defineApp<typeof tool>({
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter()}</p>
 				<p>ENV_FILE: {envFile}</p>
+				<button type="button" onClick={onClick}>
+					Open docs
+				</button>
 				<Show when={output()} fallback={<p>読み込み中...</p>}>
 					<p>合計: {output()?.total}件</p>
 					<ul>
