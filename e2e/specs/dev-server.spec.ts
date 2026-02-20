@@ -77,12 +77,12 @@ test.describe("chapplin dev server", () => {
 	test("dev-ui preview renders todo app", async ({ page }) => {
 		await page.goto("/");
 
-		const toolItem = page.locator("li", { hasText: "get_todos" });
-		await toolItem.getByRole("button", { name: "[Preview]" }).click();
+		await page.getByTestId("tool-item-get_todos").click();
 
-		await expect(
-			page.getByRole("heading", { name: /Preview: get_todos/i }),
-		).toBeVisible();
+		await expect(page.getByTestId("preview-tool-name")).toBeVisible();
+		await expect(page.getByTestId("preview-tool-name")).toContainText(
+			"get_todos",
+		);
 
 		const connecting = page.getByText("Connecting MCP host bridge...");
 		await expect(connecting).toBeHidden();
@@ -90,10 +90,9 @@ test.describe("chapplin dev server", () => {
 		const frame = page.frameLocator("#frame");
 		await expect(frame.getByText("読み込み中...")).toBeVisible();
 
-		const input = page.locator("#input");
-		await input.fill(JSON.stringify({ filter: "all" }, null, 2));
+		await page.getByTestId("tool-input-filter").selectOption('"all"');
 
-		await page.getByRole("button", { name: "Run" }).click();
+		await page.getByTestId("preview-run").click();
 
 		const output = page.locator("#output");
 		await expect
@@ -106,20 +105,26 @@ test.describe("chapplin dev server", () => {
 		await expect(frame.getByText(ENV_FILE_MARKER)).toBeVisible();
 	});
 
-	test("dev-ui shows preview only for UI tools", async ({ page }) => {
+	test("dev-ui marks UI tools and supports non-app tool execution", async ({
+		page,
+	}) => {
 		await page.goto("/");
 
-		const todosItem = page.locator("li", { hasText: "get_todos" });
+		const todosItem = page.getByTestId("tool-item-get_todos");
 		await expect(todosItem.getByText("App")).toBeVisible();
-		await expect(
-			todosItem.getByRole("button", { name: "[Preview]" }),
-		).toBeVisible();
 
-		const weatherItem = page.locator("li", { hasText: "get_weather" });
+		const weatherItem = page.getByTestId("tool-item-get_weather");
 		await expect(weatherItem.getByText("App")).toHaveCount(0);
-		await expect(
-			weatherItem.getByRole("button", { name: "[Preview]" }),
-		).toHaveCount(0);
+
+		await weatherItem.click();
+		await expect(page.getByTestId("preview-no-app")).toBeVisible();
+
+		await page.getByTestId("tool-input-city").fill("tokyo");
+		await page.getByTestId("tool-input-unit").selectOption('"celsius"');
+		await page.getByTestId("preview-run").click();
+		await expect
+			.poll(async () => page.locator("#output").inputValue())
+			.toMatch(/temperature/);
 	});
 
 	test("dev-ui preview handles invalid input and recovers", async ({
@@ -127,48 +132,42 @@ test.describe("chapplin dev server", () => {
 	}) => {
 		await page.goto("/");
 
-		const toolItem = page.locator("li", { hasText: "get_todos" });
-		await toolItem.getByRole("button", { name: "[Preview]" }).click();
+		await page.getByTestId("tool-item-get_todos").click();
 
-		await expect(
-			page.getByRole("heading", { name: /Preview: get_todos/i }),
-		).toBeVisible();
+		await expect(page.getByTestId("preview-tool-name")).toBeVisible();
 
 		const connecting = page.getByText("Connecting MCP host bridge...");
 		await expect(connecting).toBeHidden();
 
-		const input = page.locator("#input");
-		await input.fill("[]");
+		await page.getByTestId("tool-item-get_weather").click();
+		await page.getByTestId("tool-input-city").fill("");
 
-		await page.getByRole("button", { name: "Run" }).click();
+		await page.getByTestId("preview-run").click();
 
-		await expect(page.getByText("Input must be a JSON object")).toBeVisible();
+		await expect(page.getByTestId("preview-error")).toContainText(
+			"'city' is required",
+		);
 		await expect(page.locator("#output")).toHaveValue("");
 
-		await input.fill(JSON.stringify({ filter: "all" }, null, 2));
-		await page.getByRole("button", { name: "Run" }).click();
+		await page.getByTestId("tool-input-city").fill("tokyo");
+		await page.getByTestId("tool-input-unit").selectOption('"celsius"');
+		await page.getByTestId("preview-run").click();
 
-		await expect(page.getByText("Input must be a JSON object")).toHaveCount(0);
+		await expect(page.getByTestId("preview-error")).toHaveCount(0);
 		await expect
 			.poll(async () => page.locator("#output").inputValue())
-			.toMatch(/structuredContent/);
-
-		const frame = page.frameLocator("#frame");
-		await expect(frame.getByText("TODO リスト")).toBeVisible();
+			.toMatch(/temperature/);
 	});
 
 	test("dev-ui displays resources and prompts", async ({ page }) => {
 		await page.goto("/");
 
 		await expect(page.getByRole("heading", { name: "Tools" })).toBeVisible();
-
-		await page.getByRole("button", { name: "Resources" }).click();
 		await expect(
 			page.getByRole("heading", { name: "Resources" }),
 		).toBeVisible();
 		await expect(page.getByText("config")).toBeVisible();
 
-		await page.getByRole("button", { name: "Prompts" }).click();
 		await expect(page.getByRole("heading", { name: "Prompts" })).toBeVisible();
 		await expect(page.getByText("code-review")).toBeVisible();
 	});
@@ -176,8 +175,7 @@ test.describe("chapplin dev server", () => {
 	test("dev-ui preview can call openLink via useApp", async ({ page }) => {
 		await page.goto("/");
 
-		const toolItem = page.locator("li", { hasText: "get_todos" });
-		await toolItem.getByRole("button", { name: "[Preview]" }).click();
+		await page.getByTestId("tool-item-get_todos").click();
 
 		const connecting = page.getByText("Connecting MCP host bridge...");
 		await expect(connecting).toBeHidden();
@@ -191,5 +189,115 @@ test.describe("chapplin dev server", () => {
 			.poll(() => popup.url())
 			.toBe("https://example.com/chapplin-useapp-e2e");
 		await popup.close();
+	});
+
+	test("dev-ui theme toggle switches theme label", async ({ page }) => {
+		await page.goto("/");
+		await page.getByTestId("tool-item-get_todos").click();
+
+		const toggle = page.getByTestId("theme-toggle");
+		const before = (await toggle.textContent())?.trim() ?? "";
+		expect(before === "Theme: light" || before === "Theme: dark").toBeTruthy();
+		await toggle.click();
+		const after = (await toggle.textContent())?.trim() ?? "";
+		expect(after).not.toBe(before);
+	});
+
+	test("dev-ui host context update keeps input, output, and log state", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await page.getByTestId("tool-item-get_todos").click();
+
+		const connecting = page.getByText("Connecting MCP host bridge...");
+		await expect(connecting).toBeHidden();
+
+		await page.getByTestId("tool-input-filter").selectOption('"all"');
+		await page.getByTestId("preview-run").click();
+
+		const output = page.locator("#output");
+		await expect
+			.poll(async () => output.inputValue())
+			.toMatch(/structuredContent/);
+
+		const outputBefore = await output.inputValue();
+		const eventLog = page.getByTestId("preview-event-log");
+		const eventLogBefore = await eventLog.innerText();
+
+		await page.getByTestId("host-context-toggle").click();
+		const localeInput = page.getByTestId("host-context-locale");
+		const localeBefore = await localeInput.inputValue();
+		const nextLocale = localeBefore === "ja-JP" ? "en-US" : "ja-JP";
+		await localeInput.fill(nextLocale);
+
+		await expect(page.getByTestId("tool-input-filter")).toHaveValue('"all"');
+		await expect(output).toHaveValue(outputBefore);
+		await expect(eventLog).toHaveText(eventLogBefore);
+		await expect(connecting).toBeHidden();
+	});
+
+	test("dev-ui host context popover supports outside click and escape", async ({
+		page,
+	}) => {
+		await page.goto("/");
+
+		const toggle = page.getByTestId("host-context-toggle");
+		await toggle.click();
+		await expect(page.getByTestId("host-context-locale")).toBeVisible();
+
+		await page.click("text=Preview");
+		await expect(page.getByTestId("host-context-locale")).toHaveCount(0);
+
+		await toggle.click();
+		await expect(page.getByTestId("host-context-locale")).toBeVisible();
+
+		await page.getByTestId("host-context-locale").press("Escape");
+		await expect(page.getByTestId("host-context-locale")).toHaveCount(0);
+	});
+
+	test("dev-ui preview controller reconnect and reload keep preview usable", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await page.getByTestId("tool-item-get_todos").click();
+
+		const connecting = page.getByText("Connecting MCP host bridge...");
+		await expect(connecting).toBeHidden();
+
+		await page.getByTestId("preview-reconnect").click();
+		await expect(connecting).toBeHidden();
+
+		await page.getByTestId("preview-reload").click();
+
+		const widthPreset = page.getByTestId("preview-width-preset");
+		const widthValue = page.getByTestId("preview-width-value");
+		await widthPreset.selectOption("390");
+		await expect(widthValue).toHaveText("390px");
+
+		const resizeHandle = page.getByTestId("preview-resize-handle");
+		const handleBox = await resizeHandle.boundingBox();
+		if (!handleBox) {
+			throw new Error("Failed to resolve preview resize handle position");
+		}
+		await page.mouse.move(
+			handleBox.x + handleBox.width / 2,
+			handleBox.y + handleBox.height / 2,
+		);
+		await page.mouse.down();
+		await page.mouse.move(
+			handleBox.x + handleBox.width / 2 + 80,
+			handleBox.y + handleBox.height / 2,
+		);
+		await page.mouse.up();
+		await expect(widthValue).not.toHaveText("390px");
+
+		const frame = page.frameLocator("#frame");
+		await expect(frame.getByText("TODO リスト")).toBeVisible();
+
+		await page.getByTestId("tool-input-filter").selectOption('"all"');
+		await page.getByTestId("preview-run").click();
+		await expect
+			.poll(async () => page.locator("#output").inputValue())
+			.toMatch(/structuredContent/);
 	});
 });
