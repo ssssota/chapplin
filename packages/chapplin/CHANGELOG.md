@@ -1,5 +1,13 @@
 # chapplin
 
+## 1.2.1
+
+### Patch Changes
+
+- [#105](https://github.com/ssssota/chapplin/pull/105) [`c9dc723`](https://github.com/ssssota/chapplin/commit/c9dc7237dc73a6fb51ea383926c14cbdf4fc5d7f) Thanks [@ssssota](https://github.com/ssssota)! - Return app instance correctly with useApp for solid
+
+- [#110](https://github.com/ssssota/chapplin/pull/110) [`81eb70f`](https://github.com/ssssota/chapplin/commit/81eb70f69ecc7235af23424f42d55fa3ccfcbd96) Thanks [@ssssota](https://github.com/ssssota)! - Improve preview UI
+
 ## 1.2.0
 
 ### Minor Changes
