@@ -77,6 +77,11 @@ export const app = defineApp<typeof tool>({
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter}</p>
 				<p>ENV_FILE: {envFile}</p>
+				<img
+					src="https://picsum.photos/id/0/200/200"
+					alt="test csp"
+					data-testid="csp-blocked-image"
+				/>
 				<button type="button" onClick={onClick}>
 					Open docs
 				</button>

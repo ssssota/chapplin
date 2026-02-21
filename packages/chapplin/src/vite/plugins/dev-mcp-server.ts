@@ -136,6 +136,14 @@ async function registerCollectedModules(
 				tool.config._meta && typeof tool.config._meta === "object"
 					? (tool.config._meta as UnknownRecord)
 					: {};
+			const toolUiMeta =
+				toolMeta.ui && typeof toolMeta.ui === "object"
+					? (toolMeta.ui as UnknownRecord)
+					: {};
+			const resourceUiMeta =
+				app.meta && typeof app.meta === "object"
+					? (app.meta as UnknownRecord)
+					: {};
 
 			mcp.registerTool(
 				tool.name,
@@ -143,7 +151,7 @@ async function registerCollectedModules(
 					...tool.config,
 					_meta: {
 						...toolMeta,
-						ui: { resourceUri: uri },
+						ui: { ...toolUiMeta, resourceUri: uri },
 					},
 				},
 				tool.handler,
@@ -154,6 +162,7 @@ async function registerCollectedModules(
 				{
 					description: tool.config.description,
 					mimeType: RESOURCE_MIME_TYPE,
+					_meta: { ui: resourceUiMeta },
 				},
 				async () => ({
 					contents: [
@@ -161,7 +170,7 @@ async function registerCollectedModules(
 							uri,
 							mimeType: RESOURCE_MIME_TYPE,
 							text: html,
-							_meta: { ui: app.meta ?? {} },
+							_meta: { ui: resourceUiMeta },
 						},
 					],
 				}),

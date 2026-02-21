@@ -14,6 +14,7 @@ import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
 	type CallToolResult,
 	CallToolResultSchema,
+	ListToolsResultSchema,
 	type LoggingMessageNotification,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
@@ -93,6 +94,36 @@ function extractUiMeta(metaSource: unknown): McpUiResourceMeta | undefined {
 	if (!ui || typeof ui !== "object") return undefined;
 
 	return ui as McpUiResourceMeta;
+}
+
+function getToolVisibility(tool: Tool): Array<"model" | "app"> | undefined {
+	const meta = tool._meta;
+	if (!meta || typeof meta !== "object") return undefined;
+	const ui = (meta as Record<string, unknown>).ui;
+	if (!ui || typeof ui !== "object") return undefined;
+	const visibility = (ui as Record<string, unknown>).visibility;
+	if (!Array.isArray(visibility)) return undefined;
+	return visibility.filter(
+		(value): value is "model" | "app" => value === "model" || value === "app",
+	);
+}
+
+function isAppVisibleTool(tool: Tool): boolean {
+	const visibility = getToolVisibility(tool);
+	if (!visibility || visibility.length === 0) return true;
+	return visibility.includes("app");
+}
+
+function createToolAccessDeniedResult(toolName: string): CallToolResult {
+	return {
+		isError: true,
+		content: [
+			{
+				type: "text",
+				text: `Tool '${toolName}' is not callable from MCP Apps.`,
+			},
+		],
+	};
 }
 
 async function applyIframePermissionsFromResourceMeta(
@@ -201,7 +232,24 @@ export async function createPreviewHostBridge({
 		});
 	};
 	bridge.onupdatemodelcontext = async () => ({});
-
+	bridge.oncalltool = async (params, extra) => {
+		const listed = await mcp.client.request(
+			{ method: "tools/list" },
+			ListToolsResultSchema,
+			{ signal: extra.signal },
+		);
+		const requestedTool = listed.tools.find(
+			(candidate) => candidate.name === params.name,
+		);
+		if (!requestedTool || !isAppVisibleTool(requestedTool)) {
+			return createToolAccessDeniedResult(params.name);
+		}
+		return mcp.client.request(
+			{ method: "tools/call", params },
+			CallToolResultSchema,
+			{ signal: extra.signal },
+		);
+	};
 	await bridge.connect(transport);
 
 	const waitForInitialized = async (): Promise<void> => {
