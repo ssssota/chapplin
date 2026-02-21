@@ -467,6 +467,7 @@ export function ToolPreview({ tool, hostContext }: ToolPreviewProps) {
 									class="h-[360px] w-full border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950"
 									title={`Preview of ${tool.name}`}
 									src={iframeSrc}
+									sandbox="allow-scripts allow-same-origin"
 									data-testid="preview-frame"
 								/>
 							) : (

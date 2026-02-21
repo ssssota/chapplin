@@ -86,6 +86,10 @@ test.describe("chapplin dev server", () => {
 
 		const connecting = page.getByText("Connecting MCP host bridge...");
 		await expect(connecting).toBeHidden();
+		await expect(page.locator("#frame")).toHaveAttribute(
+			"sandbox",
+			"allow-scripts allow-same-origin",
+		);
 
 		const frame = page.frameLocator("#frame");
 		await expect(frame.getByText("読み込み中...")).toBeVisible();

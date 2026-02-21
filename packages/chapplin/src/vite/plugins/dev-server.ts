@@ -80,6 +80,75 @@ async function resolveToolFileByPath(toolPath: string) {
 	);
 }
 
+interface AppResourceCsp {
+	connectDomains?: string[];
+	resourceDomains?: string[];
+	frameDomains?: string[];
+	baseUriDomains?: string[];
+}
+
+interface AppResourceMeta {
+	csp?: AppResourceCsp;
+}
+
+type UnknownRecord = Record<string, unknown>;
+
+function readStringArray(value: unknown): string[] {
+	if (!Array.isArray(value)) return [];
+	return value.filter((item): item is string => typeof item === "string");
+}
+
+function joinCspSourceList(base: string[], additional: string[]): string {
+	const merged = new Set<string>(base);
+	for (const source of additional) {
+		const trimmed = source.trim();
+		if (!trimmed) continue;
+		merged.add(trimmed);
+	}
+	return [...merged].join(" ");
+}
+
+function buildAppIframeCsp(meta?: AppResourceMeta): string {
+	const csp = meta?.csp;
+	const connectDomains = readStringArray(csp?.connectDomains);
+	const resourceDomains = readStringArray(csp?.resourceDomains);
+	const frameDomains = readStringArray(csp?.frameDomains);
+	const baseUriDomains = readStringArray(csp?.baseUriDomains);
+	const connectSources =
+		connectDomains.length > 0
+			? joinCspSourceList([], connectDomains)
+			: "'none'";
+	const frameSources =
+		frameDomains.length > 0 ? joinCspSourceList([], frameDomains) : "'none'";
+	const baseUriSources =
+		baseUriDomains.length > 0 ? joinCspSourceList([], baseUriDomains) : "'none'";
+
+	return [
+		"default-src 'none'",
+		`script-src ${joinCspSourceList(["'self'"], resourceDomains)}`,
+		`style-src ${joinCspSourceList(["'self'", "'unsafe-inline'"], resourceDomains)}`,
+		`img-src ${joinCspSourceList(["'self'", "data:", "blob:"], resourceDomains)}`,
+		`font-src ${joinCspSourceList(["'self'", "data:"], resourceDomains)}`,
+		`connect-src ${connectSources}`,
+		`frame-src ${frameSources}`,
+		`base-uri ${baseUriSources}`,
+		"form-action 'none'",
+		"object-src 'none'",
+	].join("; ");
+}
+
+async function resolveToolAppMeta(
+	server: ViteDevServer,
+	toolFilePath: string,
+): Promise<AppResourceMeta | undefined> {
+	const imported = (await server.ssrLoadModule(toolFilePath)) as UnknownRecord;
+	const app = imported.app;
+	if (!app || typeof app !== "object") return undefined;
+	const meta = (app as UnknownRecord).meta;
+	if (!meta || typeof meta !== "object") return undefined;
+	return meta as AppResourceMeta;
+}
+
 /**
  * Setup preview URL logging (inspired by UnoCSS Inspector)
  */
@@ -163,6 +232,7 @@ export function devServer(): Plugin[] {
 								return;
 							}
 
+							const appMeta = await resolveToolAppMeta(server, toolFile.path);
 							const html = await server.transformIndexHtml(
 								req.url,
 								createAppHtml({
@@ -170,6 +240,10 @@ export function devServer(): Plugin[] {
 								}),
 							);
 							res.setHeader("content-type", "text/html");
+							res.setHeader(
+								"content-security-policy",
+								buildAppIframeCsp(appMeta),
+							);
 							res.end(html);
 							return;
 						}

@@ -146,13 +146,21 @@ function generateAppToolRegistration(
 	return `
 {
   const uri = \`ui://\${${ns}.tool.name}/app.html\`;
+  const toolMeta =
+    ${ns}.tool.config._meta && typeof ${ns}.tool.config._meta === "object"
+      ? ${ns}.tool.config._meta
+      : {};
+  const toolUiMeta =
+    toolMeta.ui && typeof toolMeta.ui === "object" ? toolMeta.ui : {};
+  const resourceUiMeta =
+    ${ns}.app.meta && typeof ${ns}.app.meta === "object" ? ${ns}.app.meta : {};
   server.registerTool(
     ${ns}.tool.name,
     {
       ...${ns}.tool.config,
       _meta: {
-        ...${ns}.tool.config._meta,
-        ui: { resourceUri: uri },
+        ...toolMeta,
+        ui: { ...toolUiMeta, resourceUri: uri },
       },
     },
     ${ns}.tool.handler
@@ -163,13 +171,14 @@ function generateAppToolRegistration(
     {
       description: ${ns}.tool.config.description,
       mimeType: "${RESOURCE_MIME_TYPE}",
+      _meta: { ui: resourceUiMeta },
     },
     async () => ({
       contents: [{
         uri,
         mimeType: "${RESOURCE_MIME_TYPE}",
         text: ${htmlImportName},
-        _meta: { ui: ${ns}.app.meta ?? {} },
+        _meta: { ui: resourceUiMeta },
       }],
     })
   );
