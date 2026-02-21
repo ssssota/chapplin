@@ -127,7 +127,8 @@ function buildAppIframeCsp(meta?: AppResourceMeta): string {
 
 	return [
 		"default-src 'none'",
-		`script-src ${joinCspSourceList(["'self'"], resourceDomains)}`,
+		// In dev, transformIndexHtml can inject inline module scripts (e.g. React refresh preamble).
+		`script-src ${joinCspSourceList(["'self'", "'unsafe-inline'"], resourceDomains)}`,
 		`style-src ${joinCspSourceList(["'self'", "'unsafe-inline'"], resourceDomains)}`,
 		`img-src ${joinCspSourceList(["'self'", "data:", "blob:"], resourceDomains)}`,
 		`font-src ${joinCspSourceList(["'self'", "data:"], resourceDomains)}`,
