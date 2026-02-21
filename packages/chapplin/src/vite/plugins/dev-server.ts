@@ -114,10 +114,10 @@ function buildAppIframeCsp(meta?: AppResourceMeta): string {
 	const resourceDomains = readStringArray(csp?.resourceDomains);
 	const frameDomains = readStringArray(csp?.frameDomains);
 	const baseUriDomains = readStringArray(csp?.baseUriDomains);
-	const connectSources =
-		connectDomains.length > 0
-			? joinCspSourceList([], connectDomains)
-			: "'none'";
+	const connectSources = joinCspSourceList(
+		["'self'", "ws:", "wss:"],
+		connectDomains,
+	);
 	const frameSources =
 		frameDomains.length > 0 ? joinCspSourceList([], frameDomains) : "'none'";
 	const baseUriSources =

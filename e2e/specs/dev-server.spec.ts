@@ -46,6 +46,9 @@ test.describe("chapplin dev server", () => {
 	test("/iframe/tools/todos.tsx/app.html returns HTML", async ({ request }) => {
 		const response = await request.get("/iframe/tools/todos.tsx/app.html");
 		expect(response.ok()).toBeTruthy();
+		expect(response.headers()["content-security-policy"]).toContain(
+			"connect-src 'self' ws: wss:",
+		);
 
 		const html = await response.text();
 		expect(html).toContain('<div id="root"></div>');
@@ -72,6 +75,42 @@ test.describe("chapplin dev server", () => {
 				}),
 			)
 			.toBe("7px|solid|rgb(15, 118, 110)");
+	});
+
+	test("/iframe/tools/todos.tsx/app.html blocks external image by CSP", async ({
+		page,
+	}) => {
+		type WindowWithCSP = typeof window & {
+			__cspViolations?: Array<{ directive: string; blockedURI: string }>;
+		};
+		await page.addInitScript(() => {
+			const w = window as WindowWithCSP;
+			w.__cspViolations = [];
+			document.addEventListener("securitypolicyviolation", (event) => {
+				w.__cspViolations?.push({
+					directive: event.violatedDirective,
+					blockedURI: event.blockedURI,
+				});
+			});
+		});
+
+		await page.goto("/iframe/tools/todos.tsx/app.html");
+		await expect(page.getByTestId("csp-blocked-image")).toBeVisible();
+		await expect
+			.poll(async () =>
+				page.evaluate(() => {
+					const w = window as WindowWithCSP;
+					return w.__cspViolations ?? [];
+				}),
+			)
+			.toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({
+						directive: expect.stringMatching(/img-src/),
+						blockedURI: expect.stringContaining("picsum.photos"),
+					}),
+				]),
+			);
 	});
 
 	test("dev-ui preview renders todo app", async ({ page }) => {
