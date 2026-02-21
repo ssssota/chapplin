@@ -4,27 +4,42 @@ import {
 	getToolUiResourceUri,
 	type McpUiHostCapabilities,
 	type McpUiHostContext,
+	type McpUiHostContextChangedNotification,
+	type McpUiMessageRequest,
 	type McpUiResourceMeta,
+	type McpUiTheme,
 	PostMessageTransport,
 } from "@modelcontextprotocol/ext-apps/app-bridge";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import {
 	type CallToolResult,
 	CallToolResultSchema,
+	type LoggingMessageNotification,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { connectDevMcp } from "./client.js";
 
 type ToolInput = Record<string, unknown>;
 
+export interface PreviewHostEvent {
+	kind: "message" | "log";
+	timestamp: number;
+	payload: McpUiMessageRequest["params"] | LoggingMessageNotification["params"];
+}
+
 export interface PreviewHostBridge {
 	executeTool: (arguments_: ToolInput) => Promise<CallToolResult>;
+	sendHostContextChange: (
+		context: McpUiHostContextChangedNotification["params"],
+	) => Promise<void>;
 	dispose: () => Promise<void>;
 }
 
 interface CreatePreviewHostBridgeOptions {
 	iframe: HTMLIFrameElement;
 	tool: Tool;
+	hostContext?: McpUiHostContext;
+	onEvent?: (event: PreviewHostEvent) => void;
 }
 
 const HOST_INFO = {
@@ -43,20 +58,30 @@ function createHostCapabilities(): McpUiHostCapabilities {
 	};
 }
 
-function createInitialHostContext(tool: Tool): McpUiHostContext {
+function createInitialHostContext(
+	tool: Tool,
+	hostContext?: McpUiHostContext,
+): McpUiHostContext {
 	const prefersDark = window.matchMedia?.(
 		"(prefers-color-scheme: dark)",
 	).matches;
 
+	const theme = hostContext?.theme ?? (prefersDark ? "dark" : "light");
+	const fallbackTheme: McpUiTheme = theme === "dark" ? "dark" : "light";
+
 	return {
-		toolInfo: { tool },
-		theme: prefersDark ? "dark" : "light",
 		displayMode: "inline",
 		availableDisplayModes: ["inline"],
 		platform: "web",
 		locale: navigator.language,
 		timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		userAgent: navigator.userAgent,
+		...hostContext,
+		toolInfo: {
+			...hostContext?.toolInfo,
+			tool,
+		},
+		theme: fallbackTheme,
 	};
 }
 
@@ -115,6 +140,8 @@ function normalizeCallToolResult(result: CallToolResponse): CallToolResult {
 export async function createPreviewHostBridge({
 	iframe,
 	tool,
+	hostContext,
+	onEvent,
 }: CreatePreviewHostBridgeOptions): Promise<PreviewHostBridge> {
 	const iframeWindow = iframe.contentWindow;
 	if (!iframeWindow) {
@@ -128,7 +155,7 @@ export async function createPreviewHostBridge({
 		mcp.client,
 		HOST_INFO,
 		createHostCapabilities(),
-		{ hostContext: createInitialHostContext(tool) },
+		{ hostContext: createInitialHostContext(tool, hostContext) },
 	);
 	const transport = new PostMessageTransport(iframeWindow, iframeWindow);
 	let disposed = false;
@@ -158,7 +185,21 @@ export async function createPreviewHostBridge({
 		}
 	};
 
-	bridge.onmessage = async () => ({});
+	bridge.onmessage = async (params) => {
+		onEvent?.({
+			kind: "message",
+			timestamp: Date.now(),
+			payload: params,
+		});
+		return {};
+	};
+	bridge.onloggingmessage = (params) => {
+		onEvent?.({
+			kind: "log",
+			timestamp: Date.now(),
+			payload: params,
+		});
+	};
 	bridge.onupdatemodelcontext = async () => ({});
 
 	await bridge.connect(transport);
@@ -194,6 +235,14 @@ export async function createPreviewHostBridge({
 				});
 				throw error;
 			}
+		},
+		sendHostContextChange: async (context) => {
+			if (disposed) {
+				throw new Error("Host bridge is already disposed");
+			}
+
+			await waitForInitialized();
+			await bridge.sendHostContextChange(context);
 		},
 		dispose: async () => {
 			if (disposed) return;
