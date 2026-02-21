@@ -121,7 +121,9 @@ function buildAppIframeCsp(meta?: AppResourceMeta): string {
 	const frameSources =
 		frameDomains.length > 0 ? joinCspSourceList([], frameDomains) : "'none'";
 	const baseUriSources =
-		baseUriDomains.length > 0 ? joinCspSourceList([], baseUriDomains) : "'none'";
+		baseUriDomains.length > 0
+			? joinCspSourceList([], baseUriDomains)
+			: "'none'";
 
 	return [
 		"default-src 'none'",
