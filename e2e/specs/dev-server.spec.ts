@@ -1,4 +1,4 @@
-import { expect, test, type FrameLocator, type Page } from "@playwright/test";
+import { expect, type FrameLocator, type Page, test } from "@playwright/test";
 import { callTool, listTools } from "../helpers/mcp-client.js";
 
 const ENV_FILE_MARKER = "ENV_FILE: from-env-test";
@@ -27,7 +27,9 @@ async function setHostContext(
 	await page
 		.getByTestId("host-context-display-mode")
 		.selectOption(context.displayMode);
-	await page.getByTestId("host-context-platform").selectOption(context.platform);
+	await page
+		.getByTestId("host-context-platform")
+		.selectOption(context.platform);
 	await page.getByTestId("host-context-close").click();
 	await expect(page.getByTestId("host-context-locale")).toHaveCount(0);
 }
@@ -46,11 +48,13 @@ async function expectHostContextValues(
 		.poll(
 			async () => ({
 				theme:
-					(await frame.getByTestId("app-host-context-theme").textContent())?.trim() ??
-					"",
+					(
+						await frame.getByTestId("app-host-context-theme").textContent()
+					)?.trim() ?? "",
 				locale:
-					(await frame.getByTestId("app-host-context-locale").textContent())?.trim() ??
-					"",
+					(
+						await frame.getByTestId("app-host-context-locale").textContent()
+					)?.trim() ?? "",
 				displayMode:
 					(
 						await frame
@@ -58,8 +62,9 @@ async function expectHostContextValues(
 							.textContent()
 					)?.trim() ?? "",
 				platform:
-					(await frame.getByTestId("app-host-context-platform").textContent())?.trim() ??
-					"",
+					(
+						await frame.getByTestId("app-host-context-platform").textContent()
+					)?.trim() ?? "",
 				toolName:
 					(
 						await frame.getByTestId("app-host-context-tool-name").textContent()

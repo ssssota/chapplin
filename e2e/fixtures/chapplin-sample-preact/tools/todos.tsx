@@ -79,7 +79,9 @@ export const app = defineApp<typeof tool>({
 				<p>フィルター: {filter}</p>
 				<p>ENV_FILE: {envFile}</p>
 				<div>
-					<p data-testid="app-host-context-theme">{hostContext?.theme ?? "-"}</p>
+					<p data-testid="app-host-context-theme">
+						{hostContext?.theme ?? "-"}
+					</p>
 					<p data-testid="app-host-context-locale">
 						{hostContext?.locale ?? "-"}
 					</p>
