@@ -1,7 +1,100 @@
-import { expect, test } from "@playwright/test";
+import { expect, type FrameLocator, type Page, test } from "@playwright/test";
 import { callTool, listTools } from "../helpers/mcp-client.js";
 
 const ENV_FILE_MARKER = "ENV_FILE: from-env-test";
+const HOST_CONTEXT_EXPECTED = {
+	locale: "en-US-x-host",
+	theme: "dark",
+	displayMode: "fullscreen",
+	platform: "desktop",
+	toolName: "get_todos",
+} as const;
+
+async function setHostContext(
+	page: Page,
+	context: {
+		locale: string;
+		theme: "light" | "dark";
+		displayMode: "inline" | "fullscreen" | "pip";
+		platform: "web" | "desktop" | "mobile";
+	},
+) {
+	await page.getByTestId("host-context-toggle").click();
+	const localeInput = page.getByTestId("host-context-locale");
+	await expect(localeInput).toBeVisible();
+	await localeInput.fill(context.locale);
+	await page.getByTestId("host-context-theme").selectOption(context.theme);
+	await page
+		.getByTestId("host-context-display-mode")
+		.selectOption(context.displayMode);
+	await page
+		.getByTestId("host-context-platform")
+		.selectOption(context.platform);
+	await page.getByTestId("host-context-close").click();
+	await expect(page.getByTestId("host-context-locale")).toHaveCount(0);
+}
+
+async function expectHostContextValues(
+	frame: FrameLocator,
+	context: {
+		locale: string;
+		theme: string;
+		displayMode: string;
+		platform: string;
+		toolName: string;
+	},
+) {
+	await expect
+		.poll(
+			async () => ({
+				theme:
+					(
+						await frame.getByTestId("app-host-context-theme").textContent()
+					)?.trim() ?? "",
+				locale:
+					(
+						await frame.getByTestId("app-host-context-locale").textContent()
+					)?.trim() ?? "",
+				displayMode:
+					(
+						await frame
+							.getByTestId("app-host-context-display-mode")
+							.textContent()
+					)?.trim() ?? "",
+				platform:
+					(
+						await frame.getByTestId("app-host-context-platform").textContent()
+					)?.trim() ?? "",
+				toolName:
+					(
+						await frame.getByTestId("app-host-context-tool-name").textContent()
+					)?.trim() ?? "",
+			}),
+			{ timeout: 20_000 },
+		)
+		.toEqual({
+			theme: context.theme,
+			locale: context.locale,
+			displayMode: context.displayMode,
+			platform: context.platform,
+			toolName: context.toolName,
+		});
+}
+
+async function expectHostContextToolName(
+	frame: FrameLocator,
+	toolName: string,
+) {
+	await expect
+		.poll(
+			async () =>
+				(
+					await frame.getByTestId("app-host-context-tool-name").textContent()
+				)?.trim() ?? "",
+			{ timeout: 20_000 },
+		)
+		.toBe(toolName);
+}
 
 test.describe("chapplin dev server", () => {
 	test("/api/files returns collected files", async ({ request }) => {
@@ -277,6 +370,83 @@ test.describe("chapplin dev server", () => {
 		await expect(output).toHaveValue(outputBefore);
 		await expect(eventLog).toHaveText(eventLogBefore);
 		await expect(connecting).toBeHidden();
+	});
+
+	test("dev-ui host context propagates to app props", async ({ page }) => {
+		await page.goto("/");
+		await page.getByTestId("tool-item-get_todos").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+
+		const frame = page.frameLocator("#frame");
+		await expect(frame.getByText("TODO リスト")).toBeVisible();
+
+		await setHostContext(page, HOST_CONTEXT_EXPECTED);
+		await expectHostContextValues(frame, HOST_CONTEXT_EXPECTED);
+	});
+
+	test("dev-ui host context keeps values after reconnect and reload", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await page.getByTestId("tool-item-get_todos").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+
+		const frame = page.frameLocator("#frame");
+		await expect(frame.getByText("TODO リスト")).toBeVisible();
+
+		await setHostContext(page, HOST_CONTEXT_EXPECTED);
+		await expectHostContextValues(frame, HOST_CONTEXT_EXPECTED);
+
+		await page.getByTestId("preview-reconnect").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+		await expectHostContextValues(frame, HOST_CONTEXT_EXPECTED);
+
+		await page.getByTestId("preview-reload").click();
+		await expect(frame.getByText("TODO リスト")).toBeVisible();
+		await page.getByTestId("preview-reconnect").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+
+		await page.getByTestId("host-context-toggle").click();
+		const localeInput = page.getByTestId("host-context-locale");
+		await expect(localeInput).toHaveValue(HOST_CONTEXT_EXPECTED.locale);
+		await expect(page.getByTestId("host-context-theme")).toHaveValue(
+			HOST_CONTEXT_EXPECTED.theme,
+		);
+		await expect(page.getByTestId("host-context-display-mode")).toHaveValue(
+			HOST_CONTEXT_EXPECTED.displayMode,
+		);
+		await expect(page.getByTestId("host-context-platform")).toHaveValue(
+			HOST_CONTEXT_EXPECTED.platform,
+		);
+		const resendLocale = `${HOST_CONTEXT_EXPECTED.locale}-resync`;
+		await localeInput.fill(resendLocale);
+		await localeInput.fill(HOST_CONTEXT_EXPECTED.locale);
+		await page.getByTestId("host-context-close").click();
+		await expect(page.getByTestId("host-context-locale")).toHaveCount(0);
+		await page.getByTestId("preview-reconnect").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+
+		await expectHostContextValues(frame, HOST_CONTEXT_EXPECTED);
+	});
+
+	test("dev-ui host context toolInfo stays aligned with selected app tool", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await page.getByTestId("tool-item-get_todos").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+		await setHostContext(page, HOST_CONTEXT_EXPECTED);
+
+		const frame = page.frameLocator("#frame");
+		await expectHostContextToolName(frame, "get_todos");
+
+		await page.getByTestId("tool-item-get_weather").click();
+		await expect(page.getByTestId("preview-no-app")).toBeVisible();
+
+		await page.getByTestId("tool-item-get_todos").click();
+		await expect(page.getByText("Connecting MCP host bridge...")).toBeHidden();
+		await setHostContext(page, HOST_CONTEXT_EXPECTED);
+		await expectHostContextToolName(frame, "get_todos");
 	});
 
 	test("dev-ui host context popover supports outside click and escape", async ({

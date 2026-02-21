@@ -67,6 +67,7 @@ export const app = defineApp<typeof tool>({
 		const app = useApp();
 		const output = () => props.output?.structuredContent;
 		const filter = () => props.input?.arguments?.filter ?? "all";
+		const hostContext = () => props.hostContext;
 		const linkUrl = "https://example.com/chapplin-useapp-e2e";
 		const onClick = () => app.openLink({ url: linkUrl });
 		return (
@@ -77,6 +78,23 @@ export const app = defineApp<typeof tool>({
 				<h1>TODO リスト</h1>
 				<p>フィルター: {filter()}</p>
 				<p>ENV_FILE: {envFile}</p>
+				<div>
+					<p data-testid="app-host-context-theme">
+						{hostContext()?.theme ?? "-"}
+					</p>
+					<p data-testid="app-host-context-locale">
+						{hostContext()?.locale ?? "-"}
+					</p>
+					<p data-testid="app-host-context-display-mode">
+						{hostContext()?.displayMode ?? "-"}
+					</p>
+					<p data-testid="app-host-context-platform">
+						{hostContext()?.platform ?? "-"}
+					</p>
+					<p data-testid="app-host-context-tool-name">
+						{hostContext()?.toolInfo?.tool?.name ?? "-"}
+					</p>
+				</div>
 				<img
 					src="https://picsum.photos/id/0/200/200"
 					alt="test csp"
