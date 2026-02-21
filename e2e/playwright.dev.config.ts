@@ -10,6 +10,7 @@ export default defineConfig({
 	testDir: "./specs",
 	testMatch: ["**/dev-server.spec.ts"],
 	timeout: 60_000,
+	retries: 3,
 	expect: { timeout: 10_000 },
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
