@@ -8,6 +8,15 @@ A framework for building MCP Servers with MCP Apps.
 npm create chapplin@latest
 ```
 
+### Install Agent Skills
+
+```bash
+# After installing chapplin
+npx skills add ./node_modules/chapplin
+```
+
+Or use [skills-npm](https://github.com/antfu/skills-npm).
+
 ### How to define tools and apps
 
 ```tsx
