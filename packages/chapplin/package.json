@@ -46,7 +46,8 @@
 	},
 	"files": [
 		"dist",
-		"bin"
+		"bin",
+		"skills"
 	],
 	"repository": {
 		"type": "git",
