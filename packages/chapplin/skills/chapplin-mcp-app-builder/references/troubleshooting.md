@@ -36,10 +36,10 @@ Import path does not match `chapplin({ target })`.
 
 1. Read `vite.config.ts` and identify target.
 2. Use one of:
-`chapplin/react`
-`chapplin/preact`
-`chapplin/solid`
-`chapplin/hono`
+   - `chapplin/react`
+   - `chapplin/preact`
+   - `chapplin/solid`
+   - `chapplin/hono`
 3. Remove mismatched runtime imports.
 
 ### Verification step

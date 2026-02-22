@@ -46,8 +46,8 @@ Typical template behavior:
 
 1. Resolve mode from CLI args (`http` default, `stdio` optional).
 2. In STDIO mode:
-Create `McpServer` -> call `register(server)` -> connect `StdioServerTransport`.
+   - Create `McpServer` -> call `register(server)` -> connect `StdioServerTransport`.
 3. In HTTP mode:
-Expose `/mcp`, create a fresh `McpServer` per request, call `register(server)`, connect `StreamableHTTPTransport`, and return `transport.handleRequest(...)`.
+   - Expose `/mcp`, create a fresh `McpServer` per request, call `register(server)`, connect `StreamableHTTPTransport`, and return `transport.handleRequest(...)`.
 
 Do not alter this transport structure unless the user explicitly asks for transport changes.
