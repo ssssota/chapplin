@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.3.0
+
+### Minor Changes
+
+- [#115](https://github.com/ssssota/chapplin/pull/115) [`a9585ec`](https://github.com/ssssota/chapplin/commit/a9585ec7978bd6c06933017ed93dbb282e368c02) Thanks [@ssssota](https://github.com/ssssota)! - Add SKILL for agents
+
 ## 1.2.1
 
 ### Patch Changes
