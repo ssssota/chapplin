@@ -1,5 +1,11 @@
 # chapplin
 
+## 1.3.1
+
+### Patch Changes
+
+- [#126](https://github.com/ssssota/chapplin/pull/126) [`eddb2bc`](https://github.com/ssssota/chapplin/commit/eddb2bc9f726b4e148692dd23beb4086f18e925f) Thanks [@ssssota](https://github.com/ssssota)! - Avoid concurrent client build
+
 ## 1.3.0
 
 ### Minor Changes
