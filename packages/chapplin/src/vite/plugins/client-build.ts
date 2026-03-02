@@ -21,6 +21,18 @@ let buildContext: {
 	plugins: PluginOption[];
 } | null = null;
 
+/** Promise chain used to serialize nested client builds */
+let buildQueue = Promise.resolve();
+
+function runBuildQueued<T>(task: () => Promise<T>): Promise<T> {
+	const next = buildQueue.then(task, task);
+	buildQueue = next.then(
+		() => undefined,
+		() => undefined,
+	);
+	return next;
+}
+
 /**
  * Get built HTML for a tool (used by virtual-module.ts)
  * This builds on-demand if not already built
@@ -39,23 +51,31 @@ export async function getBuiltAppHtml(
 
 	// Build on demand
 	if (buildContext) {
+		const context = buildContext;
 		const files = await getCollectedFiles();
 		const tool = files.tools.find((t) => t.name === toolName && t.hasApp);
 		if (tool) {
-			const buildPromise = buildClientApp({
-				file: tool.path,
-				name: tool.name,
-				plugins: buildContext.plugins,
-				opts: buildContext.opts,
-				mode: buildContext.config.mode,
-				root: buildContext.config.root,
-				envDir: buildContext.config.envDir || undefined,
-				envPrefix: buildContext.config.envPrefix,
-			}).then(([, html]) => {
-				builtAppHtmlCache.set(toolName, html);
-				pendingBuilds.delete(toolName);
-				return html;
-			});
+			const buildPromise = runBuildQueued(() =>
+				buildClientApp({
+					file: tool.path,
+					name: tool.name,
+					plugins: context.plugins,
+					opts: context.opts,
+					mode: context.config.mode,
+					root: context.config.root,
+					envDir: context.config.envDir || undefined,
+					envPrefix: context.config.envPrefix,
+				}),
+			)
+				.then(([, html]) => {
+					builtAppHtmlCache.set(toolName, html);
+					pendingBuilds.delete(toolName);
+					return html;
+				})
+				.catch((error) => {
+					pendingBuilds.delete(toolName);
+					throw error;
+				});
 
 			pendingBuilds.set(toolName, buildPromise);
 			return buildPromise;
@@ -80,6 +100,7 @@ export function clientBuild(opts: ResolvedOptions): Plugin {
 			// Clear cache at build start
 			builtAppHtmlCache.clear();
 			pendingBuilds.clear();
+			buildQueue = Promise.resolve();
 
 			// Set up build context for lazy building
 			buildContext = {
