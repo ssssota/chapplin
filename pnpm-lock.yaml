@@ -15,6 +15,9 @@ catalogs:
     '@modelcontextprotocol/sdk':
       specifier: ^1.23.0
       version: 1.26.0
+    '@types/node':
+      specifier: ^24
+      version: 24.12.0
     '@types/react':
       specifier: 19.2.14
       version: 19.2.14
@@ -48,9 +51,6 @@ catalogs:
     vite:
       specifier: 7.3.1
       version: 7.3.1
-    vite-plugin-singlefile:
-      specifier: ^2.3.0
-      version: 2.3.0
     zod:
       specifier: ^4.3.6
       version: 4.3.6
@@ -389,7 +389,7 @@ importers:
         version: 0.2.1
       vite-plugin-singlefile:
         specifier: 'catalog:'
-        version: 2.3.0(rollup@4.57.1)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1))
+        version: 2.3.2(rollup@4.57.1)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1))
     devDependencies:
       '@modelcontextprotocol/ext-apps':
         specifier: 'catalog:'
@@ -4265,12 +4265,12 @@ packages:
   vite-plugin-dev-api@0.2.1:
     resolution: {integrity: sha512-DGD5tPCmmizLXVTkqOe984ajsWESlyiuX3tJ4n8X0Xl5bbEYvgmDNEVB/8FXEiN3PLi4cPeMAnUHK316BJhcpw==}
 
-  vite-plugin-singlefile@2.3.0:
-    resolution: {integrity: sha512-DAcHzYypM0CasNLSz/WG0VdKOCxGHErfrjOoyIPiNxTPTGmO6rRD/te93n1YL/s+miXq66ipF1brMBikf99c6A==}
+  vite-plugin-singlefile@2.3.2:
+    resolution: {integrity: sha512-b8SxCi/gG7K298oJDcKOuZeU6gf6wIcCJAaEqUmmZXdjfuONlkyNyWZC3tEbN6QockRCNUd3it9eGTtpHGoYmg==}
     engines: {node: '>18.0.0'}
     peerDependencies:
-      rollup: ^4.44.1
-      vite: ^5.4.11 || ^6.0.0 || ^7.0.0
+      rollup: ^4.59.0
+      vite: ^5.4.11 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
   vite-plugin-solid@2.11.10:
     resolution: {integrity: sha512-Yr1dQybmtDtDAHkii6hXuc1oVH9CPcS/Zb2jN/P36qqcrkNnVPsMTzQ06jyzFPFjj3U1IYKMVt/9ZqcwGCEbjw==}
@@ -8981,7 +8981,7 @@ snapshots:
     dependencies:
       '@remix-run/node-fetch-server': 0.8.1
 
-  vite-plugin-singlefile@2.3.0(rollup@4.57.1)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)):
+  vite-plugin-singlefile@2.3.2(rollup@4.57.1)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)):
     dependencies:
       micromatch: 4.0.8
       rollup: 4.57.1
